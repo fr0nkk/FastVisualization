@@ -24,3 +24,6 @@
 *.pdf binary
 *.png binary
 *.xlsx binary
+
+## github linguist
+*.m linguist-language=matlab
