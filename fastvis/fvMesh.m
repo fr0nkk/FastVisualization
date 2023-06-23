@@ -7,7 +7,7 @@ classdef fvMesh < fvPrimitive
             p = inputParser;
             p.addOptional('tri',[]);
             p.addOptional('xyz',[]);
-            p.addOptional('col',[]);
+            p.addOptional('col',[]);gitu
             p.addOptional('norm',[]);
             p.addOptional('mtl',[]);
             p.addOptional('mtl_idx',[]);
@@ -17,6 +17,8 @@ classdef fvMesh < fvPrimitive
             tri = p.Results.tri;
             col = p.Results.col;
             xyz = p.Results.xyz;
+            mtl = p.Results.mtl;
+            mtl_idx = p.Results.mtl_idx;
 
             if isempty(tri)
                 s = wobj2struct('teapot.obj');
@@ -27,14 +29,20 @@ classdef fvMesh < fvPrimitive
                 end
             end
 
+            if width(tri) < 3
+                error('faces must be made of at least 3 points')
+            end
+
+            if width(tri) > 3
+                tri = trifan(tri);
+                warning('faces were assumed to be convex and were converted to triangles');
+            end
+
             n = p.Results.norm;
             if isempty(n) && p.Results.AutoCalcNormals
                 T = triangulation(double(tri),double(xyz));
                 n = T.vertexNormal;
             end
-
-            mtl = p.Results.mtl;
-            mtl_idx = p.Results.mtl_idx;
 
             obj@fvPrimitive(ax,'GL_TRIANGLES',xyz,col,n,tri,mtl,mtl_idx);
             % glObjectBase(parent,prim_type,coords,color,normals,prim_index,material,material_index)

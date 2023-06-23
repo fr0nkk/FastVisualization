@@ -84,7 +84,7 @@ for i=1:nf
     f_m{i} = m_i(findId(m_x,f_i));
     f_s{i} = s_i(findId(s_x,f_i));
     
-    f = lines2mat(str(f_x(i,1):f_x(i,2)),4);
+    f = lines2mat(str(f_x(i,1):f_x(i,2)),inf);
     f(f.strlength == 0) = "//";
     k = f.count("/") == 1;
     f(k) = f(k).append("/");
@@ -93,12 +93,14 @@ for i=1:nf
     o = v_s(findId(v_x(:,2),f_i))+1;
     f_v{i} = applyOffset(f(:,:,1),o);
 
-    if ~isempty(vt_x) && ~all(isnan(f(:,:,2)),'all')
+    % if ~isempty(vt_x) && ~all(isnan(f(:,:,2)),'all')
+    if ~isempty(vt_x) && ~all(f(:,:,2)==0,'all')
         o = vt_s(findId(vt_x(:,2),f_i))+1;
         f_vt{i} = applyOffset(f(:,:,2),o);
     end
 
-    if ~isempty(vn_x) && ~all(isnan(f(:,:,3)),'all')
+    % if ~isempty(vn_x) && ~all(isnan(f(:,:,3)),'all')
+    if ~isempty(vn_x) && ~all(f(:,:,3)==0,'all')
         o = vn_s(findId(vn_x(:,2),f_i))+1;
         f_vn{i} = applyOffset(f(:,:,3),o);
     end
