@@ -7,7 +7,7 @@ classdef fvMesh < fvPrimitive
             p = inputParser;
             p.addOptional('tri',[]);
             p.addOptional('xyz',[]);
-            p.addOptional('col',[]);gitu
+            p.addOptional('col',[]);
             p.addOptional('norm',[]);
             p.addOptional('mtl',[]);
             p.addOptional('mtl_idx',[]);
