@@ -242,6 +242,10 @@ classdef fvPrimitive < fvDrawable
         function ZoomTo(obj)
             obj.fvfig.Camera.ZoomBBox(obj.worldBBox);
         end
+
+        function delete(obj)
+            delete(obj.mtl_el);
+        end
     end
 
     methods(Access=protected)
