@@ -119,6 +119,9 @@ classdef fvController< glmu.GLController
             
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
 
+            gl.glEnable(gl.GL_CULL_FACE);
+            gl.glFrontFace(gl.GL_CCW);
+
             obj.screen.program.uniforms.edlStrength.Set(obj.fvfig.edl);
             obj.screen.Draw;
             
@@ -176,9 +179,11 @@ classdef fvController< glmu.GLController
         function s = id2info(obj,id)
             drawId = mod1(id(1),65535);
             s.object = obj.drawnPrimitives{drawId};
-            s.elemId = floor((id(1)-1)/65535)+1;
+            elemId = floor((id(1)-1)/65535)+1;
+            s.mtlId = [];
             if ~isempty(s.object.Material)
-                id(2) = s.object.batch_mtl_idx{s.elemId}(id(2));
+                id(2) = s.object.batch_mtl_idx{elemId}(id(2));
+                s.mtlId = s.object.batch_mtl(elemId);
             end
             s.primId = id(2);
         end

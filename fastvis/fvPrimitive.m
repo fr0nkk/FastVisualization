@@ -11,6 +11,7 @@ classdef fvPrimitive < fvDrawable
         Material % glMaterial array
         Colormap = jet(256) % [N x 3] array
         Light = struct('Offset',[0 0 0],'Ambient',[0.2 0.2 0.2],'Diffuse',[1 1 1],'Specular',[1 1 1]);
+        Cull = 0;
 
         % for use with normals and no material
         Specular = [0.5 0.5 0.5];
@@ -41,6 +42,7 @@ classdef fvPrimitive < fvDrawable
         glDrawable
         glProg
         batch_mtl_idx
+        batch_mtl
     end
 
     properties(Dependent,Access=protected)
@@ -233,6 +235,11 @@ classdef fvPrimitive < fvDrawable
             obj.Update;
         end
 
+        function set.Cull(obj,c)
+            obj.Cull = c;
+            obj.Update;
+        end
+
         function UpdateColor(obj)
             notify(obj,'ColorChanged');
             if ~obj.isInit, return, end
@@ -288,6 +295,19 @@ classdef fvPrimitive < fvDrawable
                     uni.material_shin.Set(obj.Shininess);
                 end
             end
+
+            gl = obj.glDrawable.gl;
+            if obj.Cull
+                gl.glEnable(gl.GL_CULL_FACE);
+                if obj.Cull > 0
+                    gl.glFrontFace(gl.GL_CCW);
+                else
+                    gl.glFrontFace(gl.GL_CW);
+                end
+            else
+                gl.glDisable(gl.GL_CULL_FACE);
+            end
+
             obj.glDrawable.Draw;
         end
 
@@ -306,7 +326,7 @@ classdef fvPrimitive < fvDrawable
                     obj.glDrawable.uni = rmfield(obj.glDrawable.uni,'color_source');
                 end
                 m = mode(obj.validMtlIdx(p),2);
-                [um,~,g] = unique(m);
+                [obj.batch_mtl,~,g] = unique(m);
                 obj.batch_mtl_idx = splitapply(@(c) {c},int32(1:height(p))',g);
                 
                 co = cellfun(@numel,obj.batch_mtl_idx).*width(p);
@@ -314,7 +334,7 @@ classdef fvPrimitive < fvDrawable
 
                 p = p(vertcat(obj.batch_mtl_idx{:}),:);
                 obj.glDrawable.EditElement(ind2glind(p));
-                M = obj.validMaterial(um);
+                M = obj.validMaterial(obj.batch_mtl);
                 obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a,0),M,'uni',0);
                 mtl_idx = (1:numel(M))';
                 obj.mtl_el = arrayfun(@(k) addlistener(M(k),'PropChanged',@(src,evt) obj.EditMaterial(src,k)),mtl_idx);
