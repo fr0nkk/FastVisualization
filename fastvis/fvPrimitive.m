@@ -122,6 +122,10 @@ classdef fvPrimitive < fvDrawable
         end
 
         function set.Colormap(obj,cmap)
+            sz = size(cmap);
+            if ~isscalartext(cmap) && (sz(1) < 1 || sz(2) ~= 3 || numel(sz) > 2)
+                error('Colormap must be [m x 3] where m is at least 1')
+            end
             obj.Colormap = cmap;
             obj.UpdateColor();
         end
@@ -190,13 +194,18 @@ classdef fvPrimitive < fvDrawable
         function c = get.validColor(obj)
             c = obj.Color;
             if width(c) == 1
-                % colormap mode
-                if isinteger(c)
-                    c = single(c) ./ single(intmax(class(c)));
+                cmap = obj.Colormap;
+                if isscalartext(cmap)
+                    f = str2func(cmap);
+                    cmap = f(256);
                 end
-                h = height(obj.Colormap);
-                c = clamp(floor(c.*h)+1,1,h);
-                c = obj.Colormap(c,:);
+                % colormap mode
+                h = height(cmap);
+                if isfloat(c)
+                    c = floor(c.*h)+1;
+                end
+                
+                c = cmap(clamp(c,1,h),:);
             end
             if isempty(c)
                 cmap = obj.fvfig.ColorOrder;
