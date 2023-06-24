@@ -38,6 +38,12 @@ classdef fvMesh < fvPrimitive
                 warning('faces were assumed to be convex and were converted to triangles');
             end
 
+            tf = any(tri == 0,2);
+            if any(tf)
+                tri = tri(~tf,:);
+                warning('removed faces with index 0')
+            end
+
             n = p.Results.norm;
             if isempty(n) && p.Results.AutoCalcNormals
                 T = triangulation(double(tri),double(xyz));

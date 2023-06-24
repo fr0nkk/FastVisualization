@@ -1,4 +1,4 @@
-function s = wobj2struct(filename)
+function s = wobj2struct(filename,triangulateFlag)
 
 % s.o = string array
 % s.g = string array
@@ -16,10 +16,13 @@ function s = wobj2struct(filename)
 % s.f(i).v = uint32 array [nbFaces X nPtsPerFace]
 % s.f(i).vt = uint32 array [nbFaces X nPtsPerFace]
 % s.f(i).vn = uint32 array [nbFaces X nPtsPerFace]
+% s.f(i).n = uint32 scalar nbFaces
 % s.l = struct array
 % s.l(i).o = scalar uint32
 % s.l(i).g = scalar uint32
 % s.l(i).v = uint32 array [1 X nPts]
+
+if nargin < 2, triangulateFlag = false; end
 
 [type,str] = readTypeTextLines(filename);
 
@@ -77,6 +80,7 @@ f_s = c;
 f_v = c;
 f_vt = c;
 f_vn = c;
+f_n = c;
 for i=1:nf
     f_i = f_x(i,1);
     f_g{i} = findId(g_x,f_i);
@@ -89,24 +93,30 @@ for i=1:nf
     k = f.count("/") == 1;
     f(k) = f(k).append("/");
     f = int32(f.split("/",3).double);
-
+    if triangulateFlag && width(f) > 3
+        newf = [];
+        newf(:,:,1) = trifan(f(:,:,1));
+        newf(:,:,2) = trifan(f(:,:,2));
+        newf(:,:,3) = trifan(f(:,:,3));
+        f = newf;
+    end
     o = v_s(findId(v_x(:,2),f_i))+1;
     f_v{i} = applyOffset(f(:,:,1),o);
 
-    % if ~isempty(vt_x) && ~all(isnan(f(:,:,2)),'all')
     if ~isempty(vt_x) && ~all(f(:,:,2)==0,'all')
         o = vt_s(findId(vt_x(:,2),f_i))+1;
         f_vt{i} = applyOffset(f(:,:,2),o);
     end
 
-    % if ~isempty(vn_x) && ~all(isnan(f(:,:,3)),'all')
     if ~isempty(vn_x) && ~all(f(:,:,3)==0,'all')
         o = vn_s(findId(vn_x(:,2),f_i))+1;
         f_vn{i} = applyOffset(f(:,:,3),o);
     end
+
+    f_n{i} = height(f);
 end
 
-s.f = struct('o',f_o,'g',f_g,'m',f_m,'s',f_s,'v',f_v,'vt',f_vt,'vn',f_vn);
+s.f = struct('o',f_o,'g',f_g,'m',f_m,'s',f_s,'v',f_v,'vt',f_vt,'vn',f_vn,'n',f_n);
 
 l_x = tfExtents(type == "l");
 if isempty(l_x), return, end
