@@ -21,9 +21,9 @@ classdef fvMesh < fvPrimitive
             mtl_idx = p.Results.mtl_idx;
 
             if isempty(tri)
-                s = wobj2struct('teapot.obj');
-                tri = s.f.v;
-                xyz = s.v;
+                wo = wobj('teapot.obj');
+                tri = wo.faces.vertices;
+                xyz = wo.vertices;
                 if isempty(col)
                     col = rescale(xyz(:,3));
                 end
@@ -51,7 +51,6 @@ classdef fvMesh < fvPrimitive
             end
 
             obj@fvPrimitive(ax,'GL_TRIANGLES',xyz,col,n,tri,mtl,mtl_idx);
-            % glObjectBase(parent,prim_type,coords,color,normals,prim_index,material,material_index)
         end
     end
 end
