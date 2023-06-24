@@ -14,15 +14,17 @@ classdef fvMaterialCache < handle
             obj.fvfig = fvfig;
         end
         
-        function s = UniStruct(obj,mtl)
+        function s = UniStruct(obj,mtl,forceRecalc)
             % must be on a gl context
-            k = find(ismember(mtl,obj.mtl));
+            k = find(ismember(obj.mtl,mtl));
             if isempty(k)
                 k = numel(obj.mtl)+1;
                 obj.mtl(k) = mtl;
                 obj.tex{k} = [];
                 obj.texNeedRecalc(k) = true;
             end
+
+            obj.texNeedRecalc(k) = forceRecalc | obj.texNeedRecalc(k);
 
             s=struct;
             if mtl.isTex
@@ -68,7 +70,7 @@ classdef fvMaterialCache < handle
                     img(:,:,4) = 1;
                 end
                 if isempty(obj.tex{k})
-                    obj.tex{k} = glmu.Texture(7,'GL_TEXTURE_2D',img,'GL_RGBA',1);
+                    obj.tex{k} = glmu.Texture(7,'GL_TEXTURE_2D',img,'GL_RGBA',0);
                 else
                     obj.tex{k}.Edit(img,'GL_RGBA',1);
                 end

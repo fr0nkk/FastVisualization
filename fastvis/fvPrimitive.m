@@ -51,6 +51,7 @@ classdef fvPrimitive < fvDrawable
         validColor
         validPrimIdx
         validMtlIdx
+        validMaterial
     end
 
     properties(Access=private)
@@ -210,6 +211,13 @@ classdef fvPrimitive < fvDrawable
             obj.Update;
         end
 
+        function M = get.validMaterial(obj)
+            M = obj.Material;
+            if iscell(M)
+                M = vertcat(M{:});
+            end
+        end
+
         function set.Light(obj,s)
             obj.Light = s;
             obj.Update;
@@ -291,8 +299,8 @@ classdef fvPrimitive < fvDrawable
                 co = [co cumsum([0 ; co(1:end-1)])];
 
                 obj.glDrawable.EditElement(ind2glind(vertcat(F{:})));
-                M = obj.Material(um);
-                obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a),M,'uni',0);
+                M = obj.validMaterial(um);
+                obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a,0),M,'uni',0);
                 mtl_idx = (1:numel(M))';
                 obj.mtl_el = arrayfun(@(k) addlistener(M(k),'PropChanged',@(src,evt) obj.EditMaterial(src,k)),mtl_idx);
                 obj.glDrawable.countoffsets = co;
@@ -308,7 +316,7 @@ classdef fvPrimitive < fvDrawable
 
         function EditMaterial(obj,src,k)
             [gl,temp] = obj.getContext;
-            obj.glDrawable.multi_uni{k} = obj.fvfig.mtlCache.UniStruct(src);
+            obj.glDrawable.multi_uni{k} = obj.fvfig.mtlCache.UniStruct(src,1);
             obj.Update;
         end
         
