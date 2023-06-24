@@ -33,9 +33,13 @@ classdef fvMaterialCache < handle
             else
                 s.color_source = 'material_color';
                 col = mtl.color;
-                if width(col) < 4
-                    col(:,4) = 1;
+                if width(col) == 1
+                    col = [col col col];
                 end
+                if width(col) < 4
+                    col(4) = 1;
+                end
+                col(4) = col(4) .* mtl.alpha;
                 s.material_col = col;
             end
             s.material_spec = mtl.specular;
@@ -47,7 +51,7 @@ classdef fvMaterialCache < handle
         function t = getTex(obj,k)
             if obj.texNeedRecalc(k)
                 m = obj.mtl(k);
-                if ischar(m.color) || isstring(m.color)
+                if isscalartext(m.color)
                     img = imread(m.color);
                 else
                     img = m.color;
@@ -69,6 +73,7 @@ classdef fvMaterialCache < handle
                 if size(img,3) < 4
                     img(:,:,4) = 1;
                 end
+                img(:,:,4) = img(:,:,4) .* m.alpha;
                 if isempty(obj.tex{k})
                     obj.tex{k} = glmu.Texture(7,'GL_TEXTURE_2D',img,'GL_RGBA',0);
                 else
