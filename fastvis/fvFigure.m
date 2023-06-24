@@ -140,8 +140,11 @@ classdef fvFigure < JChildParent
         end
 
         function lastState = hold(obj,tf)
-            lastState = obj.isHold;
+            curState = obj.isHold;
             obj.isHold = tf;
+            if nargout >= 1
+                lastState = curState;
+            end
         end
 
         function set.BackgroundColor(obj,col)
