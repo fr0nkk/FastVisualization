@@ -10,7 +10,7 @@ classdef fvPrimitive < fvDrawable
         MaterialIndex % vertex material index
         Material % glMaterial array
         Colormap = jet(256) % [N x 3] array
-        Light = struct('Offset',[0 0 0],'Ambient',[0.2 0.2 0.2],'Diffuse',[1 1 1],'Specular',[1 1 1]);
+        Light = struct('Offset',[0 0 0],'Ambient',[0.2 0.2 0.2],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
         Cull = 0;
 
         % for use with normals and no material
@@ -107,8 +107,8 @@ classdef fvPrimitive < fvDrawable
         function set.Coord(obj,v)
             temp2 = obj.UpdateOnCleanup;
             obj.Coord = v;
+            obj.needRecalc = 1;
             obj.InvalidateBBox;
-            obj.AdjustIData;
             notify(obj,'CoordsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
@@ -143,7 +143,6 @@ classdef fvPrimitive < fvDrawable
             obj.Index = idx;
             obj.needRecalc = 1;
             obj.InvalidateBBox;
-            obj.AdjustIData;
             notify(obj,'PrimitiveIndexChanged');
             obj.Update;
         end
@@ -179,6 +178,11 @@ classdef fvPrimitive < fvDrawable
             ind = obj.Index;
             if isempty(ind)
                 ind = (1:obj.Count)';
+            end
+
+            k = any(ind > obj.Count | ind < 1,2);
+            if any(k)
+                ind = ind(~k,:);
             end
         end
 
@@ -353,13 +357,6 @@ classdef fvPrimitive < fvDrawable
             [gl,temp] = obj.getContext;
             obj.glDrawable.multi_uni{k} = obj.fvfig.mtlCache.UniStruct(src,1);
             obj.Update;
-        end
-        
-        function AdjustIData(obj)
-            k = any(obj.Index > obj.Count | obj.Index < 1,2);
-            if any(k)
-                obj.Index = obj.Index(~k,:);
-            end
         end
     end
 
