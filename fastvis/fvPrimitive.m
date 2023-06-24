@@ -40,6 +40,7 @@ classdef fvPrimitive < fvDrawable
         model_offset
         glDrawable
         glProg
+        batch_mtl_idx
     end
 
     properties(Dependent,Access=protected)
@@ -306,12 +307,13 @@ classdef fvPrimitive < fvDrawable
                 end
                 m = mode(obj.validMtlIdx(p),2);
                 [um,~,g] = unique(m);
-                F = splitapply(@(c) {c},p,g);
+                obj.batch_mtl_idx = splitapply(@(c) {c},int32(1:height(p))',g);
                 
-                co = cellfun(@numel,F);
+                co = cellfun(@numel,obj.batch_mtl_idx).*width(p);
                 co = [co cumsum([0 ; co(1:end-1)])];
 
-                obj.glDrawable.EditElement(ind2glind(vertcat(F{:})));
+                p = p(vertcat(obj.batch_mtl_idx{:}),:);
+                obj.glDrawable.EditElement(ind2glind(p));
                 M = obj.validMaterial(um);
                 obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a,0),M,'uni',0);
                 mtl_idx = (1:numel(M))';

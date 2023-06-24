@@ -177,6 +177,9 @@ classdef fvController< glmu.GLController
             drawId = mod1(id(1),65535);
             s.object = obj.drawnPrimitives{drawId};
             s.elemId = floor((id(1)-1)/65535)+1;
+            if ~isempty(s.object.Material)
+                id(2) = s.object.batch_mtl_idx{s.elemId}(id(2));
+            end
             s.primId = id(2);
         end
 
@@ -196,12 +199,6 @@ classdef fvController< glmu.GLController
             end
         end
     end
-    % methods(Static)
-
-        % function [xyz,id] = closestPoint(xyzs,ids,viewParams)
-        % end
-
-    % end
 end
 
 function PrepareProgs(prog,MProj,viewPos)
