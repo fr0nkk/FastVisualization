@@ -2,7 +2,7 @@ classdef fvFigure < JChildParent
     
     properties(Transient,SetObservable)
         BackgroundColor = [0 0 0];
-        Light = struct('Position',[0 0 10000],'Ambient',[1 1 1],'Diffuse',[1 1 1],'Specular',[1 1 1]);
+        Light = struct('Position',[0 0 1e5],'Ambient',[1 1 1],'Diffuse',[1 1 1],'Specular',[1 1 1]);
         isHold matlab.lang.OnOffSwitchState = false;
         edl = 0.2;
         edlWithBackground logical = false
@@ -139,11 +139,13 @@ classdef fvFigure < JChildParent
             temp = onCleanup(@obj.EndPauseUpdate);
         end
 
-        function lastState = hold(obj,tf)
+        function out = hold(obj,state)
             curState = obj.isHold;
-            obj.isHold = tf;
-            if nargout >= 1
-                lastState = curState;
+            if nargin >= 2
+                obj.isHold = state;
+            end
+            if nargout || nargin < 2
+                out = curState;
             end
         end
 

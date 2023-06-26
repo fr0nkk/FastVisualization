@@ -1,0 +1,5 @@
+function varargout = fvhold(varargin)
+%FVHOLD Shortcut to the current fvFigure's hold function
+a = gcfv;
+[varargout{1:nargout}] = a.hold(varargin{:});
+end

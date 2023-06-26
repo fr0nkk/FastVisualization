@@ -105,6 +105,9 @@ classdef fvPrimitive < fvDrawable
         end
 
         function set.Coord(obj,v)
+            if width(v) > 3
+                error('Coords must be [N x 3] or [N x 2]')
+            end
             temp2 = obj.UpdateOnCleanup;
             obj.Coord = v;
             obj.needRecalc = 1;
@@ -195,6 +198,9 @@ classdef fvPrimitive < fvDrawable
             xyz = obj.Coord;
             if width(xyz) < 3
                 xyz(:,end+1:3) = 0;
+            end
+            if ~isfloat(xyz)
+                xyz = single(xyz);
             end
         end
 

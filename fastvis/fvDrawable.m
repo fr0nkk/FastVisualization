@@ -53,7 +53,7 @@ classdef (Abstract) fvDrawable < fvChild
         end
 
         function m = full_model(obj)
-            m = obj.parent.full_model * obj.model_fcn(obj.model);
+            m = obj.model_fcn(obj.parent.full_model * obj.model);
         end
 
         function set.model_fcn(obj,f)

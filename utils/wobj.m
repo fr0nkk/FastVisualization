@@ -1,6 +1,7 @@
 classdef wobj < handle
 
     properties(SetAccess = protected)
+        source
         object          % string array
         group           % string array
         material        % string array
@@ -13,12 +14,10 @@ classdef wobj < handle
     
     methods
         function obj = wobj(filename)
-
-            % if nargin < 2, triangulateFlag = false; end
-            
-            [type,str] = iReadTypeTextLines(filename);
-            
-            % obj = struct;
+            fn = which(filename);
+            if isempty(fn), fn = filename; end
+            obj.source = fn;
+            [type,str] = iReadTypeTextLines(obj.source);
             
             o_x = find(type == "o");
             g_x = find(type == "g");
@@ -29,14 +28,17 @@ classdef wobj < handle
             obj.object = str(o_x);
             
             
-            d = fileparts(filename);
+            d = fileparts(obj.source);
             m_str = str(type == "mtllib");
             if ~isempty(m_str)
                 obj.material = iReadMtl(fullfile(d,m_str));
+                [~,m_i] = ismember(str(m_x),[obj.material.name]');
             else
-                obj.material = struct('name',{string.empty});
+                obj.material = struct.empty;
+                m_i = [];
             end
-            [~,m_i] = ismember(str(m_x),[obj.material.name]');
+            m_i = int32(m_i);
+            
             s_i = str(s_x);
             
             s_x = [1 ; s_x];
@@ -73,19 +75,20 @@ classdef wobj < handle
                 fc{i,4} = s_i(iFindId(s_x,f_i));
                 
                 f = iLines2Mat(str(f_x(i,1):f_x(i,2)),inf);
-                f(f.strlength == 0) = "//";
+                tf = ~f.contains("/");
+                f(tf) = f(tf).append("//");
                 k = f.count("/") == 1;
                 f(k) = f(k).append("/");
                 f = int32(f.split("/",3).double);
                 o = v_s(iFindId(v_x(:,2),f_i))+1;
                 fc{i,5} = iApplyOffset(f(:,:,1),o);
             
-                if ~isempty(vt_x) && ~all(f(:,:,2)==0,'all')
+                if ~isempty(vt_x)% && ~all(f(:,:,2)==0,'all')
                     o = vt_s(iFindId(vt_x(:,2),f_i))+1;
                     fc{i,6} = iApplyOffset(f(:,:,2),o);
                 end
             
-                if ~isempty(vn_x) && ~all(f(:,:,3)==0,'all')
+                if ~isempty(vn_x)% && ~all(f(:,:,3)==0,'all')
                     o = vn_s(iFindId(vn_x(:,2),f_i))+1;
                     fc{i,7} = iApplyOffset(f(:,:,3),o);
                 end
@@ -95,6 +98,7 @@ classdef wobj < handle
 
             fc = [{'object','group','material','smooth','vertices','texture_coords','normals','count'} ; num2cell(fc,1)];
             obj.faces = struct(fc{:});
+            clear fc
             
             l_x = iExtents(type == "l");
             if isempty(l_x), return, end
@@ -124,6 +128,58 @@ classdef wobj < handle
             vc = @(x) vertcat(x{:});
             obj.lines = struct('g',vc(l_g),'o',vc(l_o),'v',vc(l_v));
         end
+
+        function [tri,xyz,texCoord,normals,materials,vertex_material] = getDrawData(obj)
+            fv = cellfun(@trifan,{obj.faces.vertices},'uni',0);
+            h = cellfun(@height,fv);
+            fv = vertcat(fv{:});
+            tf = ~any(fv==0,2);
+            fv = fv(tf,:);
+            
+            fn = cellfun(@trifan,{obj.faces.normals},'uni',0);
+            fn = vertcat(fn{:});
+            if ~isempty(fn), fn = fn(tf,:); end
+            fn(fn==0) = 1;
+            
+            ft = cellfun(@trifan,{obj.faces.texture_coords},'uni',0);
+            ft = vertcat(ft{:});
+            if ~isempty(ft), ft = ft(tf,:); end
+            ft(ft==0) = 1;
+            
+            fm = repmat(repelem([obj.faces.material],1,h)',1,3);
+            if ~isempty(fm), fm = fm(tf,:); end
+            
+            w = [width(obj.vertices) width(obj.normals) width(obj.texture_coords) width(fm)/3];
+            
+            V = [obj.vertices(fv,:) obj.normals(fn,:) obj.texture_coords(ft,:) single(fm(:))];
+            [uv,~,tri] = unique(V,'rows');
+            tri = reshape(tri,[],3);
+            
+            uv = mat2cell(uv,height(uv),w);
+            [xyz, normals, texCoord, vertex_material] = uv{:};
+            
+            materials = cell(numel(obj.material),1);
+            d0 = fileparts(obj.source);
+            for i=1:numel(obj.material)
+                m = obj.material(i);
+                if isfield(m,'map_Kd') && ~isempty(m.map_Kd)
+                    col = fullfile(d0,m.map_Kd);
+                else
+                    col = m.Kd.split(" ",2).double;
+                end
+                if isfield(m,'map_d') && ~isempty(m.map_d)
+                    a = imread(fullfile(d0,m.map_d));
+                    a = single(a) ./ 255;
+                    a = mean(a,3);
+                elseif isfield(m,'d')
+                    a = m.d.double;
+                else
+                    a = 1;
+                end
+                materials{i} = fvMaterial(col,a);
+            end
+            materials = vertcat(materials{:});
+        end
     end
 end
 
@@ -133,7 +189,7 @@ function [i,n] = iExtents(tf)
 end
 
 function str = iLines2Mat(str,maxDim2)
-    if isempty(str), return, end
+    if isempty(str), str = string.empty; return, end
     ns = str.count(" ");
     ms = max(ns);
     if ms+1 > maxDim2

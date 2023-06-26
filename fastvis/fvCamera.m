@@ -147,8 +147,8 @@ classdef fvCamera < handle
         
         function [MP,MV] = PrepareDraw(obj)
             camDist = -obj.viewParamsInternal.T(3);
-            obj.projParamsInternal.near = clamp(camDist/10,1e-3,1);
-            obj.projParamsInternal.far = clamp(camDist*10,100,1e6);
+            obj.projParamsInternal.near = camDist/10;
+            obj.projParamsInternal.far = camDist*100;
             MP = obj.MProj;
             MV = obj.MView;
         end
