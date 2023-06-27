@@ -10,8 +10,10 @@ classdef fvFigure < JChildParent
         Camera
         type = 'auto'; % auto, 2D or 3D
         model = eye(4)
+    end
 
-        % fvfig fvFigure
+    properties(Transient)
+        Title
     end
 
     properties(Hidden)
@@ -259,6 +261,14 @@ classdef fvFigure < JChildParent
 
         function EndTempHold(obj)
             obj.holdStack = max(0,obj.holdStack - 1);
+        end
+
+        function t = get.Title(obj)
+            t = obj.parent.parent.title;
+        end
+
+        function set.Title(obj,t)
+            obj.parent.parent.title = t;
         end
 
         function delete(obj)

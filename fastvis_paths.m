@@ -5,8 +5,8 @@ if nargin < 1, addFlag = true; end
 
 pathList = {
     'fastvis'
-    'examples'
     'utils'
+    'obj'
     fullfile('utils','java')
     };
 

@@ -1,37 +1,89 @@
-classdef fvText < fvText3
+classdef fvText < fvPrimitive & fvConstantSize
 
     properties
-        CutoffDist = inf
-        FontSize = 14;
+        Text
+        Font
+        hAlign % left right center
+        vAlign % top bottom center
+    end
+
+    properties(Hidden)
+        ConstSizeIsNormal = true;
     end
 
     methods
         function obj = fvText(varargin)
             [parent,args,t] = fvFigure.ParseInit(varargin{:});
-            obj = obj@fvText3(parent,args{:});
-            obj.model_fcn = @obj.ModelFcn;
+            p = inputParser;
+            p.addOptional('str','Fast Visualization',@ischar);
+            p.addOptional('sz',20);
+            p.addOptional('font','Arial',@ischar);
+            p.addOptional('hAlign','left',@ischar);
+            p.addOptional('vAlign','bottom',@ischar);
+            p.parse(args{:});
+
+            str = p.Results.str;
+            font = p.Results.font;
+            hAlign = p.Results.hAlign;
+            vAlign = p.Results.vAlign;
+
+            [xyz,ind] = fvText.makeShape(str,1,font,hAlign,vAlign);
+
+            obj@fvPrimitive(parent,'GL_TRIANGLES',xyz,[1 1 0],[],ind);
+            obj = obj@fvConstantSize(p.Results.sz);
+
+            obj.isInit = false;
+
+            obj.Text = str;
+            obj.Font = font;
+            obj.hAlign = hAlign;
+            obj.vAlign = vAlign;
+
+            obj.isInit = true;
         end
 
-        function set.CutoffDist(obj,v)
-            obj.CutoffDist = v;
-            obj.Update;
+        function set.Text(obj,v)
+            if strcmp(v,obj.Text), return, end
+            obj.Text = v;
+            obj.UpdateShape;
         end
 
-        function set.FontSize(obj,sz)
-            obj.FontSize = sz;
-            obj.Update;
+        function set.Font(obj,v)
+            obj.Font = v;
+            obj.UpdateShape;
         end
 
-        function m = ModelFcn(obj,m)
-            C = obj.fvfig.Camera;
-            p = mapply([0 0 0],m);
-            d = min(sqrt(sum((C.getCamPos - p).^2)),obj.CutoffDist);
-            s = mean(C.projParams.size);
-            [~,MT] = mdecompose(m); % discard rotation and scale
-            MS = MScale3D(obj.FontSize);
-            m = MT * MS * MRot3D(-C.viewParams.R,1) * MScale3D(d./s);
+        function set.hAlign(obj,v)
+            obj.hAlign = v;
+            obj.UpdateShape;
+        end
+
+        function set.vAlign(obj,v)
+            obj.vAlign = v;
+            obj.UpdateShape;
+        end
+
+        function UpdateShape(obj)
+            if ~obj.isInit, return, end
+            t = obj.UpdateOnCleanup;
+            [xyz,ind] = obj.makeShape(obj.Text,1,obj.Font,obj.hAlign,obj.vAlign);
+            obj.Coord = xyz;
+            obj.Index = ind;
         end
     end
 
+    methods(Static)
+        function [xyz,ind] = makeShape(str,sz,font,hAlign,vAlign)
+            shp = str2shape(str,sz,font,hAlign,vAlign,6);
+            if ~shp.NumRegions
+                xyz = [nan nan];
+                ind = 1;
+            else
+                tri = shp.triangulation;
+                xyz = tri.Points;
+                ind = tri.ConnectivityList;
+            end
+        end
+    end
 end
 
