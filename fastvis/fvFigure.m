@@ -45,16 +45,18 @@ classdef fvFigure < JChildParent
     end
     
     methods
-        function obj = fvFigure(canvas,msaaSamples)
-            if nargin < 2, msaaSamples = 4; end
+        function obj = fvFigure(camera,msaaSamples,canvas)
+            if nargin < 1 || isempty(camera), camera = fvCamera; end
+            if nargin < 2 || isempty(msaaSamples), msaaSamples = 4; end
             % obj.fvfig = obj;
-            obj.Camera = fvCamera;
+            obj.Camera = camera;
             obj.ctrl = fvController;
-            if nargin < 1 || isempty(canvas)
+            if nargin < 3 || isempty(canvas)
                 canvas = GLCanvas('GL4',0);
                 parent = JFrame(mfilename);
                 parent.add(canvas);
             end
+            
             canvas.addChild(obj);
             obj.ctrl.setGLCanvas(obj.parent);
             obj.parent.Init(obj,msaaSamples);
@@ -141,7 +143,7 @@ classdef fvFigure < JChildParent
             temp = onCleanup(@obj.EndPauseUpdate);
         end
 
-        function out = hold(obj,state)
+        function out = fvhold(obj,state)
             curState = obj.isHold;
             if nargin >= 2
                 obj.isHold = state;

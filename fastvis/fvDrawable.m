@@ -1,13 +1,11 @@
 classdef (Abstract) fvDrawable < fvChild
-    %GLAXESPRIMITIVE Summary of this class goes here
-    %   Detailed explanation goes here
+    %FVDRAWABLE base drawable class
 
     properties(SetObservable)
         model = eye(4)
         alpha = 1;
         visible = true;
         clickable = true;
-        model_fcn = @(m) m; % function to apply to the model
     end
 
     properties(Abstract,Hidden,SetAccess=protected)
@@ -53,15 +51,7 @@ classdef (Abstract) fvDrawable < fvChild
         end
 
         function m = full_model(obj)
-            m = obj.model_fcn(obj.parent.full_model * obj.model);
-        end
-
-        function set.model_fcn(obj,f)
-            if ~isa(f,'function_handle')
-                error('model_fcn must be a function_handle');
-            end
-            obj.model_fcn = f;
-            obj.Update;
+            m = obj.ModelFcn(obj.parent.full_model * obj.model);
         end
 
         function bbox = get.BoundingBox(obj)
@@ -91,6 +81,11 @@ classdef (Abstract) fvDrawable < fvChild
             obj.BoundingBox = [];
         end
 
+    end
+
+    methods(Access=protected)
+        function m = ModelFcn(obj,m)
+        end
     end
 end
 

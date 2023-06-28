@@ -1,4 +1,5 @@
 classdef fvPointcloud < fvPrimitive
+%FVPOINTCLOUD view a pointcloud in fast vis
 
     properties(Transient)
         pointSizeType = 'pixel' % 'pixel' or 'unit'
@@ -10,7 +11,7 @@ classdef fvPointcloud < fvPrimitive
     methods
         function obj = fvPointcloud(varargin)
             [ax,args,t] = fvFigure.ParseInit(varargin{:});
-
+            
             p = inputParser;
             p.addOptional('xyz',[]);
             p.addOptional('col',[]);

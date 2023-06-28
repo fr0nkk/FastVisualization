@@ -1,0 +1,80 @@
+{
+    "_schemaVersion": "1.0.0",
+    "fvFigure":
+    {
+        "inputs":
+        [
+            {"name":"Camera",  "kind":"positional", "type":[["fvCamera"],["@(args) isempty(args)"]]},
+            {"name":"MSAA",  "kind":"positional", "type":[["integer","scalar"],["@(args) isempty(args)"]]},
+            {"name":"Canvas",  "kind":"positional", "type":["GLCanvas"]}
+        ]
+    },
+
+    "fvhold":
+    {
+        "inputs":
+        [
+            {"name":"fvfig", "kind":"ordered", "type":"fvFigure"},
+            {"name":"options", "kind":"positional", "type":["char", "choices={'on','off'}"]}
+        ]
+    },
+
+    "fvPointcloud":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Coords",  "kind":"positional", "type":["numeric"]},
+            {"name":"Colors",  "kind":"positional", "type":["numeric"]},
+            {"name":"Indices",  "kind":"positional", "type":["numeric"]}
+        ]
+    },
+
+    "fvLine":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Coords",  "kind":"positional", "type":["numeric"]},
+            {"name":"Colors",  "kind":"positional", "type":["numeric"]},
+            {"name":"Indices",  "kind":"positional", "type":["numeric"]},
+            {"name":"LineWidth",  "kind":"positional", "type":["numeric"]}
+        ]
+    },
+
+    "fvMesh":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Triangles",  "kind":"positional", "type":["numeric"]},
+            {"name":"Coords",  "kind":"positional", "type":["numeric"]},
+            {"name":"Colors",  "kind":"positional", "type":["numeric"]},
+            {"name":"Normals",  "kind":"positional", "type":["numeric"]},
+            {"name":"Materials",  "kind":"positional", "type":[["fvMaterial"],["cell"]]},
+            {"name":"MaterialIndex",  "kind":"positional", "type":["numeric"]},
+            {"name":"AutoCalcNormals",  "kind":"namevalue", "type":["logical","scalar"]}
+        ]
+    },
+
+    "fvImage":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Image",  "kind":"positional", "type":[["numeric"],["matlabpathfile=*.jpg,*.png"]]}
+        ]
+    },
+
+    "fvText":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Text",  "kind":"positional", "type":["@(x) isscalartext(x)"]},
+            {"name":"Size",  "kind":"positional", "type":["numeric"]},
+            {"name":"Font",  "kind":"positional", "type":["char"]},
+            {"name":"todo",  "kind":"positional", "type":["numeric"]}
+        ]
+    }
+}

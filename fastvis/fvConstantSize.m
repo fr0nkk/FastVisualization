@@ -5,10 +5,6 @@ classdef(Abstract) fvConstantSize < handle
         CutoffDist = inf; % in world unit
     end
 
-    properties(Abstract)
-        model_fcn
-    end
-
     properties(Abstract,Hidden)
         ConstSizeIsNormal
     end
@@ -23,7 +19,6 @@ classdef(Abstract) fvConstantSize < handle
             if nargin < 2, CutoffDist = inf; end
             obj.ConstantSize = ConstantSize;
             obj.CutoffDist = CutoffDist;
-            obj.model_fcn = @obj.ModelFcn;
         end
 
         function set.ConstantSize(obj,sz)
@@ -35,8 +30,10 @@ classdef(Abstract) fvConstantSize < handle
             obj.CutoffDist = d;
             obj.Update;
         end
+    end
 
-        function m = ModelFcn(obj,m)
+    methods(Access=protected)
+        function m = ConstSizeModelFcn(obj,m)
             if ~obj.ConstantSize(1), return, end
             C = obj.fvfig.Camera;
             [~,m] = mdecompose(m); % discard rotation and scale

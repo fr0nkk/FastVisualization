@@ -1,16 +1,20 @@
 classdef fvImage < fvPrimitive
-    %GLPOINTCLOUD Summary of this class goes here
-    %   Detailed explanation goes here
-    properties
+    %FVIMAGE Show image in fvFigure
+    
+    properties(Transient)
         ImageSource
+    end
+
+    properties(SetAccess = protected)
+        ImageSize
     end
     
     methods
         function obj = fvImage(varargin)
-            [ax,args,t] = fvFigure.ParseInit(varargin{:});
+            [parent,args,t] = fvFigure.ParseInit(varargin{:});
 
             p = inputParser;
-            p.addOptional('img',[]);
+            p.addOptional('img',[],@(x) isscalartext(x) || isnumeric(x));
             p.parse(args{:});
 
             img = p.Results.img;
@@ -19,8 +23,12 @@ classdef fvImage < fvPrimitive
             end
 
             attr = [0 0;1 0;0 1;1 1];
-            mtl = fvMaterial(img);
-            obj@fvPrimitive(ax,'GL_TRIANGLE_STRIP',attr,attr,[],[],mtl);
+            mtl = fvMaterial(0);
+            obj@fvPrimitive(parent,'GL_TRIANGLE_STRIP',attr,attr,[],[],mtl);
+            obj.ImageSource = img;
+            if ~obj.fvfig.isHold
+                obj.ZoomTo;
+            end
         end
 
         function src = get.ImageSource(obj)
@@ -29,6 +37,19 @@ classdef fvImage < fvPrimitive
 
         function set.ImageSource(obj,img)
             obj.Material.color = img;
+            if isscalartext(img)
+                info = imfinfo(img);
+                sz = [info.Height info.Width];
+            else
+                sz = size(img,[1 2]);
+            end
+            obj.ImageSize = sz;
+        end
+    end
+    methods(Access = protected)
+
+        function m = ModelFcn(obj,m)
+            m = m * MScale3D([fliplr(obj.ImageSize) 1]);
         end
         
     end

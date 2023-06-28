@@ -3,7 +3,7 @@ classdef fvLine < fvPrimitive
     %   Detailed explanation goes here
 
     properties
-        width
+        LineWidth
     end
     
     methods
@@ -31,18 +31,18 @@ classdef fvLine < fvPrimitive
             end
             
             obj@fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind);
-            obj.width = p.Results.width;
+            obj.LineWidth = p.Results.width;
         end
 
-        function set.width(obj,w)
-            obj.width = w;
+        function set.LineWidth(obj,w)
+            obj.LineWidth = w;
             obj.Update;
         end
     end
     methods(Access=protected)
         
         function DrawFcn(obj,V)
-            obj.glDrawable.gl.glLineWidth(obj.width);
+            obj.glDrawable.gl.glLineWidth(obj.LineWidth);
             obj.DrawFcn@fvPrimitive(V);
         end
         

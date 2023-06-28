@@ -15,7 +15,7 @@ classdef fvText < fvPrimitive & fvConstantSize
         function obj = fvText(varargin)
             [parent,args,t] = fvFigure.ParseInit(varargin{:});
             p = inputParser;
-            p.addOptional('str','Fast Visualization',@ischar);
+            p.addOptional('str','Fast Visualization',@isscalartext);
             p.addOptional('sz',20);
             p.addOptional('font','Arial',@ischar);
             p.addOptional('hAlign','left',@ischar);
@@ -27,7 +27,7 @@ classdef fvText < fvPrimitive & fvConstantSize
             hAlign = p.Results.hAlign;
             vAlign = p.Results.vAlign;
 
-            [xyz,ind] = fvText.makeShape(str,1,font,hAlign,vAlign);
+            [xyz,ind] = fvText.makeShape(char(str),1,font,hAlign,vAlign);
 
             obj@fvPrimitive(parent,'GL_TRIANGLES',xyz,[1 1 0],[],ind);
             obj = obj@fvConstantSize(p.Results.sz);
@@ -40,11 +40,17 @@ classdef fvText < fvPrimitive & fvConstantSize
             obj.vAlign = vAlign;
 
             obj.isInit = true;
+            if ~obj.fvfig.isHold
+                obj.ZoomTo;
+            end
         end
 
         function set.Text(obj,v)
             if strcmp(v,obj.Text), return, end
-            obj.Text = v;
+            if ~isscalartext(v)
+                error('Text must be scalar string or char')
+            end
+            obj.Text = char(v);
             obj.UpdateShape;
         end
 
@@ -69,6 +75,12 @@ classdef fvText < fvPrimitive & fvConstantSize
             [xyz,ind] = obj.makeShape(obj.Text,1,obj.Font,obj.hAlign,obj.vAlign);
             obj.Coord = xyz;
             obj.Index = ind;
+        end
+    end
+    
+    methods(Access=protected)
+        function m = ModelFcn(obj,m)
+            m = obj.ConstSizeModelFcn(m);
         end
     end
 

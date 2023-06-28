@@ -52,7 +52,10 @@ classdef fvMaterialCache < handle
             if obj.texNeedRecalc(k)
                 m = obj.mtl(k);
                 if isscalartext(m.color)
-                    img = imread(m.color);
+                    [img,cmap] = imread(m.color);
+                    if ~isempty(cmap)
+                        img = ind2rgb(img,cmap);
+                    end
                 else
                     img = m.color;
                 end

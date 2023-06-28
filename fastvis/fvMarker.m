@@ -21,5 +21,11 @@ classdef fvMarker < fvLine & fvConstantSize
             
         end
     end
+    
+    methods(Access=protected)
+        function m = ModelFcn(obj,m)
+            m = obj.ConstSizeModelFcn(m);
+        end
+    end
 end
 
