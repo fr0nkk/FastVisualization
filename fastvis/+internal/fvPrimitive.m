@@ -1,6 +1,5 @@
-classdef fvPrimitive < fvDrawable
-    %GLPOINTCLOUD Summary of this class goes here
-    %   Detailed explanation goes here
+classdef fvPrimitive < internal.fvDrawable
+%FVPRIMITIVE
     
     properties(Transient,SetObservable)
         Coord % vertex coords
@@ -66,7 +65,7 @@ classdef fvPrimitive < fvDrawable
     methods
 
         function obj = fvPrimitive(parent,prim_type,coords,color,normals,prim_index,material,material_index)
-            obj@fvDrawable(parent);
+            obj@internal.fvDrawable(parent);
             if nargin < 4, color = []; end
             if nargin < 5, normals = []; end
             if nargin < 6, prim_index = []; end
@@ -83,7 +82,8 @@ classdef fvPrimitive < fvDrawable
             
             [gl,gltemp] = obj.getContext;
 
-            obj.glProg = obj.fvfig.ctrl.InitProg('fvprim');
+            shdPath = execdir(fileparts(mfilename('fullpath')),'shaders','fvprim');
+            obj.glProg = obj.fvfig.ctrl.InitProg(shdPath);
             obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.primitive_type,uint32(0),{obj.glCoords obj.glNormals obj.glColor});
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
             obj.glDrawable.uni.pointMask = 0;
@@ -169,12 +169,12 @@ classdef fvPrimitive < fvDrawable
             if isempty(n)
                 n = [0 0 1];
             end
-            n = var2gl(n,3,obj.Count)';
+            n = internal.var2gl(n,3,obj.Count)';
         end
 
         function c = get.glColor(obj)
             c = obj.validColor;
-            c = var2gl(c,3,obj.Count)';
+            c = internal.var2gl(c,3,obj.Count)';
         end
 
         function ind = get.validPrimIdx(obj)
@@ -277,12 +277,12 @@ classdef fvPrimitive < fvDrawable
 
     methods(Access=protected)
 
-        function DrawFcn(obj,V)
+        function DrawFcn(obj,V,M)
             if obj.needRecalc
                 obj.RecalcBatch;
                 obj.needRecalc = 0;
             end
-            MO = obj.full_model * obj.model_offset;
+            MO = M * obj.model_offset;
             uni = obj.glDrawable.program.uniforms;
             uni.modelview.Set(V * MO);
             

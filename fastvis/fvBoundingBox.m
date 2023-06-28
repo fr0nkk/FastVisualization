@@ -1,9 +1,9 @@
-classdef fvBoundingBox < fvLine
-    %GLPOINTCLOUD Summary of this class goes here
-    %   Detailed explanation goes here
+classdef fvBoundingBox < handle
+%FVBOUNDINGBOX 
 
     properties(Access = private)
         el
+        L
     end
 
     methods
@@ -20,29 +20,32 @@ classdef fvBoundingBox < fvLine
             if isempty(col)
                 col = [1 1 0];
             end
+
+            
             bbox = p.Results.bbox;
 
-            obj@fvLine(parent,xyz,col,ind,1);
-            obj.primitive_type = 'GL_LINES';
-            obj.clickable = 0;
+            obj.L = fvLine(parent,xyz,col,ind,1);
+            obj.L.primitive_type = 'GL_LINES';
+            obj.L.clickable = 0;
             
-            if isa(parent,'fvPrimitive')
+            if isa(parent,'internal.fvPrimitive')
                 obj.el = [
                     addlistener(parent,'CoordsChanged',@(src,evt) obj.UpdateModel)
                     addlistener(parent,'PrimitiveIndexChanged',@(src,evt) obj.UpdateModel)
                     ];
                 obj.UpdateModel;
             elseif ~isempty(bbox)
-                obj.model = obj.BBoxModel(bbox);
+                obj.L.model = obj.BBoxModel(bbox);
             end
         end
 
         function UpdateModel(obj)
-            obj.model = obj.BBoxModel(obj.parent.BoundingBox);
+            obj.L.model = obj.BBoxModel(obj.L.parent.BoundingBox);
         end
 
         function delete(obj)
             delete(obj.el);
+            delete(obj.L);
         end
     end
 

@@ -1,4 +1,5 @@
 classdef fvCamera < handle
+%FVCAMERA
 
     properties(Transient)
         viewParams % struct: O = origin, R = rotation, T = translation

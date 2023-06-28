@@ -17,9 +17,9 @@ classdef fvFigure < JChildParent
     end
 
     properties(Hidden)
-        ctrl fvController
+        ctrl internal.fvController
         lastFocus
-        mtlCache fvMaterialCache
+        mtlCache internal.fvMaterialCache
     end
 
     events
@@ -48,9 +48,9 @@ classdef fvFigure < JChildParent
         function obj = fvFigure(camera,msaaSamples,canvas)
             if nargin < 1 || isempty(camera), camera = fvCamera; end
             if nargin < 2 || isempty(msaaSamples), msaaSamples = 4; end
-            % obj.fvfig = obj;
+            
             obj.Camera = camera;
-            obj.ctrl = fvController;
+            obj.ctrl = internal.fvController;
             if nargin < 3 || isempty(canvas)
                 canvas = GLCanvas('GL4',0);
                 parent = JFrame(mfilename);
@@ -60,7 +60,7 @@ classdef fvFigure < JChildParent
             canvas.addChild(obj);
             obj.ctrl.setGLCanvas(obj.parent);
             obj.parent.Init(obj,msaaSamples);
-            obj.mtlCache = fvMaterialCache(obj);
+            obj.mtlCache = internal.fvMaterialCache(obj);
             obj.MouseEvents = JMouseEvents(obj.parent);
             obj.camMouseListeners = [
                 addlistener(obj.MouseEvents,'Pressed',@obj.MousePressedCallback)
@@ -273,8 +273,18 @@ classdef fvFigure < JChildParent
             obj.parent.parent.title = t;
         end
 
+        function C = validateChilds(obj,desiredClass)
+            C = obj.validateChilds@JChildParent;
+            if nargin >= 2
+                C = C(cellfun(@(c) isa(c,desiredClass),C));
+            end
+        end
+
         function delete(obj)
             obj.Instances('rm',obj);
+            if isvalid(obj.parent.parent)
+                delete(obj.parent.parent);
+            end
         end
         
     end
@@ -297,7 +307,7 @@ classdef fvFigure < JChildParent
                 if isa(parent,mfilename)
                     ax = parent;
                     i = 2;
-                elseif isa(parent,'fvDrawable')
+                elseif isa(parent,'internal.fvDrawable')
                     ax = parent.fvfig;
                     i = 2;
                 else

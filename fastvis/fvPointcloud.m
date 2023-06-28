@@ -1,11 +1,11 @@
-classdef fvPointcloud < fvPrimitive
+classdef fvPointcloud < internal.fvPrimitive
 %FVPOINTCLOUD view a pointcloud in fast vis
 
     properties(Transient)
-        pointSizeType = 'pixel' % 'pixel' or 'unit'
-        pointSize = 2
-        minPointSize = 1; % in pixels, minimum size when in unit type
-        pointShape = '.' % '.' 'o' or alpha matrix [m x n]
+        PointUnit = 'pixel' % 'pixel' or 'world'
+        PointSize = 2
+        MinPointSize = 1; % in pixels, minimum size when in world unit
+        PointShape = 'square' % 'square' 'round' or alpha matrix [m x n]
     end
 
     methods
@@ -28,28 +28,28 @@ classdef fvPointcloud < fvPrimitive
                 end
             end
 
-            obj@fvPrimitive(ax,'GL_POINTS',xyz,col);
+            obj@internal.fvPrimitive(ax,'GL_POINTS',xyz,col);
         end
 
-        function set.pointSizeType(obj,t)
-            if ~ismember(t,{'pixel','unit'})
-                error('pointSizeType must be ''pixel'' or ''unit''');
+        function set.PointUnit(obj,t)
+            if ~ismember(t,{'pixel','world'})
+                error('pointSizeType must be ''pixel'' or ''world''');
             end
-            obj.pointSizeType = t;
+            obj.PointUnit = t;
             obj.Update;
         end
 
-        function set.pointSize(obj,v)
-            obj.pointSize = v;
+        function set.PointSize(obj,v)
+            obj.PointSize = v;
             obj.Update;
         end
 
-        function set.pointShape(obj,val)
+        function set.PointShape(obj,val)
             if isscalartext(val)
                 switch val
-                    case '.'
+                    case 'square'
                         pointMask = 0;
-                    case 'o'
+                    case 'round'
                         pointMask = 1;
                     otherwise
                         error('invalid value: %s',val)
@@ -57,7 +57,7 @@ classdef fvPointcloud < fvPrimitive
             else
                 [gl,temp] = obj.getContext;
                 if isinteger(val)
-                    val = val./intmax(class(val));
+                    val = single(val)./single(intmax(class(val)));
                 end
                 if size(val,3) > 1
                     val = mean(val,3);
@@ -72,17 +72,17 @@ classdef fvPointcloud < fvPrimitive
     end
     
     methods(Access=protected)
-        function DrawFcn(obj,V)
-            ptsz = obj.pointSize;
+        function DrawFcn(obj,V,M)
+            ptsz = obj.PointSize;
             u = obj.glDrawable.program.uniforms;
-            if strcmp(obj.pointSizeType,'pixel')
+            if strcmp(obj.PointUnit,'pixel')
                 ptsz = -ptsz;
             else
-                u.minPointSize.Set(obj.minPointSize);
+                u.minPointSize.Set(obj.MinPointSize);
             end
             u.pointSize.Set(ptsz);
             
-            obj.DrawFcn@fvPrimitive(V);
+            obj.DrawFcn@internal.fvPrimitive(V,M);
         end
     end
 end

@@ -1,14 +1,10 @@
-classdef fvText < fvPrimitive & fvConstantSize
+classdef fvText < internal.fvPrimitive
 
     properties
         Text
         Font
-        hAlign % left right center
-        vAlign % top bottom center
-    end
-
-    properties(Hidden)
-        ConstSizeIsNormal = true;
+        HorizontalAlignment % left right center
+        VerticalAlignment % top bottom center
     end
 
     methods
@@ -29,17 +25,19 @@ classdef fvText < fvPrimitive & fvConstantSize
 
             [xyz,ind] = fvText.makeShape(char(str),1,font,hAlign,vAlign);
 
-            obj@fvPrimitive(parent,'GL_TRIANGLES',xyz,[1 1 0],[],ind);
-            obj = obj@fvConstantSize(p.Results.sz);
+            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',xyz,[1 1 0],[],ind);
+            obj.ConstantSizeIsNormal = true;
+            obj.ConstantSize = p.Results.sz;
 
             obj.isInit = false;
 
             obj.Text = str;
             obj.Font = font;
-            obj.hAlign = hAlign;
-            obj.vAlign = vAlign;
+            obj.HorizontalAlignment = hAlign;
+            obj.VerticalAlignment = vAlign;
 
             obj.isInit = true;
+
             if ~obj.fvfig.isHold
                 obj.ZoomTo;
             end
@@ -59,28 +57,22 @@ classdef fvText < fvPrimitive & fvConstantSize
             obj.UpdateShape;
         end
 
-        function set.hAlign(obj,v)
-            obj.hAlign = v;
+        function set.HorizontalAlignment(obj,v)
+            obj.HorizontalAlignment = v;
             obj.UpdateShape;
         end
 
-        function set.vAlign(obj,v)
-            obj.vAlign = v;
+        function set.VerticalAlignment(obj,v)
+            obj.VerticalAlignment = v;
             obj.UpdateShape;
         end
 
         function UpdateShape(obj)
             if ~obj.isInit, return, end
             t = obj.UpdateOnCleanup;
-            [xyz,ind] = obj.makeShape(obj.Text,1,obj.Font,obj.hAlign,obj.vAlign);
+            [xyz,ind] = obj.makeShape(obj.Text,1,obj.Font,obj.HorizontalAlignment,obj.VerticalAlignment);
             obj.Coord = xyz;
             obj.Index = ind;
-        end
-    end
-    
-    methods(Access=protected)
-        function m = ModelFcn(obj,m)
-            m = obj.ConstSizeModelFcn(m);
         end
     end
 

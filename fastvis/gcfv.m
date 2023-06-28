@@ -1,9 +1,10 @@
-function ax = gcfv
+function fvfig = gcfv
+%GCFV Get the current fvFigure
 
-ax = fvFigure.Instances('latest');
+fvfig = fvFigure.Instances('latest');
 
-if isempty(ax)
-    ax = fvFigure;
+if isempty(fvfig)
+    fvfig = fvFigure;
 end
 
 end

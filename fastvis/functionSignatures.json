@@ -79,6 +79,26 @@
         ]
     },
 
+    "fvMarker":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Position",  "kind":"positional", "type":["numeric"]},
+            {"name":"Size",  "kind":"positional", "type":["numeric"]}
+        ]
+    },
+
+    "fvAxes":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Position",  "kind":"positional", "type":["numeric"]},
+            {"name":"Size",  "kind":"positional", "type":["numeric"]}
+        ]
+    },
+
     "fvMaterial":
     {
         "inputs":
@@ -87,16 +107,6 @@
             {"name":"Alpha",  "kind":"positional", "type":[["numeric"],["matlabpathfile=*.jpg,*.png"]]},
             {"name":"Specular",  "kind":"positional", "type":["numeric"]},
             {"name":"Shininess",  "kind":"positional", "type":["numeric"]}
-        ]
-    },
-
-    "fvMarker":
-    {
-        "inputs":
-        [
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
-            {"name":"Position",  "kind":"positional", "type":["numeric"]},
-            {"name":"Size",  "kind":"positional", "type":["numeric"]}
         ]
     }
 }

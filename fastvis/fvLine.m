@@ -1,6 +1,5 @@
-classdef fvLine < fvPrimitive
-    %GLPOINTCLOUD Summary of this class goes here
-    %   Detailed explanation goes here
+classdef fvLine < internal.fvPrimitive
+%FVLINE view lines in fast vis
 
     properties
         LineWidth
@@ -30,7 +29,7 @@ classdef fvLine < fvPrimitive
                 end
             end
             
-            obj@fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind);
+            obj@internal.fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind);
             obj.LineWidth = p.Results.width;
         end
 
@@ -41,9 +40,9 @@ classdef fvLine < fvPrimitive
     end
     methods(Access=protected)
         
-        function DrawFcn(obj,V)
+        function DrawFcn(obj,V,M)
             obj.glDrawable.gl.glLineWidth(obj.LineWidth);
-            obj.DrawFcn@fvPrimitive(V);
+            obj.DrawFcn@internal.fvPrimitive(V,M);
         end
         
     end

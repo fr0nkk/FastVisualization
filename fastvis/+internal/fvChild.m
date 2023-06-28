@@ -1,6 +1,5 @@
 classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
-    %GLAXESPRIMITIVE Summary of this class goes here
-    %   Detailed explanation goes here
+%FVCHILD
     
     properties(Transient,Hidden)
         isInit = false
@@ -32,6 +31,13 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
                 temp = obj.fvfig.UpdateOnCleanup;
             else
                 temp = [];
+            end
+        end
+
+        function C = validateChilds(obj,desiredClass)
+            C = obj.validateChilds@JChildParent;
+            if nargin >= 2
+                C = C(cellfun(@(c) isa(c,desiredClass),C));
             end
         end
 

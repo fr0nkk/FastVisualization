@@ -1,5 +1,6 @@
 classdef fvController< glmu.GLController
-    
+%FVCONTROLLER
+
     properties
         fvfig
         figSize
@@ -99,12 +100,12 @@ classdef fvController< glmu.GLController
             [MProj,MView] = obj.fvfig.Camera.PrepareDraw;
             structfun(@(s) PrepareProgs(s,MProj,obj.fvfig.Camera.getCamPos),obj.progs);
 
-            C = obj.fvfig.validateChilds;
-
+            C = obj.fvfig.validateChilds('internal.fvDrawable');
+            M = obj.fvfig.full_model;
             j = 0;
             drawnPrims = {};
             for i=1:numel(C)
-                [drawnPrims,j] = C{i}.Draw(gl,MView,j,drawnPrims);
+                [drawnPrims,j] = C{i}.Draw(gl,MView,M,j,drawnPrims);
             end
             obj.drawnPrimitives = drawnPrims;
             obj.lastViewParams = obj.fvfig.Camera.viewParams;
@@ -168,10 +169,11 @@ classdef fvController< glmu.GLController
 %             id
         end
 
-        function prog = InitProg(obj,name)
+        function prog = InitProg(obj,fullname)
+            [~,name] = fileparts(fullname);
             if ~isfield(obj.progs,name)
-                shdDir = execdir(fileparts(mfilename('fullpath')),'shaders');
-                obj.progs.(name) = glmu.Program(fullfile(shdDir,'fvprim'));
+                % shdDir = execdir(fileparts(mfilename('fullpath')),'shaders');
+                obj.progs.(name) = glmu.Program(fullname);
             end
             prog = obj.progs.(name);
         end

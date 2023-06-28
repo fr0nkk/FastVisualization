@@ -1,15 +1,23 @@
-classdef fvAxes < fvLine
-    methods
-        function obj = fvAxes(varargin)
-            [parent,~,t] = fvFigure.ParseInit(varargin{:});
+function A = fvAxes(varargin)
+%FVAXES view axes in fast vis
 
-            xyz = [0 0 0; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1];
-            col = [1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1; 0 0 1];
+[parent,args,t] = fvFigure.ParseInit(varargin{:});
+p = inputParser;
+p.addOptional('pos',[0 0 0]);
+p.addOptional('sz',100);
+p.parse(args{:});
 
-            obj@fvLine(parent,xyz,col);
-            obj.primitive_type = 'GL_LINES';
-            obj.clickable = 0;
-        end
-    end
+xyz = [0 0 0; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1];
+col = [1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1; 0 0 1];
+
+A = fvLine(parent,xyz,col);
+A.primitive_type = 'GL_LINES';
+A.ConstantSize = p.Results.sz;
+A.clickable = 0;
+A.model = MTrans3D(p.Results.pos);
+if ~A.fvfig.isHold
+    A.ZoomTo;
+end
+
 end
 
