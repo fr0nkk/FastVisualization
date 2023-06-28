@@ -71,10 +71,32 @@
         "inputs":
         [
             {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
-            {"name":"Text",  "kind":"positional", "type":["@(x) isscalartext(x)"]},
+            {"name":"Text",  "kind":"positional", "type":[["char"],["@(x) isscalartext(x)"]]},
             {"name":"Size",  "kind":"positional", "type":["numeric"]},
             {"name":"Font",  "kind":"positional", "type":["char"]},
-            {"name":"todo",  "kind":"positional", "type":["numeric"]}
+            {"name":"HorizontalAlignment", "kind":"positional", "type":["char", "choices={'Left','Right','Center'}"]},
+            {"name":"VerticalAlignment", "kind":"positional", "type":["char", "choices={'Bottom','Top','Center'}"]}
+        ]
+    },
+
+    "fvMaterial":
+    {
+        "inputs":
+        [
+            {"name":"Color",  "kind":"positional", "type":[["numeric"],["matlabpathfile=*.jpg,*.png"]]},
+            {"name":"Alpha",  "kind":"positional", "type":[["numeric"],["matlabpathfile=*.jpg,*.png"]]},
+            {"name":"Specular",  "kind":"positional", "type":["numeric"]},
+            {"name":"Shininess",  "kind":"positional", "type":["numeric"]}
+        ]
+    },
+
+    "fvMarker":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"Position",  "kind":"positional", "type":["numeric"]},
+            {"name":"Size",  "kind":"positional", "type":["numeric"]}
         ]
     }
 }

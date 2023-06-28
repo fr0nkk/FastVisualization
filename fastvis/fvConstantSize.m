@@ -40,7 +40,12 @@ classdef(Abstract) fvConstantSize < handle
             p = mapply([0 0 0],m);
             d = min(sqrt(sum((C.getCamPos - p).^2)),obj.CutoffDist);
             s = mean(C.projParams.size);
-            m = m * MRot3D(-C.viewParams.R.*obj.ConstSizeIsNormal,1) * MScale3D(d./s.*obj.ConstantSize);
+            if obj.ConstSizeIsNormal
+                R = MRot3D(-C.viewParams.R.*obj.ConstSizeIsNormal,1);
+            else
+                R = eye(4);
+            end
+            m = m * R * MScale3D(d./s.*obj.ConstantSize);
         end
     end
 end

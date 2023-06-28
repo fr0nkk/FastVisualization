@@ -50,33 +50,13 @@ classdef fvMaterialCache < handle
     methods(Access=private)
         function t = getTex(obj,k)
             if obj.texNeedRecalc(k)
+                maxSize = 2048;
                 m = obj.mtl(k);
-                if isscalartext(m.color)
-                    [img,cmap] = imread(m.color);
-                    if ~isempty(cmap)
-                        img = ind2rgb(img,cmap);
-                    end
-                else
-                    img = m.color;
-                end
-                sz = size(img,[1 2]);
-                if max(sz) > 2048
-                    sz(sz > 2048) = 2048;
-                    img = imresize(img,sz);
-                end
-                if ~isfloat(img)
-                    img = single(img)./single(intmax(class(img)));
-                end
-                if ~isa(img,'single')
-                    img = single(img);
-                end
-                if size(img,3) == 1
-                    img = repmat(img,1,1,3);
-                end
+                img = obj.getimg(m.color,maxSize,3);
                 if size(img,3) < 4
                     img(:,:,4) = 1;
                 end
-                img(:,:,4) = img(:,:,4) .* m.alpha;
+                img(:,:,4) = img(:,:,4) .* obj.getimg(m.alpha,maxSize,1,size(img,[1 2]));
                 if isempty(obj.tex{k})
                     obj.tex{k} = glmu.Texture(7,'GL_TEXTURE_2D',img,'GL_RGBA',0);
                 else
@@ -85,6 +65,41 @@ classdef fvMaterialCache < handle
                 obj.texNeedRecalc(k) = 0;
             end
             t = obj.tex{k};
+        end
+    end
+    methods(Static)
+        function img = getimg(color,maxsz,expectedChannels,expectedSize)
+            if isscalartext(color)
+                [img,cmap] = imread(color);
+                if ~isempty(cmap)
+                    img = ind2rgb(img,cmap);
+                end
+            else
+                img = color;
+            end
+
+            sz = size(img,[1 2]);
+            if max(sz) > maxsz
+                sz(sz > maxsz) = maxsz;
+                img = imresize(img,sz);
+            end
+            if ~isfloat(img)
+                    img = single(img)./single(intmax(class(img)));
+            end
+            if ~isa(img,'single')
+                img = single(img);
+            end
+            c = size(img,3);
+            if c == 1 && expectedChannels > 1
+                img = repmat(img,1,1,expectedChannels);
+            elseif c > 1 && expectedChannels == 1
+                img = mean(img,3);
+            end
+
+            if nargin >= 4
+                img = imresize(img,expectedSize);
+            end
+
         end
     end
 end

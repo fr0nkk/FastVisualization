@@ -18,7 +18,9 @@ classdef fvMarker < fvLine & fvConstantSize
             obj@fvConstantSize(p.Results.sz)
             obj.clickable = 0;
             obj.model = MTrans3D(p.Results.pos);
-            
+            if ~obj.fvfig.isHold
+                obj.ZoomTo;
+            end
         end
     end
     
