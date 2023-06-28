@@ -11,7 +11,7 @@ classdef fvImage < internal.fvPrimitive
     
     methods
         function obj = fvImage(varargin)
-            [parent,args,t] = fvFigure.ParseInit(varargin{:});
+            [parent,args,t] = internal.fvParse(varargin{:});
 
             p = inputParser;
             p.addOptional('img',[],@(x) isscalartext(x) || isnumeric(x));

@@ -72,7 +72,7 @@ classdef fvFigure < JChildParent
             obj.parent.setCallback('KeyPressed',@(src,evt) notify(obj,'KeyTyped',javaevent(evt)));
             obj.parent.parent.setCallback('FocusGained',@obj.FocusGainedCallback);
             obj.FocusGainedCallback;
-            obj.Instances('add',obj);
+            internal.fvInstances('add',obj);
         end
 
         function id = NextColorId(obj)
@@ -285,7 +285,7 @@ classdef fvFigure < JChildParent
         end
 
         function delete(obj)
-            obj.Instances('rm',obj);
+            internal.fvInstances('rm',obj);
             jf = obj.parent.parent;
             if isvalid(jf) && isa(jf,'JFrame')
                 delete(jf);
@@ -302,54 +302,6 @@ classdef fvFigure < JChildParent
         function EndPauseUpdate(obj)
             obj.pauseStack = max(0,obj.pauseStack - 1);
             obj.Update;
-        end
-    end
-
-    methods(Static)
-        function [parent,args,temp] = ParseInit(varargin)
-            if nargin > 0
-                parent = varargin{1};
-                if isa(parent,mfilename)
-                    ax = parent;
-                    i = 2;
-                elseif isa(parent,'internal.fvDrawable')
-                    ax = parent.fvfig;
-                    i = 2;
-                else
-                    ax = gcfv;
-                    parent = ax;
-                    i = 1;
-                end
-            else
-                ax = gcfv;
-                parent = ax;
-                i = 1;
-            end
-            args = varargin(i:end);
-            if nargout >= 3
-                temp = ax.UpdateOnCleanup;
-            end
-        end
-
-        function ax = Instances(action,ax)
-            if nargin < 1, action = 'all'; end
-            persistent p
-            if ~isa(p,mfilename)
-                p = fvFigure.empty;
-            end
-            switch action
-                case 'add'
-                    p(end+1) = ax;
-                case 'rm'
-                    p(p==ax) = [];
-                case 'latest'
-                    [~,i] = max([p.lastFocus]);
-                    ax = p(i);
-                case 'all'
-                    ax = p;
-                otherwise
-                    error('invalid action')
-            end
         end
     end
 end

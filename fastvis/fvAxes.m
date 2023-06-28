@@ -1,7 +1,7 @@
 function A = fvAxes(varargin)
 %FVAXES view axes in fast vis
 
-[parent,args,t] = fvFigure.ParseInit(varargin{:});
+[parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;
 p.addOptional('pos',[0 0 0]);
 p.addOptional('sz',100);

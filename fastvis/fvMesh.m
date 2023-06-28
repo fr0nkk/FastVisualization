@@ -1,7 +1,7 @@
 function M = fvMesh(varargin)
 %FVMESH
 
-[parent,args,t] = fvFigure.ParseInit(varargin{:});
+[parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;
 p.addOptional('tri',[]);
 p.addOptional('xyz',[]);

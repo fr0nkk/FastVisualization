@@ -1,7 +1,7 @@
 function M = fvMarker(varargin)
 %FVMARKER view a marker in fast vis
 
-[parent,args,t] = fvFigure.ParseInit(varargin{:});
+[parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;
 p.addOptional('pos',[0 0 0]);
 p.addOptional('sz',20);

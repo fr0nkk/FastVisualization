@@ -15,7 +15,16 @@
         "inputs":
         [
             {"name":"fvfig", "kind":"ordered", "type":"fvFigure"},
-            {"name":"options", "kind":"positional", "type":["char", "choices={'on','off'}"]}
+            {"name":"options", "kind":"flag", "type":["char", "choices={'on','off'}"]}
+        ]
+    },
+
+    "fvclose":
+    {
+        "inputs":
+        [
+            {"name":"fvfig", "kind":"ordered", "type":"fvFigure"},
+            {"name":"options", "kind":"flag", "type":["char", "choices={'all'}"]}
         ]
     },
 

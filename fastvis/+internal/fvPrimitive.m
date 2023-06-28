@@ -8,7 +8,7 @@ classdef fvPrimitive < internal.fvDrawable
         Index % index data
         MaterialIndex % vertex material index
         Material % glMaterial array
-        Colormap = jet(256) % [N x 3] array
+        Colormap = 'jet' % [N x 3] array OR char of colormap name
         Light = struct('Offset',[0 0 0],'Ambient',[0.2 0.2 0.2],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
         Cull = 0;
 

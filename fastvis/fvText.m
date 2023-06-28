@@ -9,7 +9,7 @@ classdef fvText < internal.fvPrimitive
 
     methods
         function obj = fvText(varargin)
-            [parent,args,t] = fvFigure.ParseInit(varargin{:});
+            [parent,args,t] = internal.fvParse(varargin{:});
             p = inputParser;
             p.addOptional('str','Fast Visualization',@isscalartext);
             p.addOptional('sz',20);

@@ -10,7 +10,7 @@ classdef fvPointcloud < internal.fvPrimitive
 
     methods
         function obj = fvPointcloud(varargin)
-            [ax,args,t] = fvFigure.ParseInit(varargin{:});
+            [ax,args,t] = internal.fvParse(varargin{:});
             
             p = inputParser;
             p.addOptional('xyz',[]);

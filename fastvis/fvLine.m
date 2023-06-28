@@ -7,7 +7,7 @@ classdef fvLine < internal.fvPrimitive
     
     methods
         function obj = fvLine(varargin)
-            [ax,args,t] = fvFigure.ParseInit(varargin{:});
+            [ax,args,t] = internal.fvParse(varargin{:});
 
             p = inputParser;
             p.addOptional('xyz',[]);

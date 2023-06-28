@@ -8,7 +8,7 @@ classdef fvBoundingBox < handle
 
     methods
         function obj = fvBoundingBox(varargin)
-            [parent,args,t] = fvFigure.ParseInit(varargin{:});
+            [parent,args,t] = internal.fvParse(varargin{:});
             p = inputParser;
             p.addOptional('bbox',[]);
             p.addOptional('col',[]);
