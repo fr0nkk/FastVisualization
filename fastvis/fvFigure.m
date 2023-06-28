@@ -280,10 +280,15 @@ classdef fvFigure < JChildParent
             end
         end
 
+        function fvclose(obj)
+            obj.delete;
+        end
+
         function delete(obj)
             obj.Instances('rm',obj);
-            if isvalid(obj.parent.parent)
-                delete(obj.parent.parent);
+            jf = obj.parent.parent;
+            if isvalid(jf) && isa(jf,'JFrame')
+                delete(jf);
             end
         end
         
