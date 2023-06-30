@@ -2,22 +2,22 @@ classdef (Abstract) fvDrawable < internal.fvChild
 %FVDRAWABLE base drawable class
 
     properties(SetObservable)
-        model = eye(4)
-        alpha = 1;
-        visible = true;
-        clickable = true;
+        Model = eye(4)
+        Alpha = 1;
+        Visible = true;
+        Clickable = true;
 
         ConstantSize = false;
-        CutoffDist = inf; % in world unit, when ConstantSize is set
-        ConstantSizeIsNormal = false;
+        ConstantSizeCutoff = inf; % in world unit, when ConstantSize is set
+        ConstantSizeNormal = false;
+        CallbackFcn
     end
 
-    properties(Abstract,Hidden,SetAccess=protected)
+    properties(Abstract,Access=protected)
         glProg glmu.Program
     end
 
-    properties(Transient)
-        CallbackFcn
+    properties(SetAccess = protected)
         BoundingBox
     end
 
@@ -31,26 +31,26 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj@internal.fvChild(ax);
         end
 
-        function set.model(obj,m)
+        function set.Model(obj,m)
             if ~isnumeric(m) || ~ismatrix(m) || ~all(size(m) == 4) || ~isfloat(m)
                 error('model must be 4x4 single or double matrix')
             end
-            obj.model = double(m);
+            obj.Model = double(m);
             obj.Update;
         end
 
-        function set.clickable(obj,v)
-            obj.clickable = v;
+        function set.Clickable(obj,v)
+            obj.Clickable = v;
             obj.Update;
         end
 
-        function set.visible(obj,v)
-            obj.visible = v;
+        function set.Visible(obj,v)
+            obj.Visible = v;
             obj.Update;
         end
 
-        function set.alpha(obj,v)
-            obj.alpha = v;
+        function set.Alpha(obj,v)
+            obj.Alpha = v;
             obj.Update;
         end
 
@@ -59,8 +59,8 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj.Update;
         end
 
-        function set.CutoffDist(obj,d)
-            obj.CutoffDist = d;
+        function set.ConstantSizeCutoff(obj,d)
+            obj.ConstantSizeCutoff = d;
             obj.Update;
         end
 
@@ -69,15 +69,15 @@ classdef (Abstract) fvDrawable < internal.fvChild
         end
 
         function m = relative_model(obj,m)
-            if nargin < 1, m = eye(4); end
-            m = obj.ModelFcn(m * obj.model);
+            if nargin < 2, m = eye(4); end
+            m = obj.ModelFcn(m * obj.Model);
             if ~obj.ConstantSize(1), return, end
             C = obj.fvfig.Camera;
             [~,m] = mdecompose(m); % discard rotation and scale
             p = mapply([0 0 0],m);
-            d = min(sqrt(sum((C.getCamPos - p).^2)),obj.CutoffDist);
+            d = min(sqrt(sum((C.getCamPos - p).^2)),obj.ConstantSizeCutoff);
             s = mean(C.projParams.size);
-            if obj.ConstantSizeIsNormal
+            if obj.ConstantSizeNormal
                 R = MRot3D(-C.viewParams.R,1);
             else
                 R = eye(4);
@@ -97,10 +97,10 @@ classdef (Abstract) fvDrawable < internal.fvChild
         end
 
         function [drawnPrims,j] = Draw(obj,gl,V,M,j,drawnPrims)
-            if ~obj.visible, return, end
+            if ~obj.Visible, return, end
             j = j+1;
             obj.glProg.uniforms.drawid.Set(j);
-            tf = obj.clickable;
+            tf = obj.Clickable;
             gl.glColorMaski(2,tf,tf,tf,tf);
             gl.glColorMaski(3,tf,tf,tf,tf);
             M = obj.relative_model(M);

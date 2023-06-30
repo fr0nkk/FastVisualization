@@ -5,18 +5,14 @@ function M = fvMarker(varargin)
 p = inputParser;
 p.addOptional('pos',[0 0 0]);
 p.addOptional('sz',20);
+p.KeepUnmatched = true;
 p.parse(args{:});
 
 xyz = [-1 0 0; 1 0 0 ; 0 -1 0 ; 0 1 0 ; 0 0 -1 ; 0 0 1]./2;
 col = [1 1 0];
+sz = p.Results.sz;
+mdl = MTrans3D(p.Results.pos);
 
-M = fvLine(parent,xyz,col);
-M.primitive_type = 'GL_LINES';
-M.ConstantSize = p.Results.sz;
-M.clickable = 0;
-M.model = MTrans3D(p.Results.pos);
-if ~M.fvfig.isHold
-    M.ZoomTo;
-end
+M = fvLine(parent,xyz,col,'LineStrip',0,'Clickable',0,'ConstantSize',sz,'Model',mdl,p.Unmatched);
 
 end

@@ -54,7 +54,7 @@ classdef fvCamera < handle
         function ZoomBBox(obj,bbox)
             if nargin < 2 || isempty(bbox), bbox = [-0.5 -0.5 -0.5 1 1 1]; end
             obj.viewParamsInternal.O(:) = bbox(1:3)+bbox(4:6)./2;
-            obj.viewParamsInternal.T(:) = [0 0 -max(max(bbox(4:6))*1.5,0.01)];
+            obj.viewParamsInternal.T(:) = [0 0 -max(max(bbox(4:6))*1.5,0.1)];
             notify(obj,'Moved');
         end
 

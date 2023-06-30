@@ -31,13 +31,14 @@
     "fvPointcloud":
     {
         "inputs":
-        [
+        [ 
             {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
             {"name":"Coords",  "kind":"positional", "type":["numeric"]},
             {"name":"Colors",  "kind":"positional", "type":["numeric"]},
-            {"name":"Indices",  "kind":"positional", "type":["numeric"]}
-        ]
-    },
+            {"name":"Indices",  "kind":"positional", "type":["numeric"]},
+            {"name":"opts", "kind":"properties", "type":["internal.fcnsign.fvptcloud"]}
+        ] 
+    }, 
 
     "fvLine":
     {
@@ -47,7 +48,7 @@
             {"name":"Coords",  "kind":"positional", "type":["numeric"]},
             {"name":"Colors",  "kind":"positional", "type":["numeric"]},
             {"name":"Indices",  "kind":"positional", "type":["numeric"]},
-            {"name":"LineWidth",  "kind":"positional", "type":["numeric"]}
+            {"name":"opts", "kind":"properties", "type":["internal.fcnsign.fvline"]}
         ]
     },
 
@@ -62,7 +63,8 @@
             {"name":"Normals",  "kind":"positional", "type":["numeric"]},
             {"name":"Materials",  "kind":"positional", "type":[["fvMaterial"],["cell"]]},
             {"name":"MaterialIndex",  "kind":"positional", "type":["numeric"]},
-            {"name":"AutoCalcNormals",  "kind":"namevalue", "type":["logical","scalar"]}
+            {"name":"AutoCalcNormals",  "kind":"namevalue", "type":["logical","scalar"]},
+            {"name":"opts", "kind":"properties", "type":["internal.fcnsign.fvmesh"]}
         ]
     },
 

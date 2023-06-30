@@ -2,7 +2,11 @@ classdef fvLine < internal.fvPrimitive
 %FVLINE view lines in fast vis
 
     properties
-        LineWidth
+        LineWidth = 1
+    end
+
+    properties(Transient)
+        LineStrip
     end
     
     methods
@@ -13,7 +17,7 @@ classdef fvLine < internal.fvPrimitive
             p.addOptional('xyz',[]);
             p.addOptional('col',[]);
             p.addOptional('ind',[]);
-            p.addOptional('width',1);
+            p.KeepUnmatched = true;
             p.parse(args{:});
 
             xyz = p.Results.xyz;
@@ -28,14 +32,27 @@ classdef fvLine < internal.fvPrimitive
                     col = rescale(xyz(:,3));
                 end
             end
-            
-            obj@internal.fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind);
-            obj.LineWidth = p.Results.width;
+
+            obj@internal.fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind,[],[],p.Unmatched);
         end
 
         function set.LineWidth(obj,w)
             obj.LineWidth = w;
             obj.Update;
+        end
+
+        function set.LineStrip(obj,tf)
+            tf = logical(tf);
+            if tf(1)
+                prim = 'GL_LINE_STRIP';
+            else
+                prim = 'GL_LINES';
+            end
+            obj.PrimitiveType = prim;
+        end
+
+        function tf = get.LineStrip(obj)
+            tf = strcmp(obj.PrimitiveType,'GL_LINE_STRIP');
         end
     end
     methods(Access=protected)

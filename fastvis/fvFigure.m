@@ -4,7 +4,7 @@ classdef fvFigure < JChildParent
         BackgroundColor = [0 0 0];
         Light = struct('Position',[0 0 1e5],'Ambient',[1 1 1],'Diffuse',[1 1 1],'Specular',[1 1 1]);
         isHold matlab.lang.OnOffSwitchState = false;
-        edl = 0.2;
+        edl = 0.1;
         edlWithBackground logical = false
         ColorOrder = lines(7);
         Camera

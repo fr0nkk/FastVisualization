@@ -11,32 +11,33 @@ classdef fvText < internal.fvPrimitive
         function obj = fvText(varargin)
             [parent,args,t] = internal.fvParse(varargin{:});
             p = inputParser;
-            p.addOptional('str','Fast Visualization',@isscalartext);
-            p.addOptional('sz',20);
-            p.addOptional('font','Arial',@ischar);
-            p.addOptional('hAlign','left',@ischar);
-            p.addOptional('vAlign','bottom',@ischar);
+            p.addRequired('Text',@isscalartext);
+            p.addParameter('Size',20,@isscalar);
+            p.addParameter('Font','Arial',@isscalartext);
+            p.addParameter('HorizontalAlignment','left',@(x) istextmember(x,{'left','right','center'}));
+            p.addParameter('VerticalAlignment','bottom',@(x) istextmember(x,{'bottom','top','center'}));
+            p.KeepUnmatched = true;
+            if ~mod(numel(args),2)
+                % if number of arguments is even, assume no str given
+                args = [{'Fast Visualization'} args];
+            end
             p.parse(args{:});
-
-            str = p.Results.str;
-            font = p.Results.font;
-            hAlign = p.Results.hAlign;
-            vAlign = p.Results.vAlign;
-
-            [xyz,ind] = fvText.makeShape(char(str),1,font,hAlign,vAlign);
-
-            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',xyz,[1 1 0],[],ind);
-            obj.ConstantSizeIsNormal = true;
-            obj.ConstantSize = p.Results.sz;
+            
+            sz = p.Results.Size;
+            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',[0 0 0],[1 1 0],[],nan,[],[],'ConstantSizeNormal',1,'ConstantSize',sz);
 
             obj.isInit = false;
 
-            obj.Text = str;
-            obj.Font = font;
-            obj.HorizontalAlignment = hAlign;
-            obj.VerticalAlignment = vAlign;
+            obj.Text = p.Results.Text;
+            obj.Font = p.Results.Font;
+            obj.HorizontalAlignment = p.Results.HorizontalAlignment;
+            obj.VerticalAlignment = p.Results.VerticalAlignment;
 
             obj.isInit = true;
+
+            obj.UpdateShape;
+
+            set(obj,p.Unmatched);
 
             if ~obj.fvfig.isHold
                 obj.ZoomTo;
@@ -89,5 +90,9 @@ classdef fvText < internal.fvPrimitive
             end
         end
     end
+end
+
+function tf = istextmember(x,opts)
+    tf = isscalartext(x) && ismember(lower(x),opts);
 end
 

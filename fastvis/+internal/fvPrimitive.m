@@ -8,14 +8,15 @@ classdef fvPrimitive < internal.fvDrawable
         Index % index data
         MaterialIndex % vertex material index
         Material % glMaterial array
-        Colormap = 'jet' % [N x 3] array OR char of colormap name
+        PrimitiveType
+
+        Colormap = 'jet' % [N x 3] array | char | function_handle
         Light = struct('Offset',[0 0 0],'Ambient',[0.2 0.2 0.2],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
         Cull = 0;
 
         % for use with normals and no material
         Specular = [0.5 0.5 0.5];
         Shininess = 10;
-        primitive_type
     end
 
     events
@@ -36,12 +37,15 @@ classdef fvPrimitive < internal.fvDrawable
         worldBBox
     end
 
-    properties(Hidden,SetAccess=protected)
+    properties(Hidden,SetAccess=private)
         model_offset
         glDrawable
-        glProg
         batch_mtl_idx
         batch_mtl
+    end
+
+    properties(Access=protected)
+        glProg
     end
 
     properties(Dependent,Access=protected)
@@ -64,7 +68,7 @@ classdef fvPrimitive < internal.fvDrawable
     
     methods
 
-        function obj = fvPrimitive(parent,prim_type,coords,color,normals,prim_index,material,material_index)
+        function obj = fvPrimitive(parent,prim_type,coords,color,normals,prim_index,material,material_index,varargin)
             obj@internal.fvDrawable(parent);
             if nargin < 4, color = []; end
             if nargin < 5, normals = []; end
@@ -75,7 +79,7 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Normal = normals;
             obj.Color = color;
             obj.Index = prim_index;
-            obj.primitive_type = prim_type;
+            obj.PrimitiveType = prim_type;
             obj.Material = material;
             obj.MaterialIndex = material_index;
             obj.auto_color_id = obj.fvfig.NextColorId;
@@ -84,7 +88,7 @@ classdef fvPrimitive < internal.fvDrawable
 
             shdPath = execdir(fileparts(mfilename('fullpath')),'shaders','fvprim');
             obj.glProg = obj.fvfig.ctrl.InitProg(shdPath);
-            obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.primitive_type,uint32(0),{obj.glCoords obj.glNormals obj.glColor});
+            obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.PrimitiveType,uint32(0),{obj.glCoords obj.glNormals obj.glColor});
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
             obj.glDrawable.uni.pointMask = 0;
 
@@ -94,6 +98,13 @@ classdef fvPrimitive < internal.fvDrawable
                 parent.addChild(obj);
             end
             obj.isInit = true;
+
+            if nargin >= 9
+                set(obj,varargin{:});
+                if isa(obj.parent,'fvFigure') && ~obj.fvfig.isHold
+                    obj.ZoomTo;
+                end
+            end
         end
 
         function n = get.Count(obj)
@@ -112,6 +123,9 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Coord = v;
             obj.needRecalc = 1;
             obj.InvalidateBBox;
+            if height(obj.Color) == 1
+                obj.Color = obj.Color;
+            end
             notify(obj,'CoordsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
@@ -129,7 +143,7 @@ classdef fvPrimitive < internal.fvDrawable
 
         function set.Colormap(obj,cmap)
             sz = size(cmap);
-            if ~isscalartext(cmap) && (sz(1) < 1 || sz(2) ~= 3 || numel(sz) > 2)
+            if ~isscalartext(cmap) && (sz(1) < 1 || sz(2) ~= 3 || numel(sz) > 2) && ~isa(cmap,'function_handle')
                 error('Colormap must be [m x 3] where m is at least 1')
             end
             obj.Colormap = cmap;
@@ -150,8 +164,8 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Update;
         end
 
-        function set.primitive_type(obj,p)
-            obj.primitive_type = p;
+        function set.PrimitiveType(obj,p)
+            obj.PrimitiveType = p;
             if ~obj.isInit, return, end
             obj.glDrawable.primitive = obj.glDrawable.Const(p);
             obj.Update;
@@ -209,8 +223,10 @@ classdef fvPrimitive < internal.fvDrawable
             if width(c) == 1
                 cmap = obj.Colormap;
                 if isscalartext(cmap)
-                    f = str2func(cmap);
-                    cmap = f(256);
+                    cmap = str2func(cmap);
+                end
+                if isa(cmap,'function_handle')
+                    cmap = cmap(256);
                 end
                 % colormap mode
                 h = height(cmap);
@@ -250,11 +266,16 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Update;
         end
 
-        function UpdateColor(obj)
-            notify(obj,'ColorChanged');
-            if ~obj.isInit, return, end
-            [gl,temp] = obj.getContext;
-            obj.glDrawable.array.EditBuffer({[] [] obj.glColor});
+        function set.Shininess(obj,s)
+            obj.Shininess = s;
+            obj.Update;
+        end
+
+        function set.Specular(obj,s)
+            if numel(s) == 1
+                s = [s s s];
+            end
+            obj.Specular = s;
             obj.Update;
         end
 
@@ -264,6 +285,11 @@ classdef fvPrimitive < internal.fvDrawable
 
         function bbox = get.worldBBox(obj)
             bbox = fvBoundingBox.coords2bbox(obj.worldCoords);
+        end
+
+        function AutoCalcNormals(obj)
+            T = triangulation(double(obj.validPrimIdx),double(obj.validCoords));
+            obj.Normal = T.vertexNormal;
         end
 
         function ZoomTo(obj)
@@ -286,7 +312,7 @@ classdef fvPrimitive < internal.fvDrawable
             uni = obj.glDrawable.program.uniforms;
             uni.modelview.Set(V * MO);
             
-            uni.alpha.Set(obj.alpha);
+            uni.alpha.Set(obj.Alpha);
             
             if isempty(obj.Normal)
                 uni.lighting.Set('none');
@@ -363,6 +389,20 @@ classdef fvPrimitive < internal.fvDrawable
             [gl,temp] = obj.getContext;
             obj.glDrawable.multi_uni{k} = obj.fvfig.mtlCache.UniStruct(src,1);
             obj.Update;
+        end
+
+        function UpdateColor(obj)
+            notify(obj,'ColorChanged');
+            if ~obj.isInit, return, end
+            [gl,temp] = obj.getContext;
+            obj.glDrawable.array.EditBuffer({[] [] obj.glColor});
+            obj.Update;
+        end
+    end
+
+    methods (Access = protected)
+        function propgrp = getPropertyGroups(~)
+            propgrp = matlab.mixin.util.PropertyGroup({'Specular'});
         end
     end
 

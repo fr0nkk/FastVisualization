@@ -15,6 +15,7 @@ classdef fvImage < internal.fvPrimitive
 
             p = inputParser;
             p.addOptional('img',[],@(x) isscalartext(x) || isnumeric(x));
+            p.KeepUnmatched = true;
             p.parse(args{:});
 
             img = p.Results.img;
@@ -26,6 +27,7 @@ classdef fvImage < internal.fvPrimitive
             mtl = fvMaterial(0);
             obj@internal.fvPrimitive(parent,'GL_TRIANGLE_STRIP',attr,attr,[],[],mtl);
             obj.ImageSource = img;
+            set(obj,p.Unmatched);
             if ~obj.fvfig.isHold
                 obj.ZoomTo;
             end

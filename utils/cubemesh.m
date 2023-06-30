@@ -1,4 +1,4 @@
-function [p,tri,quad,edge] = cubemesh()
+function [p,tri,quad,edge,line] = cubemesh()
 
 %      Y
 %      |
@@ -57,6 +57,8 @@ edge = [1 2
         2 6
         3 7
         4 8];
+
+line = [1 2 3 4 1 5 6 7 8 5 nan 2 6 nan 3 7 nan 4 8]';
 
 
 end

@@ -16,6 +16,7 @@ classdef fvPointcloud < internal.fvPrimitive
             p.addOptional('xyz',[]);
             p.addOptional('col',[]);
             p.addOptional('ind',[]);
+            p.KeepUnmatched = true;
             p.parse(args{:});
 
             xyz = p.Results.xyz;
@@ -28,7 +29,7 @@ classdef fvPointcloud < internal.fvPrimitive
                 end
             end
 
-            obj@internal.fvPrimitive(ax,'GL_POINTS',xyz,col);
+            obj@internal.fvPrimitive(ax,'GL_POINTS',xyz,col,[],[],[],[],p.Unmatched);
         end
 
         function set.PointUnit(obj,t)

@@ -10,6 +10,7 @@ p.addOptional('norm',[]);
 p.addOptional('mtl',[]);
 p.addOptional('mtl_idx',[]);
 p.addParameter('AutoCalcNormals',true);
+p.KeepUnmatched = true;
 p.parse(args{:});
 
 tri = p.Results.tri;
@@ -43,11 +44,11 @@ if any(tf)
 end
 
 n = p.Results.norm;
-if isempty(n) && p.Results.AutoCalcNormals
-    T = triangulation(double(tri),double(xyz));
-    n = T.vertexNormal;
-end
 
-M = internal.fvPrimitive(parent,'GL_TRIANGLES',xyz,col,n,tri,mtl,mtl_idx);
+M = internal.fvPrimitive(parent,'GL_TRIANGLES',xyz,col,n,tri,mtl,mtl_idx,p.Unmatched);
+
+if isempty(n) && p.Results.AutoCalcNormals
+    M.AutoCalcNormals;
+end
 
 end

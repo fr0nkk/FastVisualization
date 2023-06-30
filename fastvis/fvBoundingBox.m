@@ -14,24 +14,22 @@ classdef fvBoundingBox < handle
             p.addOptional('col',[]);
             p.parse(args{:});
 
-            [xyz,~,~,ind] = cubemesh;
+            [xyz,~,~,~,ind] = cubemesh;
 
             col = p.Results.col;
             if isempty(col)
                 col = [1 1 0];
             end
 
-            
             bbox = p.Results.bbox;
 
-            obj.L = fvLine(parent,xyz,col,ind,1);
-            obj.L.primitive_type = 'GL_LINES';
+            obj.L = fvLine(parent,xyz,col,ind);
             obj.L.clickable = 0;
             
-            if isa(parent,'internal.fvPrimitive')
+            if isa(bbox,'internal.fvDrawable')
                 obj.el = [
-                    addlistener(parent,'CoordsChanged',@(src,evt) obj.UpdateModel)
-                    addlistener(parent,'PrimitiveIndexChanged',@(src,evt) obj.UpdateModel)
+                    addlistener(bbox,'CoordsChanged',@(src,evt) obj.UpdateModel)
+                    addlistener(bbox,'PrimitiveIndexChanged',@(src,evt) obj.UpdateModel)
                     ];
                 obj.UpdateModel;
             elseif ~isempty(bbox)
