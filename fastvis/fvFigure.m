@@ -9,7 +9,7 @@ classdef fvFigure < JChildParent
         ColorOrder = lines(7);
         Camera
         type = 'auto'; % auto, 2D or 3D
-        model = eye(4)
+        Model = eye(4)
     end
 
     properties(Transient)
@@ -153,11 +153,23 @@ classdef fvFigure < JChildParent
             end
         end
 
+        function varargout = hold(obj,varargin)
+            [varargout{1:nargout}] = obj.fvhold(varargin{:});
+        end
+
+        function fvclear(obj)
+            cellfun(@delete,obj.child);
+        end
+
+        function clear(obj)
+            obj.fvclear;
+        end
+
         function set.BackgroundColor(obj,col)
             if numel(col) > 3 || ~isnumeric(col)
                 error('Background color must be numerical with a maximum of 3 values')
             end
-            col = var2gl(col(:)',3,1);
+            col = internal.var2gl(col(:)',3,1);
             obj.ctrl.clearColor = num2cell(col);
             obj.Update;
         end
@@ -217,6 +229,15 @@ classdef fvFigure < JChildParent
             end
         end
 
+        function img = Snapshot(obj)
+            img = obj.ctrl.Snapshot;
+            if nargout == 0
+                figure('Name','fvFigure Snapshot','NumberTitle','off');
+                imshow(img);
+                clear img
+            end
+        end
+
         function ResetCamera(obj)
             t = obj.UpdateOnCleanup;
             obj.Camera.viewParams.R = strcmpi(obj.validType,'3D') .* [-45 0 -45];
@@ -249,16 +270,16 @@ classdef fvFigure < JChildParent
             end
         end
 
-        function set.model(obj,m)
+        function set.Model(obj,m)
             if ~isnumeric(m) || ~ismatrix(m) || ~all(size(m) == 4) || ~isfloat(m)
                 error('model must be 4x4 single or double matrix')
             end
-            obj.model = double(m);
+            obj.Model = double(m);
             obj.Update;
         end
 
         function m = full_model(obj)
-            m = obj.model;
+            m = obj.Model;
         end
 
         function EndTempHold(obj)
@@ -282,6 +303,10 @@ classdef fvFigure < JChildParent
 
         function fvclose(obj)
             obj.delete;
+        end
+
+        function close(obj)
+            obj.fvclose;
         end
 
         function delete(obj)

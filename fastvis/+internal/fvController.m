@@ -169,10 +169,23 @@ classdef fvController< glmu.GLController
 %             id
         end
 
+        function img = Snapshot(obj)
+            [gl,temp] = obj.canvas.getContext;
+            obj.framebuffer.ReadFrom(1);
+            w = obj.canvas.java.getWidth;
+            h = obj.canvas.java.getHeight;
+            
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
+            b = javabuffer(zeros(3,w,h,'uint8'));
+            gl.glReadPixels(0,0,w,h,gl.GL_RGB, gl.GL_UNSIGNED_BYTE, b.p);
+            img = b.array;
+            img = permute(img,[2 3 1]);
+            img = rot90(img);
+        end
+
         function prog = InitProg(obj,fullname)
             [~,name] = fileparts(fullname);
             if ~isfield(obj.progs,name)
-                % shdDir = execdir(fileparts(mfilename('fullpath')),'shaders');
                 obj.progs.(name) = glmu.Program(fullname);
             end
             prog = obj.progs.(name);

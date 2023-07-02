@@ -75,7 +75,8 @@ classdef (Abstract) fvDrawable < internal.fvChild
             C = obj.fvfig.Camera;
             [~,m] = mdecompose(m); % discard rotation and scale
             p = mapply([0 0 0],m);
-            d = min(sqrt(sum((C.getCamPos - p).^2)),obj.ConstantSizeCutoff);
+
+            d = min(vecnorm(dot(C.getCamPos - p,C.getCamRay),2,2),obj.ConstantSizeCutoff);
             s = mean(C.projParams.size);
             if obj.ConstantSizeNormal
                 R = MRot3D(-C.viewParams.R,1);

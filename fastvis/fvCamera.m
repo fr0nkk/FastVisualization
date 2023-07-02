@@ -124,6 +124,10 @@ classdef fvCamera < handle
             p = mapply([0 0 0],obj.MView,1);
         end
 
+        function x = getCamRay(obj)
+            x = [0 0 1] * obj.MView(1:3,1:3);
+        end
+
         function p = get.viewParams(obj)
             p = obj.viewParamsInternal;
         end
