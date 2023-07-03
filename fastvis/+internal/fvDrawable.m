@@ -7,6 +7,8 @@ classdef (Abstract) fvDrawable < internal.fvChild
         Visible = true;
         Clickable = true;
 
+        Camera
+
         ConstantSize = false;
         ConstantSizeCutoff = inf; % in world unit, when ConstantSize is set
         ConstantSizeNormal = false;
@@ -29,6 +31,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
     methods
         function obj = fvDrawable(ax)
             obj@internal.fvChild(ax);
+            obj.Camera = obj.fvfig.Camera;
         end
 
         function set.Model(obj,m)
@@ -72,7 +75,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
             if nargin < 2, m = eye(4); end
             m = obj.ModelFcn(m * obj.Model);
             if ~obj.ConstantSize(1), return, end
-            C = obj.fvfig.Camera;
+            C = obj.Camera;
             [~,m] = mdecompose(m); % discard rotation and scale
             p = mapply([0 0 0],m);
 
@@ -97,20 +100,23 @@ classdef (Abstract) fvDrawable < internal.fvChild
             bbox = obj.BoundingBox;
         end
 
-        function [drawnPrims,j] = Draw(obj,gl,V,M,j,drawnPrims)
+        function [drawnPrims,j] = Draw(obj,gl,M,j,drawnPrims)
             if ~obj.Visible, return, end
             j = j+1;
-            obj.glProg.uniforms.drawid.Set(j);
+            u = obj.glProg.uniforms;
+            u.drawid.Set(j);
+            u.projection.Set(obj.Camera.MProj);
+            u.viewPos.Set(obj.Camera.getCamPos);
             tf = obj.Clickable;
             gl.glColorMaski(2,tf,tf,tf,tf);
             gl.glColorMaski(3,tf,tf,tf,tf);
             M = obj.relative_model(M);
-            obj.DrawFcn(V,M);
+            obj.DrawFcn(M);
             drawnPrims = [drawnPrims {obj}];
 
             C = obj.validateChilds('internal.fvDrawable');
             for i=1:numel(C)
-                [drawnPrims,j] = C{i}.Draw(gl,V,M,j,drawnPrims);
+                [drawnPrims,j] = C{i}.Draw(gl,M,j,drawnPrims);
             end
         end
 

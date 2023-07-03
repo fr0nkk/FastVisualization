@@ -135,6 +135,8 @@ classdef fvFigure < JChildParent
 
         function Update(obj)
             if ~isvalid(obj) || ~isvalid(obj.parent) || obj.pauseStack > 0, return, end
+            camDist = -obj.Camera.viewParams.T(3);
+            obj.Camera.SetNearFar(camDist/10,camDist*100);
             obj.parent.Update;
         end
 

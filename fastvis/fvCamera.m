@@ -12,6 +12,8 @@ classdef fvCamera < handle
         ZoomActive = true
         RotationActive = [true true] % xy
         PanActive = [true true] % xy
+
+        isPerspective = true % Perspective or Orthographic
     end
 
     events
@@ -21,10 +23,11 @@ classdef fvCamera < handle
     properties(SetAccess=private)
         MView % 4x4 matrix
         MProj % 4x4 matrix
+        % viewport_size = [500 500];
     end
 
     properties(Transient,Access=private)
-        viewParamsInternal = struct('O',[0 0 0],'R',[-45 0 -45],'T',[0 0 -1]);
+        viewParamsInternal = struct('O',[0 0 0],'R',[0 0 0],'T',[0 0 0]);
         projParamsInternal = struct('size',[500 500],'near',0.01,'far',100,'F',1);
         MProj_need_recalc = 1
         MView_need_recalc = 1
@@ -36,7 +39,11 @@ classdef fvCamera < handle
         function M = get.MProj(obj)
             if obj.MProj_need_recalc
                 p = obj.projParamsInternal;
-                obj.MProj = MProj3D('P',[[p.size./mean(p.size) p.F].*p.near p.far]);
+                if obj.isPerspective
+                    obj.MProj = MProj3D('P',[[p.size./mean(p.size) p.F].*p.near p.far]);
+                else
+                    obj.MProj = MProj3D('O',[p.size.*p.F p.near p.far]);
+                end
                 obj.MProj_need_recalc = 0;
             end
             M = obj.MProj;
@@ -55,6 +62,9 @@ classdef fvCamera < handle
             if nargin < 2 || isempty(bbox), bbox = [-0.5 -0.5 -0.5 1 1 1]; end
             obj.viewParamsInternal.O(:) = bbox(1:3)+bbox(4:6)./2;
             obj.viewParamsInternal.T(:) = [0 0 -max(max(bbox(4:6))*1.5,0.1)];
+            if ~obj.isPerspective
+                obj.projParamsInternal.F = -obj.viewParamsInternal.T(3) ./ mean(obj.projParamsInternal.size);
+            end
             notify(obj,'Moved');
         end
 
@@ -80,7 +90,11 @@ classdef fvCamera < handle
             if any(obj.PanActive) && buttonMask(1) && ~any(isnan(dcoords(1,:)))
                 s = obj.buttonPressState{1};
                 a = obj.PanSensitivity .* obj.PanActive;
-                k = -s.view.T(3) ./ (mean(s.proj.size).*s.proj.F) .* a;
+                if obj.isPerspective
+                    k = -s.view.T(3) ./ (mean(obj.projParamsInternal.size).*s.proj.F) .* a;
+                else
+                    k = s.proj.F .* a;
+                end
                 obj.viewParamsInternal.T([1 2]) = s.view.T([1 2]) + dcoords(1,:) .* k;
                 moved = true;
             end
@@ -100,7 +114,13 @@ classdef fvCamera < handle
         function ZoomAction(obj,qty,coords)
             if obj.ZoomActive
                 obj.SetOrigin(coords);
-                obj.viewParamsInternal.T = obj.viewParamsInternal.T .* (1 + (qty.*obj.ZoomSensitivity));
+                k = (1 + (qty.*obj.ZoomSensitivity));
+                if ~obj.isPerspective
+                    obj.projParamsInternal.F = obj.projParamsInternal.F .* k;
+                    obj.viewParamsInternal.T(1:2) = obj.viewParamsInternal.T(1:2) .* k;
+                else
+                    obj.viewParamsInternal.T = obj.viewParamsInternal.T .* k;
+                end
                 notify(obj,'Moved');
             end
         end
@@ -146,16 +166,25 @@ classdef fvCamera < handle
             notify(obj,'Moved');
         end
 
+        function set.isPerspective(obj,tf)
+            obj.isPerspective = tf;
+            if tf
+                obj.viewParamsInternal.T(3) = -obj.projParamsInternal.F .* mean(obj.projParamsInternal.size);
+                obj.projParamsInternal.F = 1;
+            else
+                obj.projParamsInternal.F = -obj.viewParamsInternal.T(3) ./ mean(obj.projParamsInternal.size);
+            end
+            obj.MProj_need_recalc = 1;
+            notify(obj,'Moved');
+        end
+
     end
 
     methods(Hidden)
-        
-        function [MP,MV] = PrepareDraw(obj)
-            camDist = -obj.viewParamsInternal.T(3);
-            obj.projParamsInternal.near = camDist/10;
-            obj.projParamsInternal.far = camDist*100;
-            MP = obj.MProj;
-            MV = obj.MView;
+
+        function SetNearFar(obj,near,far)
+            obj.projParamsInternal.near = near;
+            obj.projParamsInternal.far = far;
         end
 
         function Resize(obj,sz)

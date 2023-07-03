@@ -105,6 +105,7 @@ classdef fvPrimitive < internal.fvDrawable
                     obj.ZoomTo;
                 end
             end
+
         end
 
         function n = get.Count(obj)
@@ -293,7 +294,7 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function ZoomTo(obj)
-            obj.fvfig.Camera.ZoomBBox(obj.worldBBox);
+            obj.Camera.ZoomBBox(obj.worldBBox);
         end
 
         function delete(obj)
@@ -303,11 +304,12 @@ classdef fvPrimitive < internal.fvDrawable
 
     methods(Access=protected)
 
-        function DrawFcn(obj,V,M)
+        function DrawFcn(obj,M)
             if obj.needRecalc
                 obj.RecalcBatch;
                 obj.needRecalc = 0;
             end
+            V = obj.Camera.MView;
             MO = M * obj.model_offset;
             uni = obj.glDrawable.program.uniforms;
             uni.modelview.Set(V * MO);

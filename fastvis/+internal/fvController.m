@@ -96,16 +96,12 @@ classdef fvController< glmu.GLController
             gl.glColorMaski(2,1,1,1,1);
             gl.glColorMaski(3,1,1,1,1);
 
-
-            [MProj,MView] = obj.fvfig.Camera.PrepareDraw;
-            structfun(@(s) PrepareProgs(s,MProj,obj.fvfig.Camera.getCamPos),obj.progs);
-
             C = obj.fvfig.validateChilds('internal.fvDrawable');
             M = obj.fvfig.full_model;
             j = 0;
             drawnPrims = {};
             for i=1:numel(C)
-                [drawnPrims,j] = C{i}.Draw(gl,MView,M,j,drawnPrims);
+                [drawnPrims,j] = C{i}.Draw(gl,M,j,drawnPrims);
             end
             obj.drawnPrimitives = drawnPrims;
             obj.lastViewParams = obj.fvfig.Camera.viewParams;
@@ -222,6 +218,5 @@ classdef fvController< glmu.GLController
 end
 
 function PrepareProgs(prog,MProj,viewPos)
-    prog.uniforms.projection.Set(MProj);
     prog.uniforms.viewPos.Set(viewPos);
 end
