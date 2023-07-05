@@ -28,7 +28,7 @@ classdef fvPrimitive < internal.fvDrawable
 
     properties(Dependent)
         Count
-        ndims
+        % ndims
     end
 
     properties(Dependent,Hidden)
@@ -112,7 +112,7 @@ classdef fvPrimitive < internal.fvDrawable
             n = height(obj.Coord);
         end
 
-        function d = get.ndims(obj)
+        function d = ndims(obj)
             d = width(obj.Coord);
         end
 

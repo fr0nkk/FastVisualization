@@ -73,7 +73,7 @@ classdef fvPointcloud < internal.fvPrimitive
     end
     
     methods(Access=protected)
-        function DrawFcn(obj,V,M)
+        function DrawFcn(obj,V)
             ptsz = obj.PointSize;
             u = obj.glDrawable.program.uniforms;
             if strcmp(obj.PointUnit,'pixel')
@@ -83,7 +83,7 @@ classdef fvPointcloud < internal.fvPrimitive
             end
             u.pointSize.Set(ptsz);
             
-            obj.DrawFcn@internal.fvPrimitive(V,M);
+            obj.DrawFcn@internal.fvPrimitive(V);
         end
     end
 end

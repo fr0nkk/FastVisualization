@@ -23,22 +23,21 @@ classdef fvBoundingBox < handle
 
             bbox = p.Results.bbox;
 
-            obj.L = fvLine(parent,xyz,col,ind);
-            obj.L.clickable = 0;
+            obj.L = fvLine(parent,xyz,col,ind,'Clickable',0);
             
-            if isa(bbox,'internal.fvDrawable')
+            if isa(parent,'internal.fvDrawable')
                 obj.el = [
-                    addlistener(bbox,'CoordsChanged',@(src,evt) obj.UpdateModel)
-                    addlistener(bbox,'PrimitiveIndexChanged',@(src,evt) obj.UpdateModel)
+                    addlistener(parent,'CoordsChanged',@(src,evt) obj.UpdateModel)
+                    addlistener(parent,'PrimitiveIndexChanged',@(src,evt) obj.UpdateModel)
                     ];
                 obj.UpdateModel;
             elseif ~isempty(bbox)
-                obj.L.model = obj.BBoxModel(bbox);
+                obj.L.Model = obj.BBoxModel(bbox);
             end
         end
 
         function UpdateModel(obj)
-            obj.L.model = obj.BBoxModel(obj.L.parent.BoundingBox);
+            obj.L.Model = obj.BBoxModel(obj.L.parent.BoundingBox);
         end
 
         function delete(obj)

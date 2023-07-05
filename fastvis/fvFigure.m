@@ -35,7 +35,7 @@ classdef fvFigure < JChildParent
         mousePressOrigin = nan(0,2);
         camStateOrigin = cell(0,1);
         pauseStack = 0
-        holdStack = 0
+        % holdStack = 0
         camMouseListeners
         camListener
     end
@@ -79,16 +79,16 @@ classdef fvFigure < JChildParent
             id = numel(obj.child)*obj.isHold + 1;
         end
 
-        function set.Camera(obj,c)
-            if ~isa(c,'fvCamera')
+        function set.Camera(obj,fvcam)
+            if ~isa(fvcam,'fvCamera')
                 error('Camera must be a fvCamera');
             end
             delete(obj.camListener)
-            obj.camListener = skippablelistener(c,'Moved',@(src,evt) obj.Update);
-            obj.Camera = c;
+            obj.camListener = skippablelistener(fvcam,'Moved',@(src,evt) obj.Update);
+            obj.Camera = fvcam;
             if ~isempty(obj.ctrl)
-                obj.Camera.projParams.size(1:2) = obj.ctrl.figSize;
-                obj.Update;
+                % obj.Camera.projParams.size(1:2) = obj.ctrl.figSize;
+                % obj.Update;
             end
         end
 
@@ -135,8 +135,7 @@ classdef fvFigure < JChildParent
 
         function Update(obj)
             if ~isvalid(obj) || ~isvalid(obj.parent) || obj.pauseStack > 0, return, end
-            camDist = -obj.Camera.viewParams.T(3);
-            obj.Camera.SetNearFar(camDist/10,camDist*100);
+            obj.Camera.AdjustNearFar;
             obj.parent.Update;
         end
 
@@ -161,6 +160,7 @@ classdef fvFigure < JChildParent
 
         function fvclear(obj)
             cellfun(@delete,obj.child);
+            obj.child = {};
         end
 
         function clear(obj)
@@ -185,9 +185,8 @@ classdef fvFigure < JChildParent
 
         function addprimitive(obj,prim)
             if prim.isInit, return, end
-            if ~obj.isHold && ~obj.holdStack
-                cellfun(@delete,obj.child);
-                obj.child = {};
+            if ~obj.isHold %&& ~obj.holdStack
+                obj.fvclear;
             end
             obj.addChild(prim);
             
@@ -222,7 +221,7 @@ classdef fvFigure < JChildParent
         function t = get.validType(obj)
             t = obj.type;
             if strcmpi(t,'auto')
-                d = max(cellfun(@(c) c.ndims,obj.child));
+                d = max(cellfun(@ndims,obj.child));
                 if isempty(d) || d >= 3
                     t = '3D';
                 else
@@ -246,10 +245,10 @@ classdef fvFigure < JChildParent
             obj.ResetCameraZoom;
         end
 
-        function t = TempHold(obj)
-            obj.holdStack = obj.holdStack+1;
-            t = onCleanup(@obj.EndTempHold);
-        end
+        % function t = TempHold(obj)
+        %     obj.holdStack = obj.holdStack+1;
+        %     t = onCleanup(@obj.EndTempHold);
+        % end
 
         function set.Light(obj,s)
             obj.Light = s;
@@ -284,9 +283,9 @@ classdef fvFigure < JChildParent
             m = obj.Model;
         end
 
-        function EndTempHold(obj)
-            obj.holdStack = max(0,obj.holdStack - 1);
-        end
+        % function EndTempHold(obj)
+        %     obj.holdStack = max(0,obj.holdStack - 1);
+        % end
 
         function t = get.Title(obj)
             t = obj.parent.parent.title;

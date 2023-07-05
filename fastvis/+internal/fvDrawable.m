@@ -10,7 +10,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
         Camera
 
         ConstantSize = false;
-        ConstantSizeCutoff = inf; % in world unit, when ConstantSize is set
+        ConstantSizeCutoff = inf; % in world unit, when ConstantSize is set (does not work when camera is orthographic)
         ConstantSizeNormal = false;
         CallbackFcn
     end
@@ -27,11 +27,22 @@ classdef (Abstract) fvDrawable < internal.fvChild
         bbox = GetBBox(obj) % bbox = [minXyz rangeXyz] (= [-0.5 -0.5 -0.5 1 1 1] for a centered unit cube)
         DrawFcn(obj,V,M);
     end
+
+    methods(Abstract)
+        d = ndims(obj);
+    end
     
     methods
         function obj = fvDrawable(ax)
             obj@internal.fvChild(ax);
-            obj.Camera = obj.fvfig.Camera;
+        end
+
+        function c = get.Camera(obj)
+            if isempty(obj.Camera)
+                c = obj.fvfig.Camera;
+            else
+                c = obj.Camera;
+            end
         end
 
         function set.Model(obj,m)
@@ -79,18 +90,18 @@ classdef (Abstract) fvDrawable < internal.fvChild
             [~,m] = mdecompose(m); % discard rotation and scale
             p = mapply([0 0 0],m);
 
-            d = min(vecnorm(dot(C.getCamPos - p,C.getCamRay),2,2),obj.ConstantSizeCutoff);
-            s = mean(C.projParams.size);
             if obj.ConstantSizeNormal
                 R = MRot3D(-C.viewParams.R,1);
             else
                 R = eye(4);
             end
-            c = obj.ConstantSize;
-            if numel(c) == 2
-                c(3) = 1;
+            sz = obj.ConstantSize;
+            if numel(sz) == 2
+                sz(3) = 1;
             end
-            m = m * R * MScale3D(d./s.*c);
+            obj.ConstantSizeCutoff
+            d = min(vecnorm(dot(C.getCamPos - p,C.getCamRay),2,2),obj.ConstantSizeCutoff);
+            m = m * R * MScale3D(sz.*C.getScaleFactor(d));
         end
 
         function bbox = get.BoundingBox(obj)

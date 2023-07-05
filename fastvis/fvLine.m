@@ -57,9 +57,9 @@ classdef fvLine < internal.fvPrimitive
     end
     methods(Access=protected)
         
-        function DrawFcn(obj,V,M)
+        function DrawFcn(obj,M)
             obj.glDrawable.gl.glLineWidth(obj.LineWidth);
-            obj.DrawFcn@internal.fvPrimitive(V,M);
+            obj.DrawFcn@internal.fvPrimitive(M);
         end
         
     end
