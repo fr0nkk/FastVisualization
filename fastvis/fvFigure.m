@@ -161,6 +161,7 @@ classdef fvFigure < JChildParent
         function fvclear(obj)
             cellfun(@delete,obj.child);
             obj.child = {};
+            obj.fvhold(0);
         end
 
         function clear(obj)

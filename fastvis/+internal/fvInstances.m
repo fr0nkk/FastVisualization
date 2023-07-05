@@ -17,4 +17,9 @@ function ax = fvInstances(action,ax)
         otherwise
             error('invalid action')
     end
+    if isempty(p)
+        munlock;
+    else
+        mlock;
+    end
 end

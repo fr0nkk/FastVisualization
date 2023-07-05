@@ -33,7 +33,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable
     end
 
     properties(Transient,Access=private)
-        viewParamsInternal = struct('O',[0 0 0],'R',[0 0 0],'T',[0 0 0]);
+        viewParamsInternal = struct('O',[0 0 0],'R',[0 0 0],'T',[0 0 -1]);
         projParamsInternal = struct('size',[500 500],'near',0.01,'far',100,'F',45);
         MProj_need_recalc = 1
         MView_need_recalc = 1

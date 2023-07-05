@@ -13,7 +13,7 @@ classdef fvPointcloud < internal.fvPrimitive
             [ax,args,t] = internal.fvParse(varargin{:});
             
             p = inputParser;
-            p.addOptional('xyz',[]);
+            p.addOptional('xyz',nan);
             p.addOptional('col',[]);
             p.addOptional('ind',[]);
             p.KeepUnmatched = true;
@@ -21,7 +21,7 @@ classdef fvPointcloud < internal.fvPrimitive
 
             xyz = p.Results.xyz;
             col = p.Results.col;
-            if isempty(xyz)
+            if isscalar(xyz) && isnan(xyz)
                 [X,Y,Z] = peaks(200);
                 xyz = [X(:) Y(:) Z(:)];
                 if isempty(col)

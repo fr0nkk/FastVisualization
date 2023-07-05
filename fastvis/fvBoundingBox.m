@@ -1,48 +1,86 @@
-classdef fvBoundingBox < handle
+classdef fvBoundingBox < handle & matlab.mixin.SetGet
 %FVBOUNDINGBOX 
+    
+    properties(Transient)
+        bbox
+        Visible
+    end
+    
+    properties(SetAccess = private)
+        BBoxLines
+    end
+
+    properties(Dependent)
+        parent
+    end
 
     properties(Access = private)
         el
-        L
     end
 
     methods
         function obj = fvBoundingBox(varargin)
             [parent,args,t] = internal.fvParse(varargin{:});
             p = inputParser;
-            p.addOptional('bbox',[]);
-            p.addOptional('col',[]);
+            p.addOptional('bbox',[0 0 0 1 1 1]);
+            p.addOptional('col',[1 1 0]);
+            p.KeepUnmatched = true;
             p.parse(args{:});
 
             [xyz,~,~,~,ind] = cubemesh;
 
             col = p.Results.col;
-            if isempty(col)
-                col = [1 1 0];
-            end
+            obj.BBoxLines = fvLine(parent,xyz,col,ind,'Clickable',0);
+            obj.bbox = p.Results.bbox;
 
-            bbox = p.Results.bbox;
+            addlistener(obj.BBoxLines,'ObjectBeingDestroyed',@(~,~) obj.delete);
+            set(obj,p.Unmatched);
+        end
 
-            obj.L = fvLine(parent,xyz,col,ind,'Clickable',0);
-            
-            if isa(parent,'internal.fvDrawable')
+        function set.bbox(obj,b)
+            delete(obj.el)
+            if isempty(b)
+                if ~isa(obj.parent,'internal.fvDrawable')
+                    error('Parent can not be fvFigure for auto set')
+                end
                 obj.el = [
-                    addlistener(parent,'CoordsChanged',@(src,evt) obj.UpdateModel)
-                    addlistener(parent,'PrimitiveIndexChanged',@(src,evt) obj.UpdateModel)
+                    addlistener(obj.BBoxLines.parent,'CoordsChanged',@(src,evt) obj.UpdateModel)
+                    addlistener(obj.BBoxLines.parent,'PrimitiveIndexChanged',@(src,evt) obj.UpdateModel)
                     ];
                 obj.UpdateModel;
-            elseif ~isempty(bbox)
-                obj.L.Model = obj.BBoxModel(bbox);
+            else
+                obj.BBoxLines.Model = obj.BBoxModel(b);
             end
+            obj.bbox = b;
+        end
+
+        function p = get.parent(obj)
+            p = obj.BBoxLines.parent;
         end
 
         function UpdateModel(obj)
-            obj.L.Model = obj.BBoxModel(obj.L.parent.BoundingBox);
+            obj.BBoxLines.Model = obj.BBoxModel(obj.parent.BoundingBox);
+        end
+
+        function ind = Extract(obj,prim)
+            if nargin < 2, prim = obj.parent; end
+
+            % get the bounding box model in prim's SOC
+            M = prim.full_model \ obj.BBoxLines.full_model;
+            ind = obj.inside(prim.Coord,M);
+        end
+
+        function set.Visible(obj,v)
+            obj.BBoxLines.Visible = v;
+        end
+
+        function v = get.Visible(obj)
+            v = obj.BBoxLines.Visible;
         end
 
         function delete(obj)
             delete(obj.el);
-            delete(obj.L);
+            delete(obj.BBoxLines);
         end
     end
 
@@ -72,6 +110,11 @@ classdef fvBoundingBox < handle
         function [p1,p2] = bbox2corners(bbox)
             p1 = bbox(1:3);
             p2 = p1 + bbox(4:6);
+        end
+
+        function ind = inside(coords,bboxModel)
+            coords = mapply(coords,bboxModel,1);
+            ind = all(coords >= 0 & coords <= 1,2);
         end
     end
 end

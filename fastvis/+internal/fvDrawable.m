@@ -4,6 +4,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
     properties(SetObservable)
         Model = eye(4)
         Alpha = 1;
+        Active = true;
         Visible = true;
         Clickable = true;
 
@@ -11,7 +12,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         ConstantSize = false;
         ConstantSizeCutoff = inf; % in world unit, when ConstantSize is set (does not work when camera is orthographic)
-        ConstantSizeNormal = false;
+        ConstantSizeRot = 'same';
         CallbackFcn
     end
 
@@ -25,7 +26,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
     methods(Abstract,Access=protected)
         bbox = GetBBox(obj) % bbox = [minXyz rangeXyz] (= [-0.5 -0.5 -0.5 1 1 1] for a centered unit cube)
-        DrawFcn(obj,V,M);
+        DrawFcn(obj,M);
     end
 
     methods(Abstract)
@@ -58,8 +59,13 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj.Update;
         end
 
-        function set.Visible(obj,v)
-            obj.Visible = v;
+        function set.Active(obj,tf)
+            obj.Active = tf;
+            obj.Update;
+        end
+
+        function set.Visible(obj,tf)
+            obj.Visible = tf;
             obj.Update;
         end
 
@@ -84,16 +90,19 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         function m = relative_model(obj,m)
             if nargin < 2, m = eye(4); end
-            m = obj.ModelFcn(m * obj.Model);
+            m = m * obj.Model;
             if ~obj.ConstantSize(1), return, end
             C = obj.Camera;
-            [~,m] = mdecompose(m); % discard rotation and scale
+            [mr,m] = mdecompose(m);
             p = mapply([0 0 0],m);
 
-            if obj.ConstantSizeNormal
-                R = MRot3D(-C.viewParams.R,1);
-            else
-                R = eye(4);
+            switch lower(obj.ConstantSizeRot)
+                case 'same'
+                    R = mr;
+                case 'normal'
+                    R = MRot3D(-C.viewParams.R,1);
+                case 'none'
+                    R = eye(4);
             end
             sz = obj.ConstantSize;
             if numel(sz) == 2
@@ -112,18 +121,23 @@ classdef (Abstract) fvDrawable < internal.fvChild
         end
 
         function [drawnPrims,j] = Draw(obj,gl,M,j,drawnPrims)
-            if ~obj.Visible, return, end
-            j = j+1;
-            u = obj.glProg.uniforms;
-            u.drawid.Set(j);
-            u.projection.Set(obj.Camera.MProj);
-            u.viewPos.Set(obj.Camera.getCamPos);
-            tf = obj.Clickable;
-            gl.glColorMaski(2,tf,tf,tf,tf);
-            gl.glColorMaski(3,tf,tf,tf,tf);
+            if ~obj.Active, return, end
+            
             M = obj.relative_model(M);
-            obj.DrawFcn(M);
-            drawnPrims = [drawnPrims {obj}];
+
+            if obj.Visible
+                j = j+1;
+                u = obj.glProg.uniforms;
+                C = obj.Camera;
+                u.drawid.Set(j);
+                u.projection.Set(C.MProj);
+                u.viewPos.Set(C.getCamPos);
+                tf = obj.Clickable;
+                gl.glColorMaski(2,tf,tf,tf,tf);
+                gl.glColorMaski(3,tf,tf,tf,tf);
+                obj.DrawFcn(M);
+                drawnPrims = [drawnPrims {obj}];
+            end
 
             C = obj.validateChilds('internal.fvDrawable');
             for i=1:numel(C)
@@ -137,9 +151,5 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
     end
 
-    methods(Access=protected)
-        function m = ModelFcn(obj,m)
-        end
-    end
 end
 

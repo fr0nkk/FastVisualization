@@ -41,11 +41,19 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             end
         end
 
+        function fvclear(obj)
+            t = obj.UpdateOnCleanup;
+            cellfun(@delete,obj.child);
+            obj.Update;
+        end
+
+        function clear(obj)
+            obj.fvclear;
+        end
+
         function delete(obj)
             try
-                t = obj.UpdateOnCleanup;
-                cellfun(@delete,obj.child);
-                obj.Update;
+                obj.fvclear;
             catch
             end
         end

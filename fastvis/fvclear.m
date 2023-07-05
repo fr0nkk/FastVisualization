@@ -1,5 +1,5 @@
-function fvclear()
+function fvclear(fvfig)
+if nargin < 1, fvfig = gcfv; end
 %FVCLEAR Shortcut to the current fvFigure's clear function
-a = gcfv;
-a.fvclear();
+fvfig.fvclear();
 end
