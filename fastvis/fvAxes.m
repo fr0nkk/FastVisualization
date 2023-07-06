@@ -14,6 +14,7 @@ ind = [1 2 nan 3 4 nan 5 6]';
 sz = p.Results.sz;
 mdl = MTrans3D(p.Results.pos);
 
-A = fvLine(parent,xyz,col,ind,'Clickable',false,'ConstantSize',sz,'Model',mdl,p.Unmatched);
+A = fvLine(parent,xyz,col,ind,'Clickable',false, ...
+    'ConstantSize',sz,'Model',mdl,p.Unmatched);
 
 end

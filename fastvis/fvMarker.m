@@ -13,6 +13,7 @@ col = [1 1 0];
 sz = p.Results.sz;
 mdl = MTrans3D(p.Results.pos);
 
-M = fvLine(parent,xyz,col,'LineStrip',0,'Clickable',0,'ConstantSize',sz,'Model',mdl,p.Unmatched);
+M = fvLine(parent,xyz,col,'LineStrip',false,'Clickable',false, ...
+    'ConstantSize',sz,'Model',mdl,'ConstantSizeRot','none',p.Unmatched);
 
 end

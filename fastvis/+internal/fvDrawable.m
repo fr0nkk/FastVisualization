@@ -8,11 +8,11 @@ classdef (Abstract) fvDrawable < internal.fvChild
         Visible = true;
         Clickable = true;
 
-        Camera
+        Camera fvCamera
 
         ConstantSize = false;
         ConstantSizeCutoff = inf; % in world unit, when ConstantSize is set (does not work when camera is orthographic)
-        ConstantSizeRot = 'same';
+        ConstantSizeRot = 'Same'; % Same, None or Normal
         CallbackFcn
     end
 
@@ -84,6 +84,14 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj.Update;
         end
 
+        function set.ConstantSizeRot(obj,str)
+            if ~ismember(lower(str),{'same','normal','none'})
+                error('Invalid value: %s. - Must be ''same'', ''normal'' or ''none''',str)
+            end
+            obj.ConstantSizeRot = str;
+            obj.Update;
+        end
+
         function m = full_model(obj)
             m = obj.relative_model(obj.parent.full_model);
         end
@@ -108,7 +116,6 @@ classdef (Abstract) fvDrawable < internal.fvChild
             if numel(sz) == 2
                 sz(3) = 1;
             end
-            obj.ConstantSizeCutoff
             d = min(vecnorm(dot(C.getCamPos - p,C.getCamRay),2,2),obj.ConstantSizeCutoff);
             m = m * R * MScale3D(sz.*C.getScaleFactor(d));
         end

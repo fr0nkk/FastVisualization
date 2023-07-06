@@ -19,6 +19,14 @@
         ]
     },
 
+    "fvclear":
+    {
+        "inputs":
+        [
+            {"name":"fvfig", "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]}
+        ]
+    },
+
     "fvclose":
     {
         "inputs":
@@ -32,11 +40,11 @@
     {
         "inputs":
         [ 
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Coords",  "kind":"positional", "type":["numeric"]},
             {"name":"Colors",  "kind":"positional", "type":["numeric"]},
             {"name":"Indices",  "kind":"positional", "type":["numeric"]},
-            {"name":"opts", "kind":"properties", "type":["internal.fcnsign.fvptcloud"]}
+            {"name":"opts", "kind":"properties", "type":["fvPointcloud"]}
         ] 
     }, 
 
@@ -44,11 +52,11 @@
     {
         "inputs":
         [
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Coords",  "kind":"positional", "type":["numeric"]},
             {"name":"Colors",  "kind":"positional", "type":["numeric"]},
             {"name":"Indices",  "kind":"positional", "type":["numeric"]},
-            {"name":"opts", "kind":"properties", "type":["internal.fcnsign.fvline"]}
+            {"name":"opts", "kind":"properties", "type":["fvLine"]}
         ]
     },
 
@@ -56,7 +64,7 @@
     {
         "inputs":
         [
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Triangles",  "kind":"positional", "type":["numeric"]},
             {"name":"Coords",  "kind":"positional", "type":["numeric"]},
             {"name":"Colors",  "kind":"positional", "type":["numeric"]},
@@ -64,16 +72,17 @@
             {"name":"Materials",  "kind":"positional", "type":[["fvMaterial"],["cell"]]},
             {"name":"MaterialIndex",  "kind":"positional", "type":["numeric"]},
             {"name":"AutoCalcNormals",  "kind":"namevalue", "type":["logical","scalar"]},
-            {"name":"opts", "kind":"properties", "type":["internal.fcnsign.fvmesh"]}
-        ]
+            {"name":"opts", "kind":"properties", "type":["internal.fvPrimitive"]}
+        ] 
     },
 
     "fvImage":
     {
         "inputs":
         [
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
-            {"name":"Image",  "kind":"positional", "type":[["numeric"],["matlabpathfile=*.jpg,*.png"]]}
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
+            {"name":"Image",  "kind":"positional", "type":[["numeric"],["matlabpathfile=*.jpg,*.png"]]},
+            {"name":"opts", "kind":"properties", "type":["fvImage"]}
         ]
     },
 
@@ -81,12 +90,11 @@
     {
         "inputs":
         [
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Text",  "kind":"positional", "type":[["char"],["@(x) isscalartext(x)"]]},
             {"name":"Size",  "kind":"positional", "type":["numeric"]},
             {"name":"Font",  "kind":"positional", "type":["char"]},
-            {"name":"HorizontalAlignment", "kind":"positional", "type":["char", "choices={'Left','Right','Center'}"]},
-            {"name":"VerticalAlignment", "kind":"positional", "type":["char", "choices={'Bottom','Top','Center'}"]}
+            {"name":"opts", "kind":"properties", "type":["fvText"]}
         ]
     },
 
@@ -94,9 +102,10 @@
     {
         "inputs":
         [
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Position",  "kind":"positional", "type":["numeric"]},
-            {"name":"Size",  "kind":"positional", "type":["numeric"]}
+            {"name":"Size",  "kind":"positional", "type":["numeric"]},
+            {"name":"opts", "kind":"properties", "type":["fvLine"]}
         ]
     },
 
@@ -104,9 +113,10 @@
     {
         "inputs":
         [
-            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["fvDrawable"]]},
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Position",  "kind":"positional", "type":["numeric"]},
-            {"name":"Size",  "kind":"positional", "type":["numeric"]}
+            {"name":"Size",  "kind":"positional", "type":["numeric"]},
+            {"name":"opts", "kind":"properties", "type":["fvLine"]}
         ]
     },
 

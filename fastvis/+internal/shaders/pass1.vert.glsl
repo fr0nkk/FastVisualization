@@ -1,4 +1,4 @@
-#version 400
+#version 410 core
 
 layout(location = 0) in vec4 quadVerts;
 

@@ -14,19 +14,20 @@ classdef fvImage < internal.fvPrimitive
             [parent,args,t] = internal.fvParse(varargin{:});
 
             p = inputParser;
-            p.addOptional('img',[],@(x) isscalartext(x) || isnumeric(x));
+            p.addRequired('img',@(x) isscalartext(x) || isnumeric(x));
             p.KeepUnmatched = true;
-            p.parse(args{:});
 
-            img = p.Results.img;
-            if isempty(img)
-                img = 'peppers.png';
+            if ~mod(numel(args),2)
+                % if number of arguments is even, assume no str given
+                args = [{'peppers.png'} args];
             end
+
+            p.parse(args{:});
 
             attr = [0 0;1 0;0 1;1 1];
             mtl = fvMaterial(0);
             obj@internal.fvPrimitive(parent,'GL_TRIANGLE_STRIP',attr,attr,[],[],mtl);
-            obj.ImageSource = img;
+            obj.ImageSource = p.Results.img;
             set(obj,p.Unmatched);
             if ~obj.fvfig.isHold
                 obj.ZoomTo;
@@ -45,15 +46,9 @@ classdef fvImage < internal.fvPrimitive
             else
                 sz = size(img,[1 2]);
             end
+            obj.Coord = [0 0;1 0;0 1;1 1] .* fliplr(sz);
             obj.ImageSize = sz;
         end
-    end
-    methods(Access = protected)
-
-        function m = ModelFcn(obj,m)
-            m = m * MScale3D([fliplr(obj.ImageSize) 1]);
-        end
-        
     end
 end
 

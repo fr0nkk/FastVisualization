@@ -3,8 +3,8 @@ classdef fvText < internal.fvPrimitive
     properties
         Text
         Font
-        HorizontalAlignment % left right center
-        VerticalAlignment % top bottom center
+        HorizontalAlignment = 'Left' % left right center
+        VerticalAlignment = 'Bottom' % top bottom center
     end
 
     methods
@@ -14,8 +14,6 @@ classdef fvText < internal.fvPrimitive
             p.addRequired('Text',@isscalartext);
             p.addParameter('Size',20,@isscalar);
             p.addParameter('Font','Arial',@isscalartext);
-            p.addParameter('HorizontalAlignment','left',@(x) istextmember(x,{'left','right','center'}));
-            p.addParameter('VerticalAlignment','bottom',@(x) istextmember(x,{'bottom','top','center'}));
             p.KeepUnmatched = true;
             if ~mod(numel(args),2)
                 % if number of arguments is even, assume no str given
@@ -24,14 +22,12 @@ classdef fvText < internal.fvPrimitive
             p.parse(args{:});
             
             sz = p.Results.Size;
-            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',[0 0 0],[1 1 0],[],nan,[],[],'ConstantSizeRot','normal','ConstantSize',sz);
+            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',[0 0 0],[1 1 0],[],nan,[],[],'ConstantSizeRot','Normal','ConstantSize',sz);
 
             obj.isInit = false;
 
             obj.Text = p.Results.Text;
             obj.Font = p.Results.Font;
-            obj.HorizontalAlignment = p.Results.HorizontalAlignment;
-            obj.VerticalAlignment = p.Results.VerticalAlignment;
 
             obj.isInit = true;
 

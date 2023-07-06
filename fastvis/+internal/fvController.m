@@ -77,7 +77,7 @@ classdef fvController< glmu.GLController
         end
         
         function UpdateFcn(obj,gl)
-            t = tic;
+            % t = tic;
             obj.MSframebuffer.DrawTo(1:4);
 
             % clear everything
@@ -124,7 +124,7 @@ classdef fvController< glmu.GLController
             
             glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.figSize)
             
-            toc(t);
+            % toc(t);
         end
         
         function ResizeFcn(obj,gl,sz)

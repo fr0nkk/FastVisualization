@@ -8,8 +8,9 @@ classdef fvFigure < JChildParent
         edlWithBackground logical = false
         ColorOrder = lines(7);
         Camera
-        type = 'auto'; % auto, 2D or 3D
-        Model = eye(4)
+        Type = 'auto'; % auto, 2D or 3D
+        Model = eye(4);
+        DisplayCoordOnClick = true;
     end
 
     properties(Transient)
@@ -20,6 +21,7 @@ classdef fvFigure < JChildParent
         ctrl internal.fvController
         lastFocus
         mtlCache internal.fvMaterialCache
+        lastMousePress
     end
 
     events
@@ -31,11 +33,9 @@ classdef fvFigure < JChildParent
 
     properties(Access = protected)
         MouseEvents
-        lastMousePress
         mousePressOrigin = nan(0,2);
         camStateOrigin = cell(0,1);
         pauseStack = 0
-        % holdStack = 0
         camMouseListeners
         camListener
     end
@@ -107,6 +107,9 @@ classdef fvFigure < JChildParent
             evt.data = obj.lastMousePress;
             notify(obj,'MouseClicked',evt);
             if isempty(obj.lastMousePress), return, end
+            if obj.DisplayCoordOnClick
+                disp(obj.lastMousePress.xyz)
+            end
             o = obj.lastMousePress.object;
             if ~isempty(o.CallbackFcn), o.CallbackFcn(obj,evt); end
         end
@@ -214,13 +217,13 @@ classdef fvFigure < JChildParent
             end
         end
 
-        function set.type(obj,t)
-            obj.type = t;
+        function set.Type(obj,t)
+            obj.Type = t;
             obj.UpdateCameraConstraints
         end
 
         function t = get.validType(obj)
-            t = obj.type;
+            t = obj.Type;
             if strcmpi(t,'auto')
                 d = max(cellfun(@ndims,obj.child));
                 if isempty(d) || d >= 3
@@ -245,11 +248,6 @@ classdef fvFigure < JChildParent
             obj.Camera.viewParams.R = strcmpi(obj.validType,'3D') .* [-45 0 -45];
             obj.ResetCameraZoom;
         end
-
-        % function t = TempHold(obj)
-        %     obj.holdStack = obj.holdStack+1;
-        %     t = onCleanup(@obj.EndTempHold);
-        % end
 
         function set.Light(obj,s)
             obj.Light = s;
@@ -283,10 +281,6 @@ classdef fvFigure < JChildParent
         function m = full_model(obj)
             m = obj.Model;
         end
-
-        % function EndTempHold(obj)
-        %     obj.holdStack = max(0,obj.holdStack - 1);
-        % end
 
         function t = get.Title(obj)
             t = obj.parent.parent.title;

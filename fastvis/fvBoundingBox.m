@@ -63,8 +63,6 @@ classdef fvBoundingBox < handle & matlab.mixin.SetGet
         end
 
         function ind = Extract(obj,prim)
-            if nargin < 2, prim = obj.parent; end
-
             % get the bounding box model in prim's SOC
             M = prim.full_model \ obj.BBoxLines.full_model;
             ind = obj.inside(prim.Coord,M);
@@ -97,6 +95,9 @@ classdef fvBoundingBox < handle & matlab.mixin.SetGet
         end
 
         function bbox = coords2bbox(x)
+            if width(x) < 3
+                x(:,3) = 0;
+            end
             minx = min(x,[],1);
             maxx = max(x,[],1);
             bbox = [minx maxx-minx];

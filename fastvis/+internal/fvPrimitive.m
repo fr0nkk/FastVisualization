@@ -75,6 +75,16 @@ classdef fvPrimitive < internal.fvDrawable
             if nargin < 6, prim_index = []; end
             if nargin < 7, material = []; end
             if nargin < 8, material_index = []; end
+
+            if height(coords) == 1 && width(coords) > 3
+                coords = coords';
+            end
+
+            if width(coords) == 1
+                coords(:,2) = (1:height(coords))';
+                coords = fliplr(coords);
+            end
+
             obj.Coord = coords;
             obj.Normal = normals;
             obj.Color = color;
