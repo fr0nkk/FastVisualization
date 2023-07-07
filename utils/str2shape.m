@@ -1,5 +1,9 @@
 function shp = str2shape(str,lineSize,fontname,hAlignment,vAlignment,pts_per_bezier)
 
+if ~ispc
+    warning('str2shape may not be compatible since it uses NET.addAssembly')
+end
+
 NET.addAssembly('System.Drawing');
 
 % call with no args returns all available fonts

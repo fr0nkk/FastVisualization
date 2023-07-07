@@ -92,8 +92,6 @@
         [
             {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Text",  "kind":"positional", "type":[["char"],["@(x) isscalartext(x)"]]},
-            {"name":"Size",  "kind":"positional", "type":["numeric"]},
-            {"name":"Font",  "kind":"positional", "type":["char"]},
             {"name":"opts", "kind":"properties", "type":["fvText"]}
         ]
     },
@@ -104,7 +102,6 @@
         [
             {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Position",  "kind":"positional", "type":["numeric"]},
-            {"name":"Size",  "kind":"positional", "type":["numeric"]},
             {"name":"opts", "kind":"properties", "type":["fvLine"]}
         ]
     },
@@ -115,7 +112,6 @@
         [
             {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Position",  "kind":"positional", "type":["numeric"]},
-            {"name":"Size",  "kind":"positional", "type":["numeric"]},
             {"name":"opts", "kind":"properties", "type":["fvLine"]}
         ]
     },

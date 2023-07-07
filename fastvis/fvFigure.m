@@ -10,7 +10,7 @@ classdef fvFigure < JChildParent
         Camera
         Type = 'auto'; % auto, 2D or 3D
         Model = eye(4);
-        DisplayCoordOnClick = true;
+        DisplayCoordOnClick = false;
     end
 
     properties(Transient)

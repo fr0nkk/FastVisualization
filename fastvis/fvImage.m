@@ -18,7 +18,7 @@ classdef fvImage < internal.fvPrimitive
             p.KeepUnmatched = true;
 
             if ~mod(numel(args),2)
-                % if number of arguments is even, assume no str given
+                % if number of arguments is even, assume no img given
                 args = [{'peppers.png'} args];
             end
 

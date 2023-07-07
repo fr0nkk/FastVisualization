@@ -2,9 +2,13 @@ classdef fvText < internal.fvPrimitive
 
     properties
         Text
-        Font
+        Font = 'Arial'
         HorizontalAlignment = 'Left' % left right center
         VerticalAlignment = 'Bottom' % top bottom center
+    end
+
+    properties(Transient)
+        TextSize % alias of obj.ConstantSize
     end
 
     methods
@@ -12,8 +16,6 @@ classdef fvText < internal.fvPrimitive
             [parent,args,t] = internal.fvParse(varargin{:});
             p = inputParser;
             p.addRequired('Text',@isscalartext);
-            p.addParameter('Size',20,@isscalar);
-            p.addParameter('Font','Arial',@isscalartext);
             p.KeepUnmatched = true;
             if ~mod(numel(args),2)
                 % if number of arguments is even, assume no str given
@@ -21,19 +23,16 @@ classdef fvText < internal.fvPrimitive
             end
             p.parse(args{:});
             
-            sz = p.Results.Size;
-            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',[0 0 0],[1 1 0],[],nan,[],[],'ConstantSizeRot','Normal','ConstantSize',sz);
+            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',[0 0 0],[1 1 0],[],nan,[],[],'ConstantSizeRot','Normal');
 
             obj.isInit = false;
-
+            obj.ConstantSize = 20;
             obj.Text = p.Results.Text;
-            obj.Font = p.Results.Font;
+            set(obj,p.Unmatched);
 
             obj.isInit = true;
 
             obj.UpdateShape;
-
-            set(obj,p.Unmatched);
 
             if ~obj.fvfig.isHold
                 obj.ZoomTo;
@@ -52,6 +51,14 @@ classdef fvText < internal.fvPrimitive
         function set.Font(obj,v)
             obj.Font = v;
             obj.UpdateShape;
+        end
+
+        function set.TextSize(obj,sz)
+            obj.ConstantSize = sz;
+        end
+
+        function sz = get.TextSize(obj)
+            sz = obj.ConstantSize;
         end
 
         function set.HorizontalAlignment(obj,v)
@@ -86,9 +93,5 @@ classdef fvText < internal.fvPrimitive
             end
         end
     end
-end
-
-function tf = istextmember(x,opts)
-    tf = isscalartext(x) && ismember(lower(x),opts);
 end
 
