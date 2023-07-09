@@ -106,14 +106,13 @@ classdef fvController< glmu.GLController
             obj.drawnPrimitives = drawnPrims;
             obj.lastViewParams = obj.fvfig.Camera.viewParams;
 
-
             obj.framebuffer.DrawTo(1:3);
 
             gl.glColorMaski(2,1,1,1,1);
             gl.glColorMaski(3,1,1,1,1);
 
             gl.glDisable(gl.GL_DEPTH_TEST);
-            
+            gl.glDepthRange(0,1);
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
 
             gl.glEnable(gl.GL_CULL_FACE);
@@ -215,8 +214,4 @@ classdef fvController< glmu.GLController
             end
         end
     end
-end
-
-function PrepareProgs(prog,MProj,viewPos)
-    prog.uniforms.viewPos.Set(viewPos);
 end

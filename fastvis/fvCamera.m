@@ -24,6 +24,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable
 
     events
         Moved
+        Resized
     end
 
     properties(SetAccess=private)
@@ -252,7 +253,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable
                 obj.projParamsInternal.F = obj.cached_fov;
             else
                 obj.cached_fov = obj.projParamsInternal.F;
-                obj.projParamsInternal.F = -obj.viewParamsInternal.T(3) ./ max(obj.projParamsInternal.size) * tand(obj.projParamsInternal.F);
+                obj.projParamsInternal.F = -obj.viewParamsInternal.T(3) ./ max(obj.projParamsInternal.size) * 2*tand(obj.projParamsInternal.F/2);
             end
             newM = {obj.MProj obj.MView};
             
@@ -278,6 +279,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable
 
         function Resize(obj,sz)
             obj.projParamsInternal.size = sz;
+            notify(obj,'Resized');
         end
 
         function EndAnimation(obj,P,V)

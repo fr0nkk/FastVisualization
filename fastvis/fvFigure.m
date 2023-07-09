@@ -1,19 +1,42 @@
 classdef fvFigure < JChildParent
     
     properties(Transient,SetObservable)
+        % BackgroundColor - Color of the fvFigure's background
         BackgroundColor = [0 0 0];
+
+        % Light - Struct containing information about lighting
+        % The struct must contain Position, Ambient, Diffuse, Specular
         Light = struct('Position',[0 0 1e5],'Ambient',[1 1 1],'Diffuse',[1 1 1],'Specular',[1 1 1]);
+
+        % isHold - State of hold of the fvFigure
         isHold matlab.lang.OnOffSwitchState = false;
+
+        % edl - Eye Dome Lighting normalized strength
+        % set to 0 to deactivate
         edl = 0.1;
+
+        % edlWithBackground - Use EDL to shade objects with background
         edlWithBackground logical = false
+
+        % ColorOrder - Colormap for object's color when they have no color specified
         ColorOrder = lines(7);
+
+        % Camera - fvCamera used for viewing the scene - see fvCamera
         Camera
+
+        % Type - Type of axes, determining camera constraints
+        % Can be auto, 2D, or 3D
         Type = 'auto'; % auto, 2D or 3D
+
+        % Model - Base transformation model of the fvFigure
         Model = eye(4);
+
+        % DisplayCoordOnClick - set to true to display the clicked coord in console
         DisplayCoordOnClick = false;
     end
 
     properties(Transient)
+        % Title - Title of the fvFigure
         Title
     end
 
@@ -22,6 +45,7 @@ classdef fvFigure < JChildParent
         lastFocus
         mtlCache internal.fvMaterialCache
         lastMousePress
+        DepthRange = [0 1];
     end
 
     events
@@ -87,8 +111,8 @@ classdef fvFigure < JChildParent
             obj.camListener = skippablelistener(fvcam,'Moved',@(src,evt) obj.Update);
             obj.Camera = fvcam;
             if ~isempty(obj.ctrl)
-                % obj.Camera.projParams.size(1:2) = obj.ctrl.figSize;
-                % obj.Update;
+                obj.Camera.Resize(obj.ctrl.figSize);
+                obj.Update;
             end
         end
 
@@ -111,7 +135,10 @@ classdef fvFigure < JChildParent
                 disp(obj.lastMousePress.xyz)
             end
             o = obj.lastMousePress.object;
-            if ~isempty(o.CallbackFcn), o.CallbackFcn(obj,evt); end
+            if ~isempty(o.CallbackFcn)
+                evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,1);
+                o.CallbackFcn(obj,evt);
+            end
         end
 
         function MouseWheelMovedCallback(obj,src,evt)
@@ -162,6 +189,7 @@ classdef fvFigure < JChildParent
         end
 
         function fvclear(obj)
+            obj.Model = eye(4);
             cellfun(@delete,obj.child);
             obj.child = {};
             obj.fvhold(0);
@@ -303,6 +331,10 @@ classdef fvFigure < JChildParent
 
         function close(obj)
             obj.fvclose;
+        end
+
+        function Focus(obj)
+            obj.parent.parent.java.requestFocus;
         end
 
         function delete(obj)

@@ -21,9 +21,8 @@ function x = var2gl(x,n,m)
         x(:,end+1:n) = 0;
     end
 
-    if height(x) == 1 && nargin >= 3
-        % uniform color
-        x = repmat(x,m,1);
+    if nargin >= 3 && height(x) < m
+        x(end:m,:) = repmat(x(end,:),m-height(x)+1,1);
     end
     
 end

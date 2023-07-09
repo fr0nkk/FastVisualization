@@ -1,14 +1,20 @@
 classdef fvText < internal.fvPrimitive
+%FVTEXT Insert text
 
-    properties
-        Text
-        Font = 'Arial'
-        HorizontalAlignment = 'Left' % left right center
-        VerticalAlignment = 'Bottom' % top bottom center
+    properties(SetObservable)
+        % Text - Text to display
+        Text char
+
+        % Font - Font for the rendered text
+        % Use str2shape() to see a list of available fonts
+        Font char = 'Arial'
+
+        HorizontalAlignment char = 'Left' % Valid values: Left, Right, Center
+        VerticalAlignment char = 'Bottom' % Valid values: Top, Bottom, Center
     end
 
     properties(Transient)
-        TextSize % alias of obj.ConstantSize
+        TextSize % Text size - see ConstantSize property
     end
 
     methods

@@ -1,7 +1,7 @@
 classdef fvImage < internal.fvPrimitive
 %FVIMAGE 
     
-    properties(Transient)
+    properties(Transient,SetObservable)
         ImageSource
     end
 

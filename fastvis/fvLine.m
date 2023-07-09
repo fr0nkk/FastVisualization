@@ -1,7 +1,7 @@
 classdef fvLine < internal.fvPrimitive
 %FVLINE view lines in fast vis
 
-    properties
+    properties(SetObservable)
         LineWidth = 1
     end
 
@@ -57,9 +57,9 @@ classdef fvLine < internal.fvPrimitive
     end
     methods(Access=protected)
         
-        function DrawFcn(obj,M)
+        function DrawFcn(obj,varargin)
             obj.glDrawable.gl.glLineWidth(obj.LineWidth);
-            obj.DrawFcn@internal.fvPrimitive(M);
+            obj.DrawFcn@internal.fvPrimitive(varargin{:});
         end
         
     end

@@ -23,14 +23,12 @@ classdef fvBoundingBox < handle & matlab.mixin.SetGet
             [parent,args,t] = internal.fvParse(varargin{:});
             p = inputParser;
             p.addOptional('bbox',[0 0 0 1 1 1]);
-            p.addOptional('col',[1 1 0]);
             p.KeepUnmatched = true;
             p.parse(args{:});
 
             [xyz,~,~,~,ind] = cubemesh;
 
-            col = p.Results.col;
-            obj.BBoxLines = fvLine(parent,xyz,col,ind,'Clickable',0);
+            obj.BBoxLines = fvLine(parent,xyz,[0.5 0.5 0.5],ind,'Clickable',0);
             obj.bbox = p.Results.bbox;
 
             addlistener(obj.BBoxLines,'ObjectBeingDestroyed',@(~,~) obj.delete);

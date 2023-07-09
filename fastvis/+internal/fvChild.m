@@ -6,6 +6,7 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
     end
 
     properties(SetAccess=protected)
+        % fvfig - fvFigure which contains this object
         fvfig fvFigure
     end
     

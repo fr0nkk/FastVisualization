@@ -1,7 +1,7 @@
 classdef fvPointcloud < internal.fvPrimitive
 %FVPOINTCLOUD view a pointcloud in fast vis
 
-    properties(Transient)
+    properties(Transient,SetObservable)
         PointUnit = 'pixel' % 'pixel' or 'world'
         PointSize = 2
         MinPointSize = 1; % in pixels, minimum size when in world unit
@@ -73,7 +73,7 @@ classdef fvPointcloud < internal.fvPrimitive
     end
     
     methods(Access=protected)
-        function DrawFcn(obj,M)
+        function DrawFcn(obj,varargin)
             ptsz = obj.PointSize;
             u = obj.glDrawable.program.uniforms;
             if strcmp(obj.PointUnit,'pixel')
@@ -83,7 +83,7 @@ classdef fvPointcloud < internal.fvPrimitive
             end
             u.pointSize.Set(ptsz);
             
-            obj.DrawFcn@internal.fvPrimitive(M);
+            obj.DrawFcn@internal.fvPrimitive(varargin{:});
         end
     end
 end

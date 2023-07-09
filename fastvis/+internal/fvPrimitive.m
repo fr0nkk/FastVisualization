@@ -2,20 +2,58 @@ classdef fvPrimitive < internal.fvDrawable
 %FVPRIMITIVE
     
     properties(Transient,SetObservable)
-        Coord % vertex coords
-        Color % vertex color | vertex texture uv
-        Normal % vertex normals
-        Index % index data
-        MaterialIndex % vertex material index
-        Material % glMaterial array
+        % Coord - vertex coordinates
+        % Must be [N x 2] or [N x 3] where N is the number of vertex
+        Coord
+
+        % Color - Vertex color, texture uv, or index for colormap.
+        % If floating point (single or double), range must be from 0 to 1
+        % Color per vertex: [N x 3]
+        % Texture uv per vertex: [N x 2]
+        % Index for colormap: [N x 1]
+        % If empty, the primitive's color will use the ColorOrder of its fvFigure
+        % If there are less colors than the number of coords, the last
+        % color will be replicated to match the number of coords.
+        Color
+
+        % Normal - vertex normals
+        % Used for rendering triangulated surfaces
+        % if not set and the primitive is a triangulated surface, the
+        % render will use EDL to render the light
+        Normal
+
+        % Index - Coord's index to render
+        % If empty, all the vertex are used sequentially
+        Index
+
+        % MaterialIndex - Index of material to use for each vertex
+        MaterialIndex
+        
+        % Material - array of fvMaterial indexes by MaterialIndex
+        Material
+
+        % PrimitiveType - Type of primitive
+        % Can be: GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN
         PrimitiveType
 
-        Colormap = 'jet' % [N x 3] array | char | function_handle
+        % Colormap - Colormap to use when colors are in colormap mode
+        % Can be [M x 3] where M is the number of colors, or the name of a colormap
+        Colormap = 'jet'
+        
+        % Light - Struct containing information about this primitive's light
+        % The struct must contain Offset, Ambient, Diffuse and Specular
         Light = struct('Offset',[0 0 0],'Ambient',[0.2 0.2 0.2],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
+
+        % Cull - Cull the front faces
+        % 0: no cull
+        % 1: cull font faces
+        % -1 cull back faces
         Cull = 0;
 
-        % for use with normals and no material
+        % Specular - Primitive's specular when rendering with color per vertex
         Specular = [0.5 0.5 0.5];
+
+        % Shininess - Primitive's shininess when rendering with color per vertex
         Shininess = 10;
     end
 
@@ -24,11 +62,6 @@ classdef fvPrimitive < internal.fvDrawable
         ColorChanged
         NormalsChanged
         PrimitiveIndexChanged
-    end
-
-    properties(Dependent)
-        Count
-        % ndims
     end
 
     properties(Dependent,Hidden)
@@ -45,25 +78,24 @@ classdef fvPrimitive < internal.fvDrawable
     end
 
     properties(Access=protected)
-        glProg
+        glProg glmu.Program
     end
-
-    properties(Dependent,Access=protected)
-        glCoords
-        glNormals
-        glColor
-
-        validCoords
-        validColor
-        validPrimIdx
-        validMtlIdx
-        validMaterial
-    end
-
+    
     properties(Access=private)
         needRecalc = 1;
         auto_color_id
         mtl_el
+    end
+
+    properties(Hidden,Dependent)
+        glCoords
+        glNormals
+        glColor
+        validPrimIdx
+        validMtlIdx
+        validCoords
+        validMaterial
+        validColor
     end
     
     methods
@@ -118,7 +150,7 @@ classdef fvPrimitive < internal.fvDrawable
 
         end
 
-        function n = get.Count(obj)
+        function n = Count(obj)
             n = height(obj.Coord);
         end
 
@@ -134,9 +166,7 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Coord = v;
             obj.needRecalc = 1;
             obj.InvalidateBBox;
-            if height(obj.Color) == 1
-                obj.Color = obj.Color;
-            end
+            obj.UpdateColor;
             notify(obj,'CoordsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
@@ -159,12 +189,14 @@ classdef fvPrimitive < internal.fvDrawable
             end
             obj.Colormap = cmap;
             obj.UpdateColor();
+            notify(obj,'ColorChanged');
         end
 
         function set.Color(obj,v)
             temp = obj.UpdateOnCleanup;
             obj.Color = v;
             obj.UpdateColor();
+            notify(obj,'ColorChanged');
         end
 
         function set.Index(obj,idx)
@@ -180,6 +212,52 @@ classdef fvPrimitive < internal.fvDrawable
             if ~obj.isInit, return, end
             obj.glDrawable.primitive = obj.glDrawable.Const(p);
             obj.Update;
+        end
+
+        function set.Material(obj,mtl)
+            obj.Material = mtl;
+            obj.needRecalc = 1;
+            obj.Update;
+        end
+
+        function set.Light(obj,s)
+            obj.Light = s;
+            obj.Update;
+        end
+
+        function set.Cull(obj,c)
+            obj.Cull = c;
+            obj.Update;
+        end
+
+        function set.Shininess(obj,s)
+            obj.Shininess = s;
+            obj.Update;
+        end
+
+        function set.Specular(obj,s)
+            if numel(s) == 1
+                s = [s s s];
+            end
+            obj.Specular = s;
+            obj.Update;
+        end
+
+        function xyz = get.worldCoords(obj)
+            xyz = mapply(obj.validCoords,obj.full_model);
+        end
+
+        function bbox = get.worldBBox(obj)
+            bbox = fvBoundingBox.coords2bbox(obj.worldCoords);
+        end
+
+        function AutoCalcNormals(obj)
+            T = triangulation(double(obj.validPrimIdx),double(obj.validCoords));
+            obj.Normal = T.vertexNormal;
+        end
+
+        function ZoomTo(obj)
+            obj.Camera.ZoomBBox(obj.worldBBox);
         end
 
         function xyz = get.glCoords(obj)
@@ -232,6 +310,7 @@ classdef fvPrimitive < internal.fvDrawable
         function c = get.validColor(obj)
             c = obj.Color;
             if width(c) == 1
+                % colormap mode
                 cmap = obj.Colormap;
                 if isscalartext(cmap)
                     cmap = str2func(cmap);
@@ -239,7 +318,6 @@ classdef fvPrimitive < internal.fvDrawable
                 if isa(cmap,'function_handle')
                     cmap = cmap(256);
                 end
-                % colormap mode
                 h = height(cmap);
                 if isfloat(c)
                     c = floor(c.*h)+1;
@@ -254,57 +332,11 @@ classdef fvPrimitive < internal.fvDrawable
             end
         end
 
-        function set.Material(obj,mtl)
-            obj.Material = mtl;
-            obj.needRecalc = 1;
-            obj.Update;
-        end
-
         function M = get.validMaterial(obj)
             M = obj.Material;
             if iscell(M)
                 M = vertcat(M{:});
             end
-        end
-
-        function set.Light(obj,s)
-            obj.Light = s;
-            obj.Update;
-        end
-
-        function set.Cull(obj,c)
-            obj.Cull = c;
-            obj.Update;
-        end
-
-        function set.Shininess(obj,s)
-            obj.Shininess = s;
-            obj.Update;
-        end
-
-        function set.Specular(obj,s)
-            if numel(s) == 1
-                s = [s s s];
-            end
-            obj.Specular = s;
-            obj.Update;
-        end
-
-        function xyz = get.worldCoords(obj)
-            xyz = mapply(obj.validCoords,obj.full_model);
-        end
-
-        function bbox = get.worldBBox(obj)
-            bbox = fvBoundingBox.coords2bbox(obj.worldCoords);
-        end
-
-        function AutoCalcNormals(obj)
-            T = triangulation(double(obj.validPrimIdx),double(obj.validCoords));
-            obj.Normal = T.vertexNormal;
-        end
-
-        function ZoomTo(obj)
-            obj.Camera.ZoomBBox(obj.worldBBox);
         end
 
         function delete(obj)
@@ -314,33 +346,38 @@ classdef fvPrimitive < internal.fvDrawable
 
     methods(Access=protected)
 
-        function DrawFcn(obj,M)
+        function DrawFcn(obj,M,j)
             if obj.needRecalc
                 obj.RecalcBatch;
                 obj.needRecalc = 0;
             end
-            V = obj.Camera.MView;
+
+            u = obj.glProg.uniforms;
+            cam = obj.Camera;
+            u.drawid.Set(j);
+            u.projection.Set(cam.MProj);
+            u.viewPos.Set(cam.getCamPos);
+
             MO = M * obj.model_offset;
-            uni = obj.glDrawable.program.uniforms;
-            uni.modelview.Set(V * MO);
+            u.modelview.Set(cam.MView * MO);
             
-            uni.alpha.Set(obj.Alpha);
+            u.alpha.Set(obj.Alpha);
             
             if isempty(obj.Normal)
-                uni.lighting.Set('none');
-                uni.edlDivisor.Set(1);
+                u.lighting.Set('none');
+                u.edlDivisor.Set(1);
             else
-                uni.lighting.Set('phong');
-                uni.edlDivisor.Set(0.001);
-                uni.model.Set(MO);
+                u.lighting.Set('phong');
+                u.edlDivisor.Set(0.001);
+                u.model.Set(MO);
                 axLight = obj.fvfig.Light;
-                uni.light.position.Set(axLight.Position + obj.Light.Offset);
-                uni.light.ambient.Set(axLight.Ambient .* obj.Light.Ambient);
-                uni.light.diffuse.Set(axLight.Diffuse .* obj.Light.Diffuse);
-                uni.light.specular.Set(axLight.Specular .* obj.Light.Specular);
+                u.light.position.Set(axLight.Position + obj.Light.Offset);
+                u.light.ambient.Set(axLight.Ambient .* obj.Light.Ambient);
+                u.light.diffuse.Set(axLight.Diffuse .* obj.Light.Diffuse);
+                u.light.specular.Set(axLight.Specular .* obj.Light.Specular);
                 if isempty(obj.Material)
-                    uni.material_spec.Set(obj.Specular);
-                    uni.material_shin.Set(obj.Shininess);
+                    u.material_spec.Set(obj.Specular);
+                    u.material_shin.Set(obj.Shininess);
                 end
             end
 
@@ -404,17 +441,10 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function UpdateColor(obj)
-            notify(obj,'ColorChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
             obj.glDrawable.array.EditBuffer({[] [] obj.glColor});
             obj.Update;
-        end
-    end
-
-    methods (Access = protected)
-        function propgrp = getPropertyGroups(~)
-            propgrp = matlab.mixin.util.PropertyGroup({'Specular'});
         end
     end
 

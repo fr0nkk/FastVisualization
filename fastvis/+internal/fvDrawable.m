@@ -2,31 +2,61 @@ classdef (Abstract) fvDrawable < internal.fvChild
 %FVDRAWABLE base drawable class
 
     properties(SetObservable)
+        % Model - Transformation matrix (4x4) to apply to the primitive
         Model = eye(4)
-        Alpha = 1;
-        Active = true;
-        Visible = true;
-        Clickable = true;
 
+        % Alpha - Transparency of the primitive, from 0 to 1
+        Alpha = 1;
+
+        % Visible - Enable or disable only the primitive for drawing
+        Visible logical = true;
+
+        % Active - Enable or disable the primitive AND its children for drawing
+        Active logical = true;
+
+        % Clickable - Enable or disable the ability to click the primitive
+        Clickable logical = true;
+
+        % Camera  - Camera to use for rendering
+        % If not explictly set, it defaults to the parent's camera
         Camera fvCamera
 
-        ConstantSize = false;
-        ConstantSizeCutoff = inf; % in world unit, when ConstantSize is set (does not work when camera is orthographic)
-        ConstantSizeRot = 'Same'; % Same, None or Normal
-        CallbackFcn
-    end
+        % ConstantSize - Render the primitive to have always the same final size
+        % If not equal to zero, the primitive is rendered so 1 unit the
+        % primitive is [ConstantSize] pixels on the screen
+        ConstantSize = 0;
 
-    properties(Abstract,Access=protected)
-        glProg glmu.Program
+        % ConstantSizeCutoff - Max distance before reducing the primitive size
+        % When ConstantSize is not 0, after this distance, the primitive
+        % will start to shrink so it does not take the whole scene
+        % (Does not work when camera projection is set to Orthographic)
+        ConstantSizeCutoff = inf;
+
+        % ConstantSizeRot - Rotation modification to apply when ConstantSize is set
+        % Same: Keep the primitive's rotation
+        % Normal: Make the primitive normal to the camera's Z axis
+        % None: Remove the primitive's rotation
+        ConstantSizeRot char = 'Same';
+
+        % DepthRange - DepthRange to use for drawing
+        % To draw a primitive always on top, use [0 0.1]
+        % To draw a primitive always behind, use [0.9 1]
+        DepthRange
+
+        % CallbackFcn - function_handle to call when the primitive is clicked
+        % Event contains the data property which contains the clicked
+        % index, material and world coordinate
+        CallbackFcn function_handle
     end
 
     properties(SetAccess = protected)
+        % BoundingBox - Bounding box of this primitive
         BoundingBox
     end
 
     methods(Abstract,Access=protected)
         bbox = GetBBox(obj) % bbox = [minXyz rangeXyz] (= [-0.5 -0.5 -0.5 1 1 1] for a centered unit cube)
-        DrawFcn(obj,M);
+        DrawFcn(obj,M,j);
     end
 
     methods(Abstract)
@@ -40,7 +70,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         function c = get.Camera(obj)
             if isempty(obj.Camera)
-                c = obj.fvfig.Camera;
+                c = obj.parent.Camera;
             else
                 c = obj.Camera;
             end
@@ -92,6 +122,22 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj.Update;
         end
 
+        function set.DepthRange(obj,r)
+            if numel(r) ~= 2 || any(r > 1) || any(r < 0)
+                error('DepthRange must be composed of two elements from 0 to 1')
+            end
+            obj.DepthRange = r;
+            obj.Update;
+        end
+
+        function r = get.DepthRange(obj)
+            if isempty(obj.DepthRange)
+                r = obj.parent.DepthRange;
+            else
+                r = obj.DepthRange;
+            end
+        end
+
         function m = full_model(obj)
             m = obj.relative_model(obj.parent.full_model);
         end
@@ -127,6 +173,27 @@ classdef (Abstract) fvDrawable < internal.fvChild
             bbox = obj.BoundingBox;
         end
 
+        function obj = Translate(obj,xyz)
+            obj.Model =  MTrans3D(xyz) * obj.Model;
+        end
+
+        function obj = Rotate(obj,xyz,degFlag,order)
+            if nargin < 3, degFlag = 0; end
+            if nargin < 4, order = [3 2 1]; end
+            obj.Model =  MRot3D(xyz,degFlag,order) * obj.Model;
+        end
+
+        function obj = Scale(obj,xyz)
+            obj.Model =  MScale3D(xyz) * obj.Model;
+        end
+
+        function obj = ResetModel(obj)
+            obj.Model = eye(4);
+        end
+    end
+
+    methods(Access = {?internal.fvController,?internal.fvDrawable})
+
         function [drawnPrims,j] = Draw(obj,gl,M,j,drawnPrims)
             if ~obj.Active, return, end
             
@@ -134,15 +201,12 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
             if obj.Visible
                 j = j+1;
-                u = obj.glProg.uniforms;
-                C = obj.Camera;
-                u.drawid.Set(j);
-                u.projection.Set(C.MProj);
-                u.viewPos.Set(C.getCamPos);
-                tf = obj.Clickable;
+                tf = obj.Clickable && obj.Camera == obj.fvfig.Camera;
                 gl.glColorMaski(2,tf,tf,tf,tf);
                 gl.glColorMaski(3,tf,tf,tf,tf);
-                obj.DrawFcn(M);
+                r = obj.DepthRange;
+                gl.glDepthRange(r(1),r(2));
+                obj.DrawFcn(M,j);
                 drawnPrims = [drawnPrims {obj}];
             end
 
