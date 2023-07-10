@@ -29,9 +29,6 @@ classdef fvImage < internal.fvPrimitive
             obj@internal.fvPrimitive(parent,'GL_TRIANGLE_STRIP',attr,attr,[],[],mtl);
             obj.ImageSource = p.Results.img;
             set(obj,p.Unmatched);
-            if ~obj.fvfig.isHold
-                obj.ZoomTo;
-            end
         end
 
         function src = get.ImageSource(obj)

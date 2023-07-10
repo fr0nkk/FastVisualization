@@ -72,8 +72,12 @@ classdef fvCamera < handle & matlab.mixin.Copyable
 
         function ZoomBBox(obj,bbox)
             if nargin < 2 || isempty(bbox), bbox = [-0.5 -0.5 -0.5 1 1 1]; end
-            obj.viewParamsInternal.O(:) = bbox(1:3)+bbox(4:6)./2;
-            obj.viewParamsInternal.T(:) = [0 0 -max(max(bbox(4:6))*1.5,0.1)];
+            obj.ZoomCenterRange(bbox(1:3)+bbox(4:6)./2,bbox(4:6));
+        end
+
+        function ZoomCenterRange(obj,center,range)
+            obj.viewParamsInternal.O(:) = center;
+            obj.viewParamsInternal.T(:) = [0 0 -max(range(:)).*1.5];
             if ~obj.isPerspective
                 obj.projParamsInternal.F = -obj.viewParamsInternal.T(3) ./ mean(obj.projParamsInternal.size);
             end
@@ -249,7 +253,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable
 
             obj.Projection = char(p);
             if obj.isPerspective
-                obj.viewParamsInternal.T(3) = -obj.projParamsInternal.F .* max(obj.projParamsInternal.size) / tand(obj.cached_fov);
+                obj.viewParamsInternal.T(3) = -obj.projParamsInternal.F .* max(obj.projParamsInternal.size) / 2/tand(obj.cached_fov/2);
                 obj.projParamsInternal.F = obj.cached_fov;
             else
                 obj.cached_fov = obj.projParamsInternal.F;

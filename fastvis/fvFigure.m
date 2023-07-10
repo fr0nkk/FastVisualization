@@ -32,7 +32,7 @@ classdef fvFigure < JChildParent
         Model = eye(4);
 
         % DisplayCoordOnClick - set to true to display the clicked coord in console
-        DisplayCoordOnClick = false;
+        DisplayCoordOnClick = 1;
     end
 
     properties(Transient)
@@ -62,6 +62,7 @@ classdef fvFigure < JChildParent
         pauseStack = 0
         camMouseListeners
         camListener
+        cameraNeedsReset = 0
     end
 
     properties(Dependent,Access=protected)
@@ -165,8 +166,15 @@ classdef fvFigure < JChildParent
 
         function Update(obj)
             if ~isvalid(obj) || ~isvalid(obj.parent) || obj.pauseStack > 0, return, end
-            obj.Camera.AdjustNearFar;
-            obj.parent.Update;
+            if obj.cameraNeedsReset
+                obj.UpdateOnCleanup;
+                obj.UpdateCameraConstraints;
+                obj.ResetCamera;
+                obj.cameraNeedsReset = 0;
+            else
+                obj.Camera.AdjustNearFar;
+                obj.parent.Update;
+            end
         end
 
         function temp = UpdateOnCleanup(obj)
@@ -215,17 +223,12 @@ classdef fvFigure < JChildParent
             obj.Update;
         end
 
-        function addprimitive(obj,prim)
-            if prim.isInit, return, end
-            if ~obj.isHold %&& ~obj.holdStack
-                obj.fvclear;
-            end
-            obj.addChild(prim);
-            
+        function addChild(obj,c)
             if ~obj.isHold
-                obj.ResetCamera;
+                obj.fvclear;
+                obj.cameraNeedsReset = 1;
             end
-            obj.UpdateCameraConstraints;
+            obj.addChild@JChildParent(c);
         end
 
         function ResetCameraZoom(obj)
@@ -355,6 +358,14 @@ classdef fvFigure < JChildParent
         function EndPauseUpdate(obj)
             obj.pauseStack = max(0,obj.pauseStack - 1);
             obj.Update;
+        end
+
+        function c = validCamera(obj)
+            c = obj.Camera;
+        end
+
+        function r = validDepthRange(obj)
+            r = obj.DepthRange;
         end
     end
 end

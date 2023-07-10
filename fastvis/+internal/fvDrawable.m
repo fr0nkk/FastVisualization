@@ -18,8 +18,8 @@ classdef (Abstract) fvDrawable < internal.fvChild
         Clickable logical = true;
 
         % Camera  - Camera to use for rendering
-        % If not explictly set, it defaults to the parent's camera
-        Camera fvCamera
+        % If not set, it defaults to the parent's camera
+        Camera
 
         % ConstantSize - Render the primitive to have always the same final size
         % If not equal to zero, the primitive is rendered so 1 unit the
@@ -68,9 +68,9 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj@internal.fvChild(ax);
         end
 
-        function c = get.Camera(obj)
+        function c = validCamera(obj)
             if isempty(obj.Camera)
-                c = obj.parent.Camera;
+                c = obj.parent.validCamera;
             else
                 c = obj.Camera;
             end
@@ -130,9 +130,9 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj.Update;
         end
 
-        function r = get.DepthRange(obj)
+        function r = validDepthRange(obj)
             if isempty(obj.DepthRange)
-                r = obj.parent.DepthRange;
+                r = obj.parent.validDepthRange;
             else
                 r = obj.DepthRange;
             end
@@ -146,7 +146,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
             if nargin < 2, m = eye(4); end
             m = m * obj.Model;
             if ~obj.ConstantSize(1), return, end
-            C = obj.Camera;
+            C = obj.validCamera;
             [mr,m] = mdecompose(m);
             p = mapply([0 0 0],m);
 
@@ -201,10 +201,10 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
             if obj.Visible
                 j = j+1;
-                tf = obj.Clickable && obj.Camera == obj.fvfig.Camera;
+                tf = obj.Clickable && obj.validCamera == obj.fvfig.Camera;
                 gl.glColorMaski(2,tf,tf,tf,tf);
                 gl.glColorMaski(3,tf,tf,tf,tf);
-                r = obj.DepthRange;
+                r = obj.validDepthRange;
                 gl.glDepthRange(r(1),r(2));
                 obj.DrawFcn(M,j);
                 drawnPrims = [drawnPrims {obj}];

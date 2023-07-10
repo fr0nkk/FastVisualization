@@ -134,18 +134,11 @@ classdef fvPrimitive < internal.fvDrawable
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
             obj.glDrawable.uni.pointMask = 0;
 
-            if isa(parent,'fvFigure')
-                parent.addprimitive(obj);
-            else
-                parent.addChild(obj);
-            end
+            parent.addChild(obj);
             obj.isInit = true;
-
-            if nargin >= 9
+            
+            if ~isempty(varargin)
                 set(obj,varargin{:});
-                if isa(obj.parent,'fvFigure') && ~obj.fvfig.isHold
-                    obj.ZoomTo;
-                end
             end
 
         end
@@ -257,7 +250,9 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function ZoomTo(obj)
-            obj.Camera.ZoomBBox(obj.worldBBox);
+            bbox = obj.BoundingBox;
+            center = mapply(bbox(1:3) + bbox(4:6)./2,obj.full_model);
+            obj.validCamera.ZoomCenterRange(center,bbox(4:6));
         end
 
         function xyz = get.glCoords(obj)
@@ -353,7 +348,7 @@ classdef fvPrimitive < internal.fvDrawable
             end
 
             u = obj.glProg.uniforms;
-            cam = obj.Camera;
+            cam = obj.validCamera;
             u.drawid.Set(j);
             u.projection.Set(cam.MProj);
             u.viewPos.Set(cam.getCamPos);

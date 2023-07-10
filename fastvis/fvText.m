@@ -40,9 +40,9 @@ classdef fvText < internal.fvPrimitive
 
             obj.UpdateShape;
 
-            if ~obj.fvfig.isHold
-                obj.ZoomTo;
-            end
+            % if ~obj.fvfig.isHold
+            %     obj.ZoomTo;
+            % end
         end
 
         function set.Text(obj,v)
