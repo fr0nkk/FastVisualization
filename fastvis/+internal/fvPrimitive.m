@@ -42,7 +42,7 @@ classdef fvPrimitive < internal.fvDrawable
         
         % Light - Struct containing information about this primitive's light
         % The struct must contain Offset, Ambient, Diffuse and Specular
-        Light = struct('Offset',[0 0 0],'Ambient',[0.2 0.2 0.2],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
+        Light = struct('Offset',[0 0 0],'Ambient',[0.3 0.3 0.3],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
 
         % Cull - Cull the front faces
         % 0: no cull
@@ -130,7 +130,7 @@ classdef fvPrimitive < internal.fvDrawable
 
             shdPath = execdir(fileparts(mfilename('fullpath')),'shaders','fvprim');
             obj.glProg = obj.fvfig.ctrl.InitProg(shdPath);
-            obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.PrimitiveType,uint32(0),{obj.glCoords obj.glNormals obj.glColor});
+            obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.PrimitiveType,uint32([0 0 0]),{obj.glCoords obj.glNormals obj.glColor});
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
             obj.glDrawable.uni.pointMask = 0;
 

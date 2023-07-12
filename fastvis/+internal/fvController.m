@@ -74,6 +74,8 @@ classdef fvController< glmu.GLController
             % enable variable point size
             gl.glEnable(gl.GL_PROGRAM_POINT_SIZE);
 
+            % gl.glEnable(gl.GL_FRAMEBUFFER_SRGB);
+
         end
         
         function UpdateFcn(obj,gl)

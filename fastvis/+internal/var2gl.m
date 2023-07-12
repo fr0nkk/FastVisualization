@@ -13,7 +13,6 @@ function x = var2gl(x,n,m)
     end
 
     if width(x) == 1
-        % gray tones
         x = repmat(x,1,n);
     end
 

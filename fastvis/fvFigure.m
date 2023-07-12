@@ -26,7 +26,7 @@ classdef fvFigure < JChildParent
 
         % Type - Type of axes, determining camera constraints
         % Can be auto, 2D, or 3D
-        Type = 'auto'; % auto, 2D or 3D
+        CameraConstraints = 'auto'; % auto, 2D or 3D
 
         % Model - Base transformation model of the fvFigure
         Model = eye(4);
@@ -66,7 +66,7 @@ classdef fvFigure < JChildParent
     end
 
     properties(Dependent,Access=protected)
-        validType
+        validCamConstraints
     end
     
     methods
@@ -197,10 +197,12 @@ classdef fvFigure < JChildParent
         end
 
         function fvclear(obj)
+            t = obj.UpdateOnCleanup;
             obj.Model = eye(4);
             cellfun(@delete,obj.child);
             obj.child = {};
             obj.fvhold(0);
+            obj.BackgroundColor = [0 0 0];
         end
 
         function clear(obj)
@@ -238,7 +240,7 @@ classdef fvFigure < JChildParent
         end
 
         function UpdateCameraConstraints(obj)
-            if strcmpi(obj.validType,'2D')
+            if strcmpi(obj.validCamConstraints,'2D')
                 % 2d mode
                 obj.Camera.RotationActive(2) = 0;
                 obj.Camera.viewParams.R(1) = 0;
@@ -248,13 +250,13 @@ classdef fvFigure < JChildParent
             end
         end
 
-        function set.Type(obj,t)
-            obj.Type = t;
+        function set.CameraConstraints(obj,t)
+            obj.CameraConstraints = t;
             obj.UpdateCameraConstraints
         end
 
-        function t = get.validType(obj)
-            t = obj.Type;
+        function t = get.validCamConstraints(obj)
+            t = obj.CameraConstraints;
             if strcmpi(t,'auto')
                 d = max(cellfun(@ndims,obj.child));
                 if isempty(d) || d >= 3
@@ -276,7 +278,7 @@ classdef fvFigure < JChildParent
 
         function ResetCamera(obj)
             t = obj.UpdateOnCleanup;
-            obj.Camera.viewParams.R = strcmpi(obj.validType,'3D') .* [-45 0 -45];
+            obj.Camera.viewParams.R = strcmpi(obj.validCamConstraints,'3D') .* [-45 0 -45];
             obj.ResetCameraZoom;
         end
 

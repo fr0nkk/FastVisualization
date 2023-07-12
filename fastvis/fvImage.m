@@ -1,5 +1,6 @@
 classdef fvImage < internal.fvPrimitive
 %FVIMAGE 
+% 1 pixel of image is 1 unit of world
     
     properties(Transient,SetObservable)
         ImageSource

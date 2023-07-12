@@ -61,8 +61,8 @@ classdef fvBoundingBox < handle & matlab.mixin.SetGet
         end
 
         function ind = Extract(obj,prim)
-            % get the bounding box model in prim's SOC
-            M = prim.full_model \ obj.BBoxLines.full_model;
+            
+            M = prim.full_model \ obj.BBoxLines.full_model; % get the bounding box model in prim's SOC
             ind = obj.inside(prim.Coord,M);
         end
 

@@ -1,7 +1,19 @@
 classdef fvHud < fvLine
+    %FVHUD Work in progress
+    % Attaching Text or image with constant size to this primitive will
+    % show them always on top in the range [0..1]
+    %
+    % example:
+    % fvPointcloud;
+    % fvhold on;
+    % h = fvHud;
+    % fvText(h,'SomeText').Translate([0.1 0.1 0]);
+    % fvImage(h,'ConstantSize',0.5); % 1 pixel of image is 0.5 pixel of figure
+
     properties(Access=protected)
-        el
+        resize_listener
     end
+
     methods
         function obj = fvHud(varargin)
             [ax,args,t] = internal.fvParse(varargin{:});
@@ -13,7 +25,7 @@ classdef fvHud < fvLine
             obj@fvLine(ax,xy,[1 1 0],'Camera',c,'DepthRange',[0 0.1],'Visible',1);
             
             
-            obj.el = addlistener(obj.fvfig.Camera,'Resized',@(~,~) obj.ResizeHud);
+            obj.resize_listener = addlistener(obj.fvfig.Camera,'Resized',@(~,~) obj.ResizeHud);
             obj.ResizeHud();
 
         end
@@ -23,7 +35,7 @@ classdef fvHud < fvLine
         end
 
         function delete(obj)
-            delete(obj.el);
+            delete(obj.resize_listener);
         end
     end
     methods(Access=protected)
