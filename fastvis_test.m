@@ -1,7 +1,8 @@
 
 a = fvFigure;
-fvhold on
+onCleanupObj = a.UpdateOnCleanup; % only update when this variable is cleared
 
+fvhold on
 wo = wobj('f16.obj');
 [tri,xyz,texCoord,normals,materials,vertex_material] = wo.getDrawData;
 m = fvMesh(tri,xyz,texCoord,normals,materials,vertex_material);
@@ -20,7 +21,7 @@ line.Scale([1 1 2]);
 im = fvImage();
 im.Scale(2/max(im.ImageSize)).Rotate([45 0 0],1).Translate([1 0.5 6]);
 
-fvText('TEST','TextSize',0,'Alpha',0.5).Translate([-2 -2 2]);
+fvText('TEST','TextSize',0,'Alpha',0.5,'Color',[1 0 0]).Translate([-2 -2 2]);
 
 bb = fvBoundingBox(line,[]);
 
@@ -32,5 +33,5 @@ p2.MinPointSize = 3;
 p2.PointShape = imresize([0 1 0 ; 1 1 1 ; 0 1 0],5,'nearest');
 
 a.ResetCamera;
-a.DisplayCoordOnClick = true;
 
+clear onCleanupObj % update

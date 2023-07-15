@@ -38,7 +38,7 @@ classdef fvPrimitive < internal.fvDrawable
 
         % Colormap - Colormap to use when colors are in colormap mode
         % Can be [M x 3] where M is the number of colors, or the name of a colormap
-        Colormap = 'jet'
+        Colormap = 'parula'
         
         % Light - Struct containing information about this primitive's light
         % The struct must contain Offset, Ambient, Diffuse and Specular
@@ -133,7 +133,7 @@ classdef fvPrimitive < internal.fvDrawable
             obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.PrimitiveType,uint32([0 0 0]),{obj.glCoords obj.glNormals obj.glColor});
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
             obj.glDrawable.uni.pointMask = 0;
-
+            obj.Name = 'fvPrimitive';
             parent.addChild(obj);
             obj.isInit = true;
             

@@ -27,7 +27,7 @@ classdef fvImage < internal.fvPrimitive
 
             attr = [0 0;1 0;0 1;1 1];
             mtl = fvMaterial(0);
-            obj@internal.fvPrimitive(parent,'GL_TRIANGLE_STRIP',attr,attr,[],[],mtl);
+            obj@internal.fvPrimitive(parent,'GL_TRIANGLE_STRIP',attr,attr,[],[],mtl,1,'Name','fvImage');
             obj.ImageSource = p.Results.img;
             set(obj,p.Unmatched);
         end

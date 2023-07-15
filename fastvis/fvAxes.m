@@ -12,7 +12,7 @@ col = [1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1; 0 0 1];
 ind = [1 2 nan 3 4 nan 5 6]';
 mdl = MTrans3D(p.Results.pos);
 
-A = fvLine(parent,xyz,col,ind,'Clickable',false,'Model',mdl);
+A = fvLine(parent,xyz,col,ind,'Clickable',false,'Model',mdl,'Name','fvAxes');
 A.ConstantSize = 100;
 set(A,p.Unmatched);
 

@@ -45,7 +45,7 @@ end
 
 n = p.Results.norm;
 
-M = internal.fvPrimitive(parent,'GL_TRIANGLES',xyz,col,n,tri,mtl,mtl_idx,p.Unmatched);
+M = internal.fvPrimitive(parent,'GL_TRIANGLES',xyz,col,n,tri,mtl,mtl_idx,'Name','fvMesh',p.Unmatched);
 
 if isempty(n) && p.Results.AutoCalcNormals
     M.AutoCalcNormals;

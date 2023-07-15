@@ -22,7 +22,7 @@ classdef fvHud < fvLine
             c.viewParams.T = [0 0 -1/tand(c.projParams.F/2)];
             
             xy = ([0 0 ; 0 1 ; 1 1 ; 1 0 ; 0 0]-0.5)./1.01+0.5;
-            obj@fvLine(ax,xy,[1 1 0],'Camera',c,'DepthRange',[0 0.1],'Visible',1);
+            obj@fvLine(ax,xy,[1 1 0],'Camera',c,'DepthRange',[0 0.1],'Visible',1,'Name','fvHud');
             
             
             obj.resize_listener = addlistener(obj.fvfig.Camera,'Resized',@(~,~) obj.ResizeHud);

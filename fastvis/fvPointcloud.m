@@ -29,7 +29,7 @@ classdef fvPointcloud < internal.fvPrimitive
                 end
             end
 
-            obj@internal.fvPrimitive(ax,'GL_POINTS',xyz,col,[],[],[],[],p.Unmatched);
+            obj@internal.fvPrimitive(ax,'GL_POINTS',xyz,col,[],[],[],[],'Name','fvPointcloud',p.Unmatched);
         end
 
         function set.PointUnit(obj,t)

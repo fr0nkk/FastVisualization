@@ -29,7 +29,7 @@ classdef fvText < internal.fvPrimitive
             end
             p.parse(args{:});
             
-            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',[0 0 0],[1 1 0],[],nan,[],[],'ConstantSizeRot','Normal');
+            obj@internal.fvPrimitive(parent,'GL_TRIANGLES',[0 0 0],[1 1 0],[],nan,[],[],'Name','fvText','ConstantSizeRot','Normal');
 
             obj.isInit = false;
             obj.ConstantSize = 20;

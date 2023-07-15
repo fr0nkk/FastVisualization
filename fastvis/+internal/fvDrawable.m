@@ -47,6 +47,8 @@ classdef (Abstract) fvDrawable < internal.fvChild
         % Event contains the data property which contains the clicked
         % index, material and world coordinate
         CallbackFcn function_handle
+
+        Name = 'fvDrawable';
     end
 
     properties(SetAccess = protected)

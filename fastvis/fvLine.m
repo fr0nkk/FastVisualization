@@ -33,7 +33,7 @@ classdef fvLine < internal.fvPrimitive
                 end
             end
 
-            obj@internal.fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind,[],[],p.Unmatched);
+            obj@internal.fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind,[],[],'Name','fvLine',p.Unmatched);
         end
 
         function set.LineWidth(obj,w)

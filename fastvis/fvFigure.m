@@ -31,13 +31,16 @@ classdef fvFigure < JChildParent
         % Model - Base transformation model of the fvFigure
         Model = eye(4);
 
-        % DisplayCoordOnClick - set to true to display the clicked coord in console
-        DisplayCoordOnClick = 1;
+        
+        RightClickActive = 1;
     end
 
     properties(Transient)
         % Title - Title of the fvFigure
         Title
+
+        % Size - Size of the canvas
+        Size
     end
 
     properties(Hidden)
@@ -63,11 +66,16 @@ classdef fvFigure < JChildParent
         camMouseListeners
         camListener
         cameraNeedsReset = 0
+        ppmenu
     end
 
     properties(Dependent,Access=protected)
         validCamConstraints
     end
+
+    % %#ok<*INUSD>
+    % %#ok<*ASGLU>
+    % %#ok<*NASGU>
     
     methods
         function obj = fvFigure(camera,msaaSamples,canvas)
@@ -98,6 +106,9 @@ classdef fvFigure < JChildParent
             obj.parent.parent.setCallback('FocusGained',@obj.FocusGainedCallback);
             obj.FocusGainedCallback;
             internal.fvInstances('add',obj);
+
+            obj.ppmenu = internal.fvPopup;
+            
         end
 
         function id = NextColorId(obj)
@@ -132,12 +143,12 @@ classdef fvFigure < JChildParent
             evt.data = obj.lastMousePress;
             notify(obj,'MouseClicked',evt);
             if isempty(obj.lastMousePress), return, end
-            if obj.DisplayCoordOnClick
-                disp(obj.lastMousePress.xyz)
-            end
             o = obj.lastMousePress.object;
+            evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,1);
+            if obj.RightClickActive && evt.java.isPopupTrigger
+                obj.ppmenu.show(evt)
+            end
             if ~isempty(o.CallbackFcn)
-                evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,1);
                 o.CallbackFcn(obj,evt);
             end
         end
@@ -321,6 +332,17 @@ classdef fvFigure < JChildParent
 
         function set.Title(obj,t)
             obj.parent.parent.title = t;
+        end
+
+        function sz = get.Size(obj)
+            sz = obj.parent.size;
+        end
+
+        function set.Size(obj,sz)
+            t = obj.UpdateOnCleanup;
+            obj.parent.size = sz;
+            obj.parent.parent.java.pack;
+            obj.Update;
         end
 
         function C = validateChilds(obj,desiredClass)
