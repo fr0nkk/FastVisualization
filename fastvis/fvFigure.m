@@ -278,12 +278,12 @@ classdef fvFigure < JChildParent
             end
         end
 
-        function img = Snapshot(obj)
-            img = obj.ctrl.Snapshot;
+        function [img,depth] = Snapshot(obj)
+            [img,depth] = obj.ctrl.Snapshot;
             if nargout == 0
                 figure('Name','fvFigure Snapshot','NumberTitle','off');
                 imshow(img);
-                clear img
+                clear img depth
             end
         end
 

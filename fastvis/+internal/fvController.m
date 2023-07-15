@@ -15,7 +15,7 @@ classdef fvController< glmu.GLController
         clearColor = {0 0 0};
 
         drawnPrimitives = {}
-        lastViewParams
+        lastViewMatrix
     end
     
     methods
@@ -76,6 +76,8 @@ classdef fvController< glmu.GLController
 
             % gl.glEnable(gl.GL_FRAMEBUFFER_SRGB);
 
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
+
         end
         
         function UpdateFcn(obj,gl)
@@ -106,7 +108,7 @@ classdef fvController< glmu.GLController
                 [drawnPrims,j] = C{i}.Draw(gl,M,j,drawnPrims);
             end
             obj.drawnPrimitives = drawnPrims;
-            obj.lastViewParams = obj.fvfig.Camera.viewParams;
+            obj.lastViewMatrix = obj.fvfig.Camera.MView;
 
             obj.framebuffer.DrawTo(1:3);
 
@@ -166,18 +168,22 @@ classdef fvController< glmu.GLController
 %             id
         end
 
-        function img = Snapshot(obj)
+        function [img,depth] = Snapshot(obj)
             [gl,temp] = obj.canvas.getContext;
-            obj.framebuffer.ReadFrom(1);
             w = obj.canvas.java.getWidth;
             h = obj.canvas.java.getHeight;
             
-            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
+            obj.framebuffer.ReadFrom(1);
             b = javabuffer(zeros(3,w,h,'uint8'));
             gl.glReadPixels(0,0,w,h,gl.GL_RGB, gl.GL_UNSIGNED_BYTE, b.p);
-            img = b.array;
-            img = permute(img,[2 3 1]);
-            img = rot90(img);
+            img = unpack3(b.array);
+
+            obj.framebuffer.ReadFrom(2);
+            b = javabuffer(zeros(3,w,h,'single'));
+            gl.glReadPixels(0,0,w,h,gl.GL_RGB, gl.GL_FLOAT, b.p);
+            depth = unpack3(b.array);
+            depth = vecnorm(depth,2,3);
+            depth(depth==0) = inf;
         end
 
         function prog = InitProg(obj,fullname)
@@ -202,11 +208,10 @@ classdef fvController< glmu.GLController
 
         function [xyz,info] = coord2closest(obj,coord,radius)
             [xyzs,ids] = obj.glGetZone(coord,radius);
-
-            v = obj.lastViewParams;
             if any(ids(:,1))
                 [~,k] = max(xyzs(:,3));
-                xyz = mapply(double(xyzs(k,:)),MTrans3D(v.T) * MRot3D(v.R,1,[1 3]),1) + v.O;
+
+                xyz = mapply(double(xyzs(k,:)),obj.lastViewMatrix,1);
                 id = ids(k,:);
                 info = obj.id2info(id);
                 info.xyz = xyz;
@@ -216,4 +221,9 @@ classdef fvController< glmu.GLController
             end
         end
     end
+end
+
+function x = unpack3(x)
+    x = permute(x,[2 3 1]);
+    x = rot90(x);
 end
