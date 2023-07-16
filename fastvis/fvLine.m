@@ -1,11 +1,11 @@
 classdef fvLine < internal.fvPrimitive
 %FVLINE view lines in fast vis
 
-    properties(SetObservable)
+    properties(Transient,SetObservable)
         LineWidth = 1
     end
 
-    properties(Transient)
+    properties(Dependent)
         LineStrip
     end
     

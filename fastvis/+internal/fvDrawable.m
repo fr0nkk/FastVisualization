@@ -1,7 +1,7 @@
 classdef (Abstract) fvDrawable < internal.fvChild
 %FVDRAWABLE base drawable class
 
-    properties(SetObservable)
+    properties(Transient,SetObservable)
         % Model - Transformation matrix (4x4) to apply to the primitive
         Model = eye(4)
 
@@ -66,9 +66,9 @@ classdef (Abstract) fvDrawable < internal.fvChild
     end
     
     methods
-        function obj = fvDrawable(ax)
-            obj@internal.fvChild(ax);
-        end
+        % function obj = fvDrawable(ax)
+        %     obj@internal.fvChild(ax);
+        % end
 
         function c = validCamera(obj)
             if isempty(obj.Camera)
@@ -125,7 +125,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
         end
 
         function set.DepthRange(obj,r)
-            if numel(r) ~= 2 || any(r > 1) || any(r < 0)
+            if ~isempty(r) && (numel(r) ~= 2 || any(r > 1) || any(r < 0))
                 error('DepthRange must be composed of two elements from 0 to 1')
             end
             obj.DepthRange = r;

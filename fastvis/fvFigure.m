@@ -66,7 +66,7 @@ classdef fvFigure < JChildParent
         camMouseListeners
         camListener
         cameraNeedsReset = 0
-        ppmenu
+        popup
     end
 
     properties(Dependent,Access=protected)
@@ -107,7 +107,7 @@ classdef fvFigure < JChildParent
             obj.FocusGainedCallback;
             internal.fvInstances('add',obj);
 
-            obj.ppmenu = internal.fvPopup;
+            obj.popup = internal.fvPopup;
             
         end
 
@@ -146,7 +146,7 @@ classdef fvFigure < JChildParent
             o = obj.lastMousePress.object;
             evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,1);
             if obj.RightClickActive && evt.java.isPopupTrigger
-                obj.ppmenu.show(evt)
+                obj.popup.show(evt)
             end
             if ~isempty(o.CallbackFcn)
                 o.CallbackFcn(obj,evt);
@@ -390,6 +390,18 @@ classdef fvFigure < JChildParent
 
         function r = validDepthRange(obj)
             r = obj.DepthRange;
+        end
+
+        function s = saveobj(obj)
+            s = struct('a',1);
+        end
+
+    end
+
+    methods(Static,Hidden)
+
+        function o = loadobj(s)
+            o = fvFigure;
         end
     end
 end

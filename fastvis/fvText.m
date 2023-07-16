@@ -1,7 +1,7 @@
 classdef fvText < internal.fvPrimitive
 %FVTEXT Insert text
 
-    properties(SetObservable)
+    properties(Transient,SetObservable)
         % Text - Text to display
         Text char
 
@@ -13,7 +13,7 @@ classdef fvText < internal.fvPrimitive
         VerticalAlignment char = 'Bottom' % Valid values: Top, Bottom, Center
     end
 
-    properties(Transient)
+    properties(Dependent,SetObservable)
         TextSize % Text size - see ConstantSize property
     end
 
@@ -35,14 +35,9 @@ classdef fvText < internal.fvPrimitive
             obj.ConstantSize = 20;
             obj.Text = p.Results.Text;
             set(obj,p.Unmatched);
-
             obj.isInit = true;
 
             obj.UpdateShape;
-
-            % if ~obj.fvfig.isHold
-            %     obj.ZoomTo;
-            % end
         end
 
         function set.Text(obj,v)

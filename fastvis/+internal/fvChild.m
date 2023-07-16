@@ -1,4 +1,4 @@
-classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
+classdef (Abstract) fvChild < JChildParent & internal.fvSaveLoad
 %FVCHILD
     
     properties(Transient,Hidden)
@@ -12,6 +12,9 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
     
     methods
         function obj = fvChild(ax)
+            if isempty(ax)
+                ax = gcfv;
+            end
             while ~isa(ax,'fvFigure')
                 ax = ax.parent;
             end
@@ -59,5 +62,6 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             end
         end
     end
+
 end
 

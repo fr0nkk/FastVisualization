@@ -1,7 +1,7 @@
 classdef fvCamera < handle & matlab.mixin.Copyable
 %FVCAMERA
 
-    properties(Transient)
+    properties(Transient,SetObservable)
         viewParams % struct: O = origin, R = rotation, T = translation
         projParams
 
@@ -14,7 +14,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable
         PanActive = [true true] % xy
 
         Projection = 'Perspective' % Perspective or Orthographic
-        AnimateProjectionChange = false
+        AnimateProjectionChange = true
         NearFarFcn = @(d) [d/10 d*50];
     end
 
@@ -201,6 +201,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable
             if isempty(MV1), MV1 = obj.MView; end
 
             obj.isAnimatingMatrix = true; temp = onCleanup(@() obj.EndAnimation(MP1,MV1));
+            if ~event.hasListener(obj,'Moved'), return; end
             oldM = [MP0(:)' MV0(:)'];
             newM = [MP1(:)' MV1(:)'];
             t = tic;
@@ -224,8 +225,8 @@ classdef fvCamera < handle & matlab.mixin.Copyable
             if isempty(pp1), pp1 = obj.projParamsInternal; end
             if isempty(vp0), vp0 = obj.viewParamsInternal; end
             if isempty(vp1), vp1 = obj.viewParamsInternal; end
-
             obj.isAnimatingMatrix = true; temp = onCleanup(@() obj.EndAnimation(pp1,vp1));
+            if ~event.hasListener(obj,'Moved'), return; end
             oldParam = [pp0.size pp0.near pp0.far pp0.F vp0.O vp0.R vp0.T];
             newParam = [pp1.size pp1.near pp1.far pp1.F vp1.O vp1.R vp1.T];
 

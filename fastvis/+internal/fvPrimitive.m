@@ -57,6 +57,10 @@ classdef fvPrimitive < internal.fvDrawable
         Shininess = 10;
     end
 
+    properties(Dependent)
+        isColormapped
+    end
+
     events
         CoordsChanged
         ColorChanged
@@ -101,7 +105,11 @@ classdef fvPrimitive < internal.fvDrawable
     methods
 
         function obj = fvPrimitive(parent,prim_type,coords,color,normals,prim_index,material,material_index,varargin)
+            if nargin < 1, parent = []; end
             obj@internal.fvDrawable(parent);
+            
+            if nargin < 2, prim_type = 'GL_POINTS'; end
+            if nargin < 3, coords = [0 0 0]; end
             if nargin < 4, color = []; end
             if nargin < 5, normals = []; end
             if nargin < 6, prim_index = []; end
@@ -302,9 +310,13 @@ classdef fvPrimitive < internal.fvDrawable
             end
         end
 
+        function tf = get.isColormapped(obj)
+            tf = width(obj.Color) == 1;
+        end
+
         function c = get.validColor(obj)
             c = obj.Color;
-            if width(c) == 1
+            if obj.isColormapped
                 % colormap mode
                 cmap = obj.Colormap;
                 if isscalartext(cmap)

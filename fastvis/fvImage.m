@@ -2,11 +2,11 @@ classdef fvImage < internal.fvPrimitive
 %FVIMAGE 
 % 1 pixel of image is 1 unit of world
     
-    properties(Transient,SetObservable)
+    properties(Dependent,SetObservable)
         ImageSource
     end
 
-    properties(SetAccess = protected)
+    properties(Dependent)
         ImageSize
     end
     
@@ -38,14 +38,17 @@ classdef fvImage < internal.fvPrimitive
 
         function set.ImageSource(obj,img)
             obj.Material.color = img;
+            obj.Coord = [0 0;1 0;0 1;1 1] .* fliplr(obj.ImageSize);
+        end
+
+        function sz = get.ImageSize(obj)
+            img = obj.Material.color;
             if isscalartext(img)
                 info = imfinfo(img);
                 sz = [info.Height info.Width];
             else
                 sz = size(img,[1 2]);
             end
-            obj.Coord = [0 0;1 0;0 1;1 1] .* fliplr(sz);
-            obj.ImageSize = sz;
         end
     end
 end
