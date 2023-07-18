@@ -1,4 +1,4 @@
-classdef (Abstract) fvChild < JChildParent & internal.fvSaveLoad
+classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
 %FVCHILD
     
     properties(Transient,Hidden)
@@ -12,9 +12,6 @@ classdef (Abstract) fvChild < JChildParent & internal.fvSaveLoad
     
     methods
         function obj = fvChild(ax)
-            if isempty(ax)
-                ax = gcfv;
-            end
             while ~isa(ax,'fvFigure')
                 ax = ax.parent;
             end
@@ -61,6 +58,40 @@ classdef (Abstract) fvChild < JChildParent & internal.fvSaveLoad
             catch
             end
         end
+    end
+
+    methods(Hidden)
+        function s = saveobj(obj)
+            s = obj.fv2struct;
+        end
+
+        function s = fv2struct(obj,varargin)
+            m = metaclass(obj);
+            tf = [m.PropertyList.Transient] & [m.PropertyList.SetObservable];
+            props = {m.PropertyList(tf).Name};
+            vals = cellfun(@(p) {obj.(p)},props,'uni',0);
+            args = [props ; vals];
+            s = struct('class',class(obj),'varargin',{varargin},'props',struct(args{:}));
+            s.child = cellfun(@saveobj,obj.child,'uni',0);
+        end
+    end
+
+    methods(Static,Hidden)
+        function obj = loadobj(s)
+            obj = internal.fvChild.struct2fv(s);
+        end
+        
+        function obj = struct2fv(s,parent)
+            if nargin < 2
+                parent = gcfv;
+                t = parent.UpdateOnCleanup;
+            end
+            f = str2func(s.class);
+            obj = f(parent,s.varargin{:});
+            set(obj,s.props);
+            cellfun(@(c) internal.fvChild.struct2fv(c,obj),s.child,'uni',0);
+        end
+
     end
 
 end

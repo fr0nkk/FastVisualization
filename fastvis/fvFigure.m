@@ -1,4 +1,4 @@
-classdef fvFigure < JChildParent
+classdef fvFigure < JChildParent & matlab.mixin.SetGet
     
     properties(Transient,SetObservable)
         % BackgroundColor - Color of the fvFigure's background
@@ -13,10 +13,10 @@ classdef fvFigure < JChildParent
 
         % edl - Eye Dome Lighting normalized strength
         % set to 0 to deactivate
-        edl = 0.1;
+        EDL = 0.1;
 
         % edlWithBackground - Use EDL to shade objects with background
-        edlWithBackground logical = false
+        EDLWithBackground logical = false
 
         % ColorOrder - Colormap for object's color when they have no color specified
         ColorOrder = lines(7);
@@ -32,15 +32,16 @@ classdef fvFigure < JChildParent
         Model = eye(4);
 
         
-        RightClickActive = 1;
-    end
+        PopupMenuActive = 1;
 
-    properties(Transient)
+
         % Title - Title of the fvFigure
         Title
 
         % Size - Size of the canvas
         Size
+
+        MSAA = 4
     end
 
     properties(Hidden)
@@ -72,19 +73,13 @@ classdef fvFigure < JChildParent
     properties(Dependent,Access=protected)
         validCamConstraints
     end
-
-    % %#ok<*INUSD>
-    % %#ok<*ASGLU>
-    % %#ok<*NASGU>
     
     methods
-        function obj = fvFigure(camera,msaaSamples,canvas)
-            if nargin < 1 || isempty(camera), camera = fvCamera; end
-            if nargin < 2 || isempty(msaaSamples), msaaSamples = 4; end
-            
-            obj.Camera = camera;
+        function obj = fvFigure(canvas)
+
+            obj.Camera = fvCamera;
             obj.ctrl = internal.fvController;
-            if nargin < 3 || isempty(canvas)
+            if nargin < 1 || isempty(canvas)
                 canvas = GLCanvas('GL4',0);
                 parent = JFrame(mfilename);
                 parent.add(canvas);
@@ -92,7 +87,7 @@ classdef fvFigure < JChildParent
             
             canvas.addChild(obj);
             obj.ctrl.setGLCanvas(obj.parent);
-            obj.parent.Init(obj,msaaSamples);
+            obj.parent.Init(obj,obj.MSAA);
             obj.mtlCache = internal.fvMaterialCache(obj);
             obj.MouseEvents = JMouseEvents(obj.parent);
             obj.camMouseListeners = [
@@ -108,20 +103,19 @@ classdef fvFigure < JChildParent
             internal.fvInstances('add',obj);
 
             obj.popup = internal.fvPopup;
-            
         end
 
         function id = NextColorId(obj)
             id = numel(obj.child)*obj.isHold + 1;
         end
 
-        function set.Camera(obj,fvcam)
-            if ~isa(fvcam,'fvCamera')
+        function set.Camera(obj,cam)
+            if ~isa(cam,'fvCamera')
                 error('Camera must be a fvCamera');
             end
             delete(obj.camListener)
-            obj.camListener = skippablelistener(fvcam,'Moved',@(src,evt) obj.Update);
-            obj.Camera = fvcam;
+            obj.camListener = skippablelistener(cam,'Moved',@(src,evt) obj.Update);
+            obj.Camera = cam;
             if ~isempty(obj.ctrl)
                 obj.Camera.Resize(obj.ctrl.figSize);
                 obj.Update;
@@ -143,9 +137,9 @@ classdef fvFigure < JChildParent
             evt.data = obj.lastMousePress;
             notify(obj,'MouseClicked',evt);
             if isempty(obj.lastMousePress), return, end
-            o = obj.lastMousePress.object;
+            o = obj.lastMousePress.info.object;
             evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,1);
-            if obj.RightClickActive && evt.java.isPopupTrigger
+            if obj.PopupMenuActive && evt.java.isPopupTrigger
                 obj.popup.show(evt)
             end
             if ~isempty(o.CallbackFcn)
@@ -229,7 +223,7 @@ classdef fvFigure < JChildParent
             obj.Update;
         end
 
-        function set.edlWithBackground(obj,tf)
+        function set.EDLWithBackground(obj,tf)
             tf = logical(tf(1));
             [gl,temp] = obj.getContext;
             obj.ctrl.screen.program.uniforms.edlWithBackground.Set(tf);
@@ -254,7 +248,7 @@ classdef fvFigure < JChildParent
             if strcmpi(obj.validCamConstraints,'2D')
                 % 2d mode
                 obj.Camera.RotationActive(2) = 0;
-                obj.Camera.viewParams.R(1) = 0;
+                obj.Camera.Rotation(1) = 0;
             else
                 % 3d mode
                 obj.Camera.RotationActive(2) = 1;
@@ -289,7 +283,7 @@ classdef fvFigure < JChildParent
 
         function ResetCamera(obj)
             t = obj.UpdateOnCleanup;
-            obj.Camera.viewParams.R = strcmpi(obj.validCamConstraints,'3D') .* [-45 0 -45];
+            obj.Camera.Rotation = strcmpi(obj.validCamConstraints,'3D') .* [-45 0 -45];
             obj.ResetCameraZoom;
         end
 
@@ -298,8 +292,8 @@ classdef fvFigure < JChildParent
             obj.Update;
         end
 
-        function set.edl(obj,value)
-            obj.edl = value;
+        function set.EDL(obj,value)
+            obj.EDL = value;
             obj.Update;
         end
 
@@ -342,6 +336,12 @@ classdef fvFigure < JChildParent
             t = obj.UpdateOnCleanup;
             obj.parent.size = sz;
             obj.parent.parent.java.pack;
+            obj.Update;
+        end
+
+        function set.MSAA(obj,n)
+            obj.ctrl.SetMSAA(n);
+            obj.MSAA = n;
             obj.Update;
         end
 
@@ -393,15 +393,24 @@ classdef fvFigure < JChildParent
         end
 
         function s = saveobj(obj)
-            s = struct('a',1);
+            m = metaclass(obj);
+            tf = [m.PropertyList.Transient] & [m.PropertyList.SetObservable];
+            props = {m.PropertyList(tf).Name};
+            vals = cellfun(@(p) {obj.(p)},props,'uni',0);
+            args = [props ; vals];
+            s = struct('props',struct(args{:}));
+            s.child = cellfun(@saveobj,obj.child,'uni',0);
         end
 
     end
 
     methods(Static,Hidden)
-
-        function o = loadobj(s)
-            o = fvFigure;
+        function obj = loadobj(s)
+            obj = fvFigure;
+            fvhold(obj,'on');
+            t = obj.UpdateOnCleanup;
+            cellfun(@(c) internal.fvChild.struct2fv(c,obj),s.child,'uni',0);
+            set(obj,s.props);
         end
     end
 end

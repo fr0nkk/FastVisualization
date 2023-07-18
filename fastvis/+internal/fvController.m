@@ -1,4 +1,4 @@
-classdef fvController< glmu.GLController
+classdef fvController < glmu.GLController
 %FVCONTROLLER
 
     properties
@@ -21,23 +21,8 @@ classdef fvController< glmu.GLController
     methods
         
         function InitFcn(obj,gl,ax,msaaSamples)
-            msaaSamples = max(msaaSamples,1);
-            
             obj.fvfig = ax;
             shdDir = execdir(fileparts(mfilename('fullpath')),'shaders');
-            % obj.mesh = glmu.Program(fullfile(shdDir,'fvprim'));
-            
-            % MSAA render buffer setup
-            MSTcol = glmu.Texture(0,gl.GL_TEXTURE_2D_MULTISAMPLE);
-            MSTcamDist = glmu.Texture(1,gl.GL_TEXTURE_2D_MULTISAMPLE);
-            MSTxyz = glmu.Texture(2,gl.GL_TEXTURE_2D_MULTISAMPLE);
-            MSTid = glmu.Texture(3,gl.GL_TEXTURE_2D_MULTISAMPLE);
-            MSrenderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT16,msaaSamples);
-            MSrenderbuffer.AddTexture(MSTcol,gl.GL_FLOAT,gl.GL_RGBA,gl.GL_RGBA16F);
-            MSrenderbuffer.AddTexture(MSTcamDist,gl.GL_FLOAT,gl.GL_RG,gl.GL_RG32F);
-            MSrenderbuffer.AddTexture(MSTxyz,gl.GL_FLOAT,gl.GL_RGB,gl.GL_RGB32F);
-            MSrenderbuffer.AddTexture(MSTid,gl.GL_UNSIGNED_INT,gl.GL_RG_INTEGER,gl.GL_RG32UI);
-            obj.MSframebuffer = glmu.Framebuffer(gl.GL_FRAMEBUFFER,MSrenderbuffer,gl.GL_DEPTH_ATTACHMENT);
 
             % resolved render buffer setup
             Tcol = glmu.Texture(4,gl.GL_TEXTURE_2D);
@@ -58,11 +43,9 @@ classdef fvController< glmu.GLController
             % render screen setup
             quadVert = single([-1 -1 0 0; 1 -1 1 0;-1 1 0 1;  1 1 1 1]');
             obj.screen = glmu.drawable.Array(fullfile(shdDir,'pass1'),gl.GL_TRIANGLE_STRIP,quadVert);
-            obj.screen.program.uniforms.msaa.Set(msaaSamples);
-            obj.screen.uni.colorTex = MSTcol;
-            obj.screen.uni.camDistTex = MSTcamDist;
-            obj.screen.uni.xyzTex = MSTxyz;
-            obj.screen.uni.idTex = MSTid;
+
+            % MSAA render buffer setup
+            obj.SetMSAA(msaaSamples);
             
             % clear flags setup
             obj.clearFlag = glmu.BitFlags('GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
@@ -100,7 +83,7 @@ classdef fvController< glmu.GLController
             gl.glColorMaski(2,1,1,1,1);
             gl.glColorMaski(3,1,1,1,1);
 
-            C = obj.fvfig.validateChilds('internal.fvDrawable');
+            C = obj.fvfig.validateChilds;
             M = obj.fvfig.full_model;
             j = 0;
             drawnPrims = {};
@@ -122,7 +105,7 @@ classdef fvController< glmu.GLController
             gl.glEnable(gl.GL_CULL_FACE);
             gl.glFrontFace(gl.GL_CCW);
 
-            obj.screen.program.uniforms.edlStrength.Set(obj.fvfig.edl);
+            obj.screen.program.uniforms.edlStrength.Set(obj.fvfig.EDL);
             obj.screen.Draw;
             
             glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.figSize)
@@ -137,6 +120,34 @@ classdef fvController< glmu.GLController
             obj.fvfig.Camera.Resize(sz);
             obj.MSframebuffer.Resize(sz);
             obj.framebuffer.Resize(sz);
+        end
+
+        function SetMSAA(obj,nSamples)
+            nSamples = max(nSamples,1);
+            [gl,temp] = obj.canvas.getContext;
+            maxSamples = glmu.Get(gl,@glGetIntegerv,gl.GL_MAX_SAMPLES,1,'int32');
+            if nSamples > maxSamples
+                nSamples = maxSamples;
+                warning('MSAA has been clamped to GL_MAX_SAMPLES (%i)',maxSamples)
+            end
+            % MSAA render buffer setup
+            MSTcol = glmu.Texture(0,gl.GL_TEXTURE_2D_MULTISAMPLE);
+            MSTcamDist = glmu.Texture(1,gl.GL_TEXTURE_2D_MULTISAMPLE);
+            MSTxyz = glmu.Texture(2,gl.GL_TEXTURE_2D_MULTISAMPLE);
+            MSTid = glmu.Texture(3,gl.GL_TEXTURE_2D_MULTISAMPLE);
+            MSrenderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT16,nSamples);
+            MSrenderbuffer.AddTexture(MSTcol,gl.GL_FLOAT,gl.GL_RGBA,gl.GL_RGBA16F);
+            MSrenderbuffer.AddTexture(MSTcamDist,gl.GL_FLOAT,gl.GL_RG,gl.GL_RG32F);
+            MSrenderbuffer.AddTexture(MSTxyz,gl.GL_FLOAT,gl.GL_RGB,gl.GL_RGB32F);
+            MSrenderbuffer.AddTexture(MSTid,gl.GL_UNSIGNED_INT,gl.GL_RG_INTEGER,gl.GL_RG32UI);
+            obj.MSframebuffer = glmu.Framebuffer(gl.GL_FRAMEBUFFER,MSrenderbuffer,gl.GL_DEPTH_ATTACHMENT);
+
+            obj.screen.program.uniforms.msaa.Set(nSamples);
+            obj.screen.uni.colorTex = MSTcol;
+            obj.screen.uni.camDistTex = MSTcamDist;
+            obj.screen.uni.xyzTex = MSTxyz;
+            obj.screen.uni.idTex = MSTid;
+            obj.canvas.resizeNeeded = 1;
         end
 
         function [xyz,id] = glGetZone(obj,c,r)
@@ -194,30 +205,22 @@ classdef fvController< glmu.GLController
             prog = obj.progs.(name);
         end
 
-        function s = id2info(obj,id)
-            drawId = mod1(id(1),65535);
-            s.object = obj.drawnPrimitives{drawId};
-            elemId = floor((id(1)-1)/65535)+1;
-            s.mtlId = [];
-            if ~isempty(s.object.Material)
-                id(2) = s.object.batch_mtl_idx{elemId}(id(2));
-                s.mtlId = s.object.batch_mtl(elemId);
-            end
-            s.primId = id(2);
-        end
-
-        function [xyz,info] = coord2closest(obj,coord,radius)
+        function [xyz,s] = coord2closest(obj,coord,radius)
             [xyzs,ids] = obj.glGetZone(coord,radius);
             if any(ids(:,1))
                 [~,k] = max(xyzs(:,3));
 
                 xyz = mapply(double(xyzs(k,:)),obj.lastViewMatrix,1);
                 id = ids(k,:);
-                info = obj.id2info(id);
-                info.xyz = xyz;
+                drawId = mod1(id(1),65535);
+                o = obj.drawnPrimitives{drawId};
+                elemId = floor((id(1)-1)/65535)+1;
+                s.xyz = xyz;
+                s.object = o;
+                s.info = o.id2info(elemId,id(2));
             else
                 xyz = [nan nan nan];
-                info = [];
+                s = [];
             end
         end
     end

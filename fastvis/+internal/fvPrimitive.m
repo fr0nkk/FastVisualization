@@ -455,6 +455,18 @@ classdef fvPrimitive < internal.fvDrawable
         end
     end
 
+    methods(Hidden)
+        function s = id2info(obj,elemId,primId)
+            s.object = obj;
+            s.mtlId = [];
+            if ~isempty(obj.Material)
+                primId = obj.batch_mtl_idx{elemId}(primId);
+                s.mtlId = s.object.batch_mtl(elemId);
+            end
+            s.primId = primId;
+        end
+    end
+
 end
 
 function ind = ind2glind(ind)

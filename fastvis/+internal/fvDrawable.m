@@ -66,9 +66,6 @@ classdef (Abstract) fvDrawable < internal.fvChild
     end
     
     methods
-        % function obj = fvDrawable(ax)
-        %     obj@internal.fvChild(ax);
-        % end
 
         function c = validCamera(obj)
             if isempty(obj.Camera)
@@ -156,7 +153,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 case 'same'
                     R = mr;
                 case 'normal'
-                    R = MRot3D(-C.viewParams.R,1);
+                    R = MRot3D(-C.Rotation,1);
                 case 'none'
                     R = eye(4);
             end
@@ -212,7 +209,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 drawnPrims = [drawnPrims {obj}];
             end
 
-            C = obj.validateChilds('internal.fvDrawable');
+            C = obj.validateChilds();
             for i=1:numel(C)
                 [drawnPrims,j] = C{i}.Draw(gl,M,j,drawnPrims);
             end

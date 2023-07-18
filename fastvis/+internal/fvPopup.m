@@ -14,7 +14,7 @@ classdef fvPopup < handle
             obj.mainMenu = JPopupMenu;
             obj.worldCoordButton = obj.mainMenu.add(JMenuItem('',@(~,~) obj.ToBase('xyz')));
             obj.localCoordButton = obj.mainMenu.add(JMenuItem('',@(~,~) obj.ToBase('xyz_local')));
-            obj.objectButton = obj.mainMenu.add(JMenuItem('',@(~,~) obj.ToBase('object')));
+            obj.objectButton = obj.mainMenu.add(JMenuItem('',@(~,~) obj.ToBase('info')));
             obj.deleteButton = obj.mainMenu.add(JMenuItem('delete',@obj.DeleteTarget));
         end
         
@@ -23,7 +23,7 @@ classdef fvPopup < handle
             coordText = @(coord,type) ['(' strjoin(arrayfun(@(a) sprintf('%.3f',a),coord,'uni',0),',') ') ' type];
             obj.worldCoordButton.text = coordText(obj.current.data.xyz,'world');
             obj.localCoordButton.text = coordText(obj.current.data.xyz_local,'local');
-            obj.objectButton.text = obj.current.data.object.Name;
+            obj.objectButton.text = obj.current.data.info.object.Name;
             obj.mainMenu.show(evt);
         end
 
@@ -33,7 +33,7 @@ classdef fvPopup < handle
         end
 
         function DeleteTarget(obj,src,evt)
-            delete(obj.current.data.object)
+            delete(obj.current.data.info.object)
         end
     end
 end
