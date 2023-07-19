@@ -1,12 +1,13 @@
-function xyz = mapply(xyz,m,invflag)
-if nargin < 3, invflag = 0; end
+function xyz = mapply(xyz,m,fwdFlag)
+if nargin == 3 && fwdFlag == 1, warning('aa'); end
+if nargin < 3, fwdFlag = 1; end
 
 xyz(:,4) = 1;
 % to avoid needing to transpose xyz twice, (B*A')' == A*B'
-if invflag
-    xyz = xyz / m';
-else
+if fwdFlag
     xyz = xyz * m';
+else
+    xyz = xyz / m';
 end
 xyz = xyz(:,1:3) ./ xyz(:,4);
 

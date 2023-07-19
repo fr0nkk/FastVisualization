@@ -138,7 +138,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             notify(obj,'MouseClicked',evt);
             if isempty(obj.lastMousePress), return, end
             o = obj.lastMousePress.info.object;
-            evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,1);
+            evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,0);
             if obj.PopupMenuActive && evt.java.isPopupTrigger
                 obj.popup.show(evt)
             end
@@ -172,10 +172,10 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         function Update(obj)
             if ~isvalid(obj) || ~isvalid(obj.parent) || obj.pauseStack > 0, return, end
             if obj.cameraNeedsReset
-                obj.UpdateOnCleanup;
+                obj.cameraNeedsReset = 0;
+                t = obj.UpdateOnCleanup;
                 obj.UpdateCameraConstraints;
                 obj.ResetCamera;
-                obj.cameraNeedsReset = 0;
             else
                 obj.Camera.AdjustNearFar;
                 obj.parent.Update;
@@ -239,7 +239,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function ResetCameraZoom(obj)
-            bboxes = cellfun(@(c) c.worldBBox,obj.child,'uni',0);
+            bboxes = cellfun(@worldBBox,obj.validateChilds('internal.fvDrawable'),'uni',0);
             bbox = fvBoundingBox.catbbox(bboxes);
             obj.Camera.ZoomBBox(bbox);
         end
@@ -300,10 +300,10 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         function set.ColorOrder(obj,cmap)
             obj.ColorOrder = cmap;
             temp = obj.UpdateOnCleanup;
-            for i=1:numel(obj.child)
-                C = obj.child{i};
-                if isempty(C.Color)
-                    C.UpdateColor;
+            C = obj.validateChilds('internal.fvPrimitive');
+            for i=1:numel(C)
+                if isempty(C{i}.Color)
+                    C{i}.UpdateColor;
                 end
             end
         end
@@ -317,7 +317,8 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function m = full_model(obj)
-            m = obj.Model;
+            m = eye(4);
+            % m = obj.Model;
         end
 
         function t = get.Title(obj)
@@ -393,24 +394,33 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function s = saveobj(obj)
+            s = obj.fv2struct;
+        end
+
+        function s = fv2struct(obj)
             m = metaclass(obj);
             tf = [m.PropertyList.Transient] & [m.PropertyList.SetObservable];
             props = {m.PropertyList(tf).Name};
             vals = cellfun(@(p) {obj.(p)},props,'uni',0);
             args = [props ; vals];
             s = struct('props',struct(args{:}));
-            s.child = cellfun(@saveobj,obj.child,'uni',0);
+            tf = cellfun(@(c) c.fvSave,obj.child);
+            s.child = cellfun(@saveobj,obj.child(tf),'uni',0);
         end
 
     end
 
     methods(Static,Hidden)
-        function obj = loadobj(s)
+        function obj = struct2fv(s)
             obj = fvFigure;
-            fvhold(obj,'on');
             t = obj.UpdateOnCleanup;
+            fvhold(obj,'on');
             cellfun(@(c) internal.fvChild.struct2fv(c,obj),s.child,'uni',0);
             set(obj,s.props);
+        end
+
+        function obj = loadobj(s)
+            obj = fvFigure.struct2fv(s);
         end
     end
 end

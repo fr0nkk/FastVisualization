@@ -68,24 +68,18 @@ classdef fvPrimitive < internal.fvDrawable
         PrimitiveIndexChanged
     end
 
-    properties(Dependent,Hidden)
-        % heavy to calculate
-        worldCoords
-        worldBBox
-    end
-
-    properties(Hidden,SetAccess=private)
+    properties(Transient,Hidden,SetAccess=private)
         model_offset
         glDrawable
         batch_mtl_idx
         batch_mtl
     end
 
-    properties(Access=protected)
+    properties(Transient,Access=protected)
         glProg glmu.Program
     end
     
-    properties(Access=private)
+    properties(Transient,Access=private)
         needRecalc = 1;
         auto_color_id
         mtl_el
@@ -142,7 +136,7 @@ classdef fvPrimitive < internal.fvDrawable
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
             obj.glDrawable.uni.pointMask = 0;
             obj.Name = 'fvPrimitive';
-            parent.addChild(obj);
+            % parent.addChild(obj);
             obj.isInit = true;
             
             if ~isempty(varargin)
@@ -244,11 +238,11 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Update;
         end
 
-        function xyz = get.worldCoords(obj)
+        function xyz = worldCoords(obj)
             xyz = mapply(obj.validCoords,obj.full_model);
         end
 
-        function bbox = get.worldBBox(obj)
+        function bbox = worldBBox(obj)
             bbox = fvBoundingBox.coords2bbox(obj.worldCoords);
         end
 
@@ -446,6 +440,9 @@ classdef fvPrimitive < internal.fvDrawable
             obj.glDrawable.multi_uni{k} = obj.fvfig.mtlCache.UniStruct(src,1);
             obj.Update;
         end
+    end
+
+    methods(Hidden)
 
         function UpdateColor(obj)
             if ~obj.isInit, return, end
@@ -453,9 +450,7 @@ classdef fvPrimitive < internal.fvDrawable
             obj.glDrawable.array.EditBuffer({[] [] obj.glColor});
             obj.Update;
         end
-    end
-
-    methods(Hidden)
+        
         function s = id2info(obj,elemId,primId)
             s.object = obj;
             s.mtlId = [];

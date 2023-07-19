@@ -68,6 +68,7 @@ classdef fvPointcloud < internal.fvPrimitive
                 pointMask = 2;
             end
             obj.glDrawable.uni.pointMask = pointMask;
+            obj.PointShape = val;
             obj.Update;
         end
     end

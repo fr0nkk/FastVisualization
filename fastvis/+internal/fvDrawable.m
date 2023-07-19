@@ -51,7 +51,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
         Name = 'fvDrawable';
     end
 
-    properties(SetAccess = protected)
+    properties(Transient,SetAccess = protected)
         % BoundingBox - Bounding box of this primitive
         BoundingBox
     end
@@ -172,6 +172,10 @@ classdef (Abstract) fvDrawable < internal.fvChild
             bbox = obj.BoundingBox;
         end
 
+        function bb = worldBBox(obj)
+            bb = fvBoundingBox.coords2bbox(mapply(cubemesh,obj.full_model));
+        end
+
         function obj = Translate(obj,xyz)
             obj.Model =  MTrans3D(xyz) * obj.Model;
         end
@@ -209,7 +213,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 drawnPrims = [drawnPrims {obj}];
             end
 
-            C = obj.validateChilds();
+            C = obj.validateChilds('internal.fvDrawable');
             for i=1:numel(C)
                 [drawnPrims,j] = C{i}.Draw(gl,M,j,drawnPrims);
             end

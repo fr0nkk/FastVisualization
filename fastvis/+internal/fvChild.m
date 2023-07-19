@@ -5,17 +5,22 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
         isInit = false
     end
 
-    properties(SetAccess=protected)
+    properties(Transient,SetAccess=protected)
         % fvfig - fvFigure which contains this object
         fvfig fvFigure
     end
+
+    properties(Transient,Hidden)
+        fvSave logical = true;
+    end
     
     methods
-        function obj = fvChild(ax)
-            while ~isa(ax,'fvFigure')
-                ax = ax.parent;
+        function obj = fvChild(parent)
+            parent.addChild(obj);
+            while ~isa(parent,'fvFigure')
+                parent = parent.parent;
             end
-            obj.fvfig = ax;
+            obj.fvfig = parent;
         end
 
         function [gl,temp] = getContext(obj)
@@ -72,7 +77,8 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             vals = cellfun(@(p) {obj.(p)},props,'uni',0);
             args = [props ; vals];
             s = struct('class',class(obj),'varargin',{varargin},'props',struct(args{:}));
-            s.child = cellfun(@saveobj,obj.child,'uni',0);
+            tf = cellfun(@(c) c.fvSave,obj.child);
+            s.child = cellfun(@saveobj,obj.child(tf),'uni',0);
         end
     end
 

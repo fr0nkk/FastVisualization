@@ -97,7 +97,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
         function ZoomCenterRange(obj,center,range)
             obj.iOrigin(:) = center;
-            obj.iTranslation(:) = [0 0 -max(range(:)).*1.5];
+            obj.iTranslation(:) = [0 0 -max(range(:)).*2];
             if ~obj.isPerspective
                 obj.iFOV = -obj.iTranslation(3) ./ mean(obj.iSize);
             end
@@ -108,7 +108,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             % set camera origin while keeping the same view
             if isempty(coord), return, end
             if any(isnan(coord))
-                coord = mapply([0 0 0],MTrans3D([obj.iTranslation(1:2) 0]) * MRot3D(obj.iRotation,1,[1 3]),1) + obj.iOrigin;
+                coord = mapply([0 0 0],MTrans3D([obj.iTranslation(1:2) 0]) * MRot3D(obj.iRotation,1,[1 3]),0) + obj.iOrigin;
             end
             M =  MTrans3D(obj.iTranslation) * MRot3D(obj.iRotation,1,[1 2 3]);
             obj.iTranslation(1:3) = mapply(coord-obj.iOrigin,M);
@@ -188,7 +188,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         end
 
         function p = getCamPos(obj)
-            p = mapply([0 0 0],obj.MView,1);
+            p = mapply([0 0 0],obj.MView,0);
         end
 
         function x = getCamRay(obj)

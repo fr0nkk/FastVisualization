@@ -23,15 +23,18 @@ im.Scale(2/max(im.ImageSize)).Rotate([45 0 0],1).Translate([1 0.5 6]);
 
 fvText('TEST','TextSize',0,'Alpha',0.5,'Color',[1 0 0]).Translate([-2 -2 2]);
 
-% bb = fvBoundingBox(line,[]);
-% 
-% ind = bb.Extract(p);
-% p2 = fvPointcloud(p.Coord(ind,:)).Translate([-3 0 0]);
-% p2.PointUnit = 'world';
-% p2.PointSize = 0.05;
-% p2.MinPointSize = 3;
-% p2.PointShape = imresize([0 1 0 ; 1 1 1 ; 0 1 0],5,'nearest');
+bb = fvBoundingBox(line,[]);
+
+ind = bb.Extract(p);
+p2 = fvPointcloud(p.Coord(ind,:)).Translate([-3 0 0]);
+p2.PointUnit = 'world';
+p2.PointSize = 0.05;
+p2.MinPointSize = 3;
+p2.PointShape = imresize([0 1 0 ; 1 1 1 ; 0 1 0],5,'nearest');
 
 a.ResetCamera;
+
+fvBoundingBox(a,p.worldBBox);
+fvBoundingBox(p,[]);
 
 clear onCleanupObj % update

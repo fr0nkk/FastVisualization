@@ -83,8 +83,8 @@ classdef fvController < glmu.GLController
             gl.glColorMaski(2,1,1,1,1);
             gl.glColorMaski(3,1,1,1,1);
 
-            C = obj.fvfig.validateChilds;
-            M = obj.fvfig.full_model;
+            C = obj.fvfig.validateChilds('internal.fvDrawable');
+            M = obj.fvfig.Model;
             j = 0;
             drawnPrims = {};
             for i=1:numel(C)
@@ -158,22 +158,22 @@ classdef fvController < glmu.GLController
             s = obj.figSize';
             c(2) = s(2) - c(2);
 
-            bid = javabuffer(zeros(2,w*w,'int32'));
+            bid = javabuffer(zeros(2,w,w,'int32'));
             obj.framebuffer.ReadFrom(3);
             gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_RG_INTEGER,gl.GL_INT,bid.p);
-
-            id = bid.array';
-            validId = id(:,1) > 0;
+            id = unpack3(bid.array);
+            % id = bid.array';
+            validId = id(:,:,1) > 0;
             
-            if any(validId)
-                bxyz = javabuffer(zeros(3,w*w,'single'));
+            if any(validId,'all')
+                bxyz = javabuffer(zeros(3,w,w,'single'));
                 obj.framebuffer.ReadFrom(2);
                 gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_RGB,gl.GL_FLOAT,bxyz.p);
 
-                xyz = bxyz.array';
-                xyz(~validId,:) = nan;
+                xyz = unpack3(bxyz.array);
+                xyz(repmat(~validId,1,1,3)) = nan;
             else
-                xyz = nan(w*w,3);
+                xyz = nan(w,w,3);
             end
 %             xyz
 %             id
@@ -207,11 +207,12 @@ classdef fvController < glmu.GLController
 
         function [xyz,s] = coord2closest(obj,coord,radius)
             [xyzs,ids] = obj.glGetZone(coord,radius);
-            if any(ids(:,1))
-                [~,k] = max(xyzs(:,3));
-
-                xyz = mapply(double(xyzs(k,:)),obj.lastViewMatrix,1);
-                id = ids(k,:);
+            if any(ids(:,:,1),'all')
+                [~,k] = max(xyzs(:,:,3),[],'all');
+                o = prod(size(xyzs,[1 2]));
+                xyz = double(xyzs(k+o.*(0:2)));
+                xyz = mapply(xyz,obj.lastViewMatrix,0);
+                id = ids(k+o.*(0:1));
                 drawId = mod1(id(1),65535);
                 o = obj.drawnPrimitives{drawId};
                 elemId = floor((id(1)-1)/65535)+1;
