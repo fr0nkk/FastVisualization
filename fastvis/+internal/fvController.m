@@ -91,7 +91,7 @@ classdef fvController < glmu.GLController
                 [drawnPrims,j] = C{i}.Draw(gl,M,j,drawnPrims);
             end
             obj.drawnPrimitives = drawnPrims;
-            obj.lastViewMatrix = obj.fvfig.Camera.MView;
+            obj.lastViewMatrix = {obj.fvfig.Camera.MView M};
 
             obj.framebuffer.DrawTo(1:3);
 
@@ -211,12 +211,12 @@ classdef fvController < glmu.GLController
                 [~,k] = max(xyzs(:,:,3),[],'all');
                 o = prod(size(xyzs,[1 2]));
                 xyz = double(xyzs(k+o.*(0:2)));
-                xyz = mapply(xyz,obj.lastViewMatrix,0);
+                xyz = mapply(xyz,obj.lastViewMatrix{1},0);
                 id = ids(k+o.*(0:1));
                 drawId = mod1(id(1),65535);
                 o = obj.drawnPrimitives{drawId};
                 elemId = floor((id(1)-1)/65535)+1;
-                s.xyz = xyz;
+                s.xyz = mapply(xyz,obj.lastViewMatrix{2},0);
                 s.object = o;
                 s.info = o.id2info(elemId,id(2));
             else

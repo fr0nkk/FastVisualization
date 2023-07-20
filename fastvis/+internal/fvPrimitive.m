@@ -68,18 +68,18 @@ classdef fvPrimitive < internal.fvDrawable
         PrimitiveIndexChanged
     end
 
-    properties(Transient,Hidden,SetAccess=private)
+    properties(Hidden,SetAccess=private)
         model_offset
         glDrawable
         batch_mtl_idx
         batch_mtl
     end
 
-    properties(Transient,Access=protected)
+    properties(Access=protected)
         glProg glmu.Program
     end
     
-    properties(Transient,Access=private)
+    properties(Access=private)
         needRecalc = 1;
         auto_color_id
         mtl_el
@@ -136,6 +136,7 @@ classdef fvPrimitive < internal.fvDrawable
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
             obj.glDrawable.uni.pointMask = 0;
             obj.Name = 'fvPrimitive';
+            obj.RightClickMenu = @internal.fvPrimitive.Menu;
             % parent.addChild(obj);
             obj.isInit = true;
             
@@ -452,13 +453,22 @@ classdef fvPrimitive < internal.fvDrawable
         end
         
         function s = id2info(obj,elemId,primId)
-            s.object = obj;
             s.mtlId = [];
             if ~isempty(obj.Material)
                 primId = obj.batch_mtl_idx{elemId}(primId);
-                s.mtlId = s.object.batch_mtl(elemId);
+                s.mtlId = obj.batch_mtl(elemId);
             end
             s.primId = primId;
+        end
+    end
+
+    methods(Hidden,Static)
+        function m = Menu(o,evt)
+            x = mapply(evt.data.xyz,o.full_model,0);
+            m = {
+                    JMenuItem(internal.fvPopup.CoordText(x,'local'), @(~,~) assignans(x));
+                };
+            m = [m ; Menu@internal.fvChild(o,evt)];
         end
     end
 

@@ -1,16 +1,20 @@
 classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
 %FVCHILD
+
+    properties(Hidden,Transient,SetObservable)
+        RightClickMenu = @internal.fvChild.Menu
+    end
     
     properties(Transient,Hidden)
         isInit = false
     end
 
-    properties(Transient,SetAccess=protected)
+    properties(SetAccess=protected)
         % fvfig - fvFigure which contains this object
         fvfig fvFigure
     end
 
-    properties(Transient,Hidden)
+    properties(Hidden)
         fvSave logical = true;
     end
     
@@ -80,6 +84,7 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             tf = cellfun(@(c) c.fvSave,obj.child);
             s.child = cellfun(@saveobj,obj.child(tf),'uni',0);
         end
+
     end
 
     methods(Static,Hidden)
@@ -96,6 +101,13 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             obj = f(parent,s.varargin{:});
             set(obj,s.props);
             cellfun(@(c) internal.fvChild.struct2fv(c,obj),s.child,'uni',0);
+        end
+
+        function m = Menu(obj,evt)
+            m = {
+                JMenuItem('get',@(~,~) assignans(obj));
+                JMenuItem('delete',@(~,~) delete(obj));
+                };
         end
 
     end

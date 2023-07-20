@@ -43,7 +43,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
     properties(Access=private)
         iOrigin = [0 0 0];
         iRotation = [0 0 0];
-        iTranslation = [0 0 0];
+        iTranslation = [0 0 -1];
         iSize = [1 1];
         iNearFar = [0 1];
         iFOV = 45;

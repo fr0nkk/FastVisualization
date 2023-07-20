@@ -135,10 +135,10 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         function MouseClickedCallback(obj,src,evt)
             t = obj.UpdateOnCleanup;
             evt.data = obj.lastMousePress;
+            % evt.data.xyz = mapply(evt.data.xyz,obj.Model,0);
             notify(obj,'MouseClicked',evt);
             if isempty(obj.lastMousePress), return, end
-            o = obj.lastMousePress.info.object;
-            evt.data.xyz_local = mapply(evt.data.xyz,o.full_model,0);
+            o = obj.lastMousePress.object;
             if obj.PopupMenuActive && evt.java.isPopupTrigger
                 obj.popup.show(evt)
             end
