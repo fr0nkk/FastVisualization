@@ -28,7 +28,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         % Can be auto, 2D, or 3D
         CameraConstraints = 'auto'; % auto, 2D or 3D
 
-        % Model - Base transformation model of the fvFigure
+        % Model - Base scene model
         Model = eye(4);
 
         
@@ -53,6 +53,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
     end
 
     events
+        Resized
         MouseClicked
         MouseHover
         MouseMoved
@@ -73,6 +74,10 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
     properties(Dependent,Access=protected)
         validCamConstraints
     end
+
+    % suppress warning for onCleanup variables
+    %#ok<*NASGU>
+    %#ok<*ASGLU>
     
     methods
         function obj = fvFigure(canvas)
@@ -98,15 +103,20 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
                 skippablelistener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
                 ];
             obj.parent.setCallback('KeyPressed',@(src,evt) notify(obj,'KeyTyped',javaevent(evt)));
-            obj.parent.parent.setCallback('FocusGained',@obj.FocusGainedCallback);
+            obj.parent.setCallback('FocusGained',@obj.FocusGainedCallback);
             obj.FocusGainedCallback;
             internal.fvInstances('add',obj);
 
-            obj.popup = internal.fvPopup;
+            obj.popup = internal.fvPopup(obj);
         end
 
         function id = NextColorId(obj)
             id = numel(obj.child)*obj.isHold + 1;
+        end
+
+        function ResizeCallback(obj,sz)
+            obj.Camera.Resize(sz);
+            notify(obj,'Resized');
         end
 
         function set.Camera(obj,cam)
@@ -117,42 +127,41 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             obj.camListener = skippablelistener(cam,'Moved',@(src,evt) obj.Update);
             obj.Camera = cam;
             if ~isempty(obj.ctrl)
-                obj.Camera.Resize(obj.ctrl.figSize);
+                obj.ResizeCallback(obj.ctrl.figSize);
                 obj.Update;
             end
         end
 
-        function MousePressedCallback(obj,src,evt)
+        function MousePressedCallback(obj,~,evt)
             [xyz,info] = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
             obj.Camera.PressAction(evt.java.getButton,xyz)
             obj.lastMousePress = info;
         end
 
-        function MouseDraggedCallback(obj,src,evt)
+        function MouseDraggedCallback(obj,~,evt)
             obj.Camera.DragAction(evt.data.buttonMask,evt.data.dxy);
         end
 
-        function MouseClickedCallback(obj,src,evt)
-            t = obj.UpdateOnCleanup;
+        function MouseClickedCallback(obj,~,evt)
+            t = obj.UpdateOnCleanup; 
             evt.data = obj.lastMousePress;
-            % evt.data.xyz = mapply(evt.data.xyz,obj.Model,0);
             notify(obj,'MouseClicked',evt);
-            if isempty(obj.lastMousePress), return, end
-            o = obj.lastMousePress.object;
             if obj.PopupMenuActive && evt.java.isPopupTrigger
                 obj.popup.show(evt)
             end
+            if isempty(obj.lastMousePress), return, end
+            o = obj.lastMousePress.object;
             if ~isempty(o.CallbackFcn)
                 o.CallbackFcn(obj,evt);
             end
         end
 
-        function MouseWheelMovedCallback(obj,src,evt)
+        function MouseWheelMovedCallback(obj,~,evt)
             p = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
             obj.Camera.ZoomAction(evt.java.getUnitsToScroll,p);
         end
 
-        function MouseMovedCallback(obj,src,evt)
+        function MouseMovedCallback(obj,~,evt)
             if ~event.hasListener(obj,'MouseHover') && ~event.hasListener(obj,'MouseMoved'), return, end
             t = obj.UpdateOnCleanup;
 
@@ -165,7 +174,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             end
         end
 
-        function FocusGainedCallback(obj,src,evt)
+        function FocusGainedCallback(obj,~,~)
             obj.lastFocus = datetime('now');
         end
 
@@ -240,7 +249,10 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
 
         function ResetCameraZoom(obj)
             bboxes = cellfun(@worldBBox,obj.validateChilds('internal.fvDrawable'),'uni',0);
-            bbox = fvBoundingBox.catbbox(bboxes);
+            xyz = cellfun(@fvBoundingBox.bbox2corners,bboxes,'uni',0);
+            xyz = vertcat(xyz{:});
+            xyz = mapply(xyz,obj.Model);
+            bbox = fvBoundingBox.coords2bbox(xyz);
             obj.Camera.ZoomBBox(bbox);
         end
 
@@ -316,7 +328,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             obj.Update;
         end
 
-        function m = full_model(obj)
+        function m = full_model(~)
             m = eye(4);
             % m = obj.Model;
         end

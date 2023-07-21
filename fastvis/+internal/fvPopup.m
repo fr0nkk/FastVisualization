@@ -4,29 +4,38 @@ classdef fvPopup < handle
         mainMenu
         worldCoordButton
         objectButton
-        current
+        cameraButton
+        camMenu
     end
     
     methods
-        function obj = fvPopup()
+        function obj = fvPopup(fvfig)
             obj.mainMenu = JPopupMenu;
-            obj.worldCoordButton = obj.mainMenu.add(JMenuItem('base_xyz',@(~,~) obj.ToBase('xyz')));
+            obj.worldCoordButton = obj.mainMenu.add(JMenuItem('world_xyz'));
             obj.objectButton = obj.mainMenu.add(JMenu('object'));
+            obj.cameraButton = obj.mainMenu.add(JMenu('Camera'));
+            obj.camMenu.reset = obj.cameraButton.add(JMenuItem('Reset',@(~,~) fvfig.ResetCamera));
+            obj.camMenu.get = obj.cameraButton.add(JMenuItem('Get',@(~,~) assignans(fvfig.Camera)));
+            obj.camMenu.proj = obj.cameraButton.add(JMenu('Projection'));
+            obj.camMenu.persp = obj.camMenu.proj.add(JMenuItem('Perspective',@(~,~) set(fvfig.Camera,'Projection','Perspective')));
+            obj.camMenu.ortho = obj.camMenu.proj.add(JMenuItem('Orthographic',@(~,~) set(fvfig.Camera,'Projection','Orthographic')));
         end
         
         function show(obj,evt)
-            obj.current = evt;
-            obj.worldCoordButton.text = obj.CoordText(obj.current.data.xyz,'world');
-            o = evt.data.object;
-            obj.objectButton.text = o.Name;
             cellfun(@delete,obj.objectButton.child);
-            m = o.RightClickMenu(o,evt);
-            cellfun(@(c) obj.objectButton.add(c),m);
-            obj.mainMenu.show(evt);
-        end
+            isOnObject = ~isempty(evt.data);
+            if isOnObject
+                obj.worldCoordButton.text = obj.CoordText(evt.data.xyz,'world');
+                obj.worldCoordButton.ActionFcn = @(~,~) assignans(evt.data.xyz);
+                o = evt.data.object;
+                obj.objectButton.text = o.Name;
+                m = o.RightClickMenu(o,evt);
+                cellfun(@(c) obj.objectButton.add(c),m);
+            end
+            obj.objectButton.java.setVisible(isOnObject);
+            obj.worldCoordButton.java.setVisible(isOnObject);
 
-        function ToBase(obj,val)
-            assignans(obj.current.data.(val));
+            obj.mainMenu.show(evt);
         end
     end
     methods(Static)

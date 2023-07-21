@@ -103,10 +103,10 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             cellfun(@(c) internal.fvChild.struct2fv(c,obj),s.child,'uni',0);
         end
 
-        function m = Menu(obj,evt)
+        function m = Menu(obj,~)
             m = {
-                JMenuItem('get',@(~,~) assignans(obj));
-                JMenuItem('delete',@(~,~) delete(obj));
+                JMenuItem('Get',@(~,~) assignans(obj));
+                JMenuItem('Delete',@(~,~) delete(obj));
                 };
         end
 

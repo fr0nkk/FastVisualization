@@ -117,7 +117,7 @@ classdef fvController < glmu.GLController
             obj.figSize = sz;
 
             gl.glViewport(0,0,sz(1),sz(2));
-            obj.fvfig.Camera.Resize(sz);
+            obj.fvfig.ResizeCallback(sz);
             obj.MSframebuffer.Resize(sz);
             obj.framebuffer.Resize(sz);
         end

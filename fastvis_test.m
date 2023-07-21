@@ -16,7 +16,7 @@ fvText(p).Rotate([10 20 30],1).Translate([3 3 0]);
 p.Colormap = pink;
 
 line = fvLine('LineWidth',2);
-line.Scale([1 1 2]);
+line.Scale([1 1 3]);
 
 im = fvImage();
 im.Scale(2/max(im.ImageSize)).Rotate([45 0 0],1).Translate([1 0.5 6]);
