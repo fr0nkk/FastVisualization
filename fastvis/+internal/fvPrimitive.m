@@ -158,7 +158,7 @@ classdef fvPrimitive < internal.fvDrawable
             if width(v) > 3
                 error('Coords must be [N x 3] or [N x 2]')
             end
-            temp2 = obj.UpdateOnCleanup;
+            temp2 = obj.PauseUpdates;
             obj.Coord = v;
             obj.needRecalc = 1;
             obj.InvalidateBBox;
@@ -170,12 +170,13 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function set.Normal(obj,v)
-            temp2 = obj.UpdateOnCleanup;
+            temp2 = obj.PauseUpdates;
             obj.Normal = v;
             notify(obj,'NormalsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
             obj.glDrawable.array.EditBuffer({[] obj.glNormals });
+            obj.Update;
         end
 
         function set.Colormap(obj,cmap)
@@ -189,7 +190,7 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function set.Color(obj,v)
-            temp = obj.UpdateOnCleanup;
+            temp = obj.PauseUpdates;
             obj.Color = v;
             obj.UpdateColor();
             notify(obj,'ColorChanged');

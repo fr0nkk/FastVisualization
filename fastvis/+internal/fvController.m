@@ -3,7 +3,6 @@ classdef fvController < glmu.GLController
 
     properties
         fvfig
-        figSize
         
         progs = struct
         screen
@@ -108,13 +107,13 @@ classdef fvController < glmu.GLController
             obj.screen.program.uniforms.edlStrength.Set(obj.fvfig.EDL);
             obj.screen.Draw;
             
-            glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.figSize)
+            glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.canvas.size)
             
             toc(t);
         end
         
         function ResizeFcn(obj,gl,sz)
-            obj.figSize = sz;
+            % obj.figSize = sz;
 
             gl.glViewport(0,0,sz(1),sz(2));
             obj.fvfig.ResizeCallback(sz);
@@ -150,50 +149,33 @@ classdef fvController < glmu.GLController
             obj.canvas.resizeNeeded = 1;
         end
 
-        function [xyz,id] = glGetZone(obj,c,r)
+        function data = glGetZone(obj,xy,whd,iTex,type,target)
             [gl,temp] = obj.canvas.getContext;
+            b = javabuffer(zeros(whd([3 1 2]),type));
 
-            w = 2*r+1; % square side length px
-            
-            s = obj.figSize';
-            c(2) = s(2) - c(2);
+            utypes = {'','UNSIGNED_'};
+            glType = gl.(['GL_' utypes{startsWith(b.matType,'u')+1} upper(b.javaType)]);
 
-            bid = javabuffer(zeros(2,w,w,'int32'));
-            obj.framebuffer.ReadFrom(3);
-            gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_RG_INTEGER,gl.GL_INT,bid.p);
-            id = unpack3(bid.array);
-            % id = bid.array';
-            validId = id(:,:,1) > 0;
-            
-            if any(validId,'all')
-                bxyz = javabuffer(zeros(3,w,w,'single'));
-                obj.framebuffer.ReadFrom(2);
-                gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_RGB,gl.GL_FLOAT,bxyz.p);
+            obj.framebuffer.ReadFrom(iTex);
+            target = obj.framebuffer.Const(target);
+            gl.glReadPixels(xy(1),xy(2),whd(1),whd(2),target,glType,b.p);
 
-                xyz = unpack3(bxyz.array);
-                xyz(repmat(~validId,1,1,3)) = nan;
-            else
-                xyz = nan(w,w,3);
-            end
-%             xyz
-%             id
+            data = permute(b.array,[2 3 1]);
+            data = rot90(data);
         end
 
         function [img,depth] = Snapshot(obj)
-            [gl,temp] = obj.canvas.getContext;
-            w = obj.canvas.java.getWidth;
-            h = obj.canvas.java.getHeight;
-            
-            obj.framebuffer.ReadFrom(1);
-            b = javabuffer(zeros(3,w,h,'uint8'));
-            gl.glReadPixels(0,0,w,h,gl.GL_RGB, gl.GL_UNSIGNED_BYTE, b.p);
-            img = unpack3(b.array);
+            sz = [obj.canvas.size 3];
+            xy = [0 0];
 
-            obj.framebuffer.ReadFrom(2);
-            b = javabuffer(zeros(3,w,h,'single'));
-            gl.glReadPixels(0,0,w,h,gl.GL_RGB, gl.GL_FLOAT, b.p);
-            depth = unpack3(b.array);
-            depth = vecnorm(depth,2,3);
+            img = obj.glGetZone(xy,sz,1,'uint8','GL_RGB');
+            depth = obj.glGetZone(xy,sz,2,'single','GL_RGB');
+
+            if obj.fvfig.Camera.isPerspective
+                depth = vecnorm(depth,2,3);
+            else
+                depth = depth(:,:,3);
+            end
             depth(depth==0) = inf;
         end
 
@@ -205,24 +187,37 @@ classdef fvController < glmu.GLController
             prog = obj.progs.(name);
         end
 
-        function [xyz,s] = coord2closest(obj,coord,radius)
-            [xyzs,ids] = obj.glGetZone(coord,radius);
-            if any(ids(:,:,1),'all')
-                [~,k] = max(xyzs(:,:,3),[],'all');
-                o = prod(size(xyzs,[1 2]));
-                xyz = double(xyzs(k+o.*(0:2)));
-                xyz = mapply(xyz,obj.lastViewMatrix{1},0);
-                id = ids(k+o.*(0:1));
-                drawId = mod1(id(1),65535);
-                o = obj.drawnPrimitives{drawId};
-                elemId = floor((id(1)-1)/65535)+1;
-                s.xyz = mapply(xyz,obj.lastViewMatrix{2},0);
-                s.object = o;
-                s.info = o.id2info(elemId,id(2));
-            else
-                xyz = [nan nan nan];
-                s = [];
-            end
+        function s = coord2closest(obj,coord,radius)
+
+            w = 2.*radius+1; % square side length px
+            
+            coord(2) = obj.canvas.size(2) - coord(2);
+
+            xy = coord-radius;
+            sz = [w w];
+            ids = obj.glGetZone(xy,[sz 2],3,'int32','GL_RG_INTEGER');
+            validId = ids(:,:,1) > 0;
+
+            x = [nan nan nan];
+            s=struct('xyz',x,'xyz_gl',x,'xyz_view',x,'object',[],'info',struct);
+            
+            if ~any(validId,'all'), return, end
+
+            xyzs = obj.glGetZone(xy,[sz 3],2,'single','GL_RGB');
+            xyzs(repmat(~validId,1,1,3)) = nan;
+
+            [~,k] = max(xyzs(:,:,3),[],'all');
+            idx = k + prod(sz).*(0:2);
+
+            s.xyz_view = double(xyzs(idx));
+            s.xyz_gl = mapply(s.xyz_view,obj.lastViewMatrix{1},0);
+            id = ids(idx(1:2));
+            drawId = mod1(id(1),65535);
+            o = obj.drawnPrimitives{drawId};
+            elemId = floor((id(1)-1)/65535)+1;
+            s.xyz = mapply(s.xyz_gl,obj.lastViewMatrix{2},0);
+            s.object = o;
+            s.info = o.id2info(elemId,id(2));
         end
     end
 end

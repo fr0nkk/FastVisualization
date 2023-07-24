@@ -1,6 +1,6 @@
 
 a = fvFigure;
-onCleanupObj = a.UpdateOnCleanup; % only update when this variable is cleared
+onCleanupObj = a.PauseUpdates; % only update when this variable is cleared
 
 fvhold on
 wo = wobj('f16.obj');

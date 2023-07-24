@@ -19,6 +19,6 @@ function [parent,args,temp] = fvParse(varargin)
     end
     args = varargin(i:end);
     if nargout >= 3
-        temp = ax.UpdateOnCleanup;
+        temp = ax.PauseUpdates;
     end
 end

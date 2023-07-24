@@ -69,6 +69,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         camListener
         cameraNeedsReset = 0
         popup
+        UpdateNeeded = true
     end
 
     properties(Dependent,Access=protected)
@@ -127,14 +128,14 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             obj.camListener = skippablelistener(cam,'Moved',@(src,evt) obj.Update);
             obj.Camera = cam;
             if ~isempty(obj.ctrl)
-                obj.ResizeCallback(obj.ctrl.figSize);
+                obj.ResizeCallback(obj.Size);
                 obj.Update;
             end
         end
 
         function MousePressedCallback(obj,~,evt)
-            [xyz,info] = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
-            obj.Camera.PressAction(evt.java.getButton,xyz)
+            info = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
+            obj.Camera.PressAction(evt.java.getButton,info.xyz_gl)
             obj.lastMousePress = info;
         end
 
@@ -143,33 +144,32 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function MouseClickedCallback(obj,~,evt)
-            t = obj.UpdateOnCleanup; 
+            t = obj.PauseUpdates; 
             evt.data = obj.lastMousePress;
             notify(obj,'MouseClicked',evt);
             if obj.PopupMenuActive && evt.java.isPopupTrigger
                 obj.popup.show(evt)
             end
-            if isempty(obj.lastMousePress), return, end
-            o = obj.lastMousePress.object;
-            if ~isempty(o.CallbackFcn)
+            o = evt.data.object;
+            if ~isempty(o) && ~isempty(o.CallbackFcn)
                 o.CallbackFcn(obj,evt);
             end
         end
 
         function MouseWheelMovedCallback(obj,~,evt)
-            p = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
-            obj.Camera.ZoomAction(evt.java.getUnitsToScroll,p);
+            info = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
+            obj.Camera.ZoomAction(evt.java.getUnitsToScroll,info.xyz_gl);
         end
 
         function MouseMovedCallback(obj,~,evt)
             if ~event.hasListener(obj,'MouseHover') && ~event.hasListener(obj,'MouseMoved'), return, end
-            t = obj.UpdateOnCleanup;
+            t = obj.PauseUpdates;
+
+            evt.data = obj.ctrl.coord2closest(jevt2coords(evt,0),5);
 
             notify(obj,'MouseMoved',evt);
-            
-            [~,info] = obj.ctrl.coord2closest(jevt2coords(evt,0),5);
-            if ~isempty(info)
-                evt.data = info;
+
+            if ~isempty(evt.data.object)
                 notify(obj,'MouseHover',evt);
             end
         end
@@ -179,19 +179,22 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function Update(obj)
-            if ~isvalid(obj) || ~isvalid(obj.parent) || obj.pauseStack > 0, return, end
+            if ~isvalid(obj) || ~isvalid(obj.parent), return, end
+            obj.UpdateNeeded = true;
+            if obj.pauseStack > 0, return, end
             if obj.cameraNeedsReset
                 obj.cameraNeedsReset = 0;
-                t = obj.UpdateOnCleanup;
+                t = obj.PauseUpdates;
                 obj.UpdateCameraConstraints;
                 obj.ResetCamera;
             else
                 obj.Camera.AdjustNearFar;
                 obj.parent.Update;
+                obj.UpdateNeeded = false;
             end
         end
 
-        function temp = UpdateOnCleanup(obj)
+        function temp = PauseUpdates(obj)
             obj.pauseStack = obj.pauseStack + 1;
             temp = onCleanup(@obj.EndPauseUpdate);
         end
@@ -211,7 +214,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function fvclear(obj)
-            t = obj.UpdateOnCleanup;
+            t = obj.PauseUpdates;
             obj.Model = eye(4);
             cellfun(@delete,obj.child);
             obj.child = {};
@@ -294,7 +297,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function ResetCamera(obj)
-            t = obj.UpdateOnCleanup;
+            t = obj.PauseUpdates;
             obj.Camera.Rotation = strcmpi(obj.validCamConstraints,'3D') .* [-45 0 -45];
             obj.ResetCameraZoom;
         end
@@ -311,7 +314,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
 
         function set.ColorOrder(obj,cmap)
             obj.ColorOrder = cmap;
-            temp = obj.UpdateOnCleanup;
+            temp = obj.PauseUpdates;
             C = obj.validateChilds('internal.fvPrimitive');
             for i=1:numel(C)
                 if isempty(C{i}.Color)
@@ -346,7 +349,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function set.Size(obj,sz)
-            t = obj.UpdateOnCleanup;
+            t = obj.PauseUpdates;
             obj.parent.size = sz;
             obj.parent.parent.java.pack;
             obj.Update;
@@ -394,7 +397,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
 
         function EndPauseUpdate(obj)
             obj.pauseStack = max(0,obj.pauseStack - 1);
-            obj.Update;
+            if obj.UpdateNeeded, obj.Update; end
         end
 
         function c = validCamera(obj)
@@ -425,7 +428,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
     methods(Static,Hidden)
         function obj = struct2fv(s)
             obj = fvFigure;
-            t = obj.UpdateOnCleanup;
+            t = obj.PauseUpdates;
             fvhold(obj,'on');
             cellfun(@(c) internal.fvChild.struct2fv(c,obj),s.child,'uni',0);
             set(obj,s.props);

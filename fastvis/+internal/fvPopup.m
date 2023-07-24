@@ -23,7 +23,7 @@ classdef fvPopup < handle
         
         function show(obj,evt)
             cellfun(@delete,obj.objectButton.child);
-            isOnObject = ~isempty(evt.data);
+            isOnObject = ~isempty(evt.data.object);
             if isOnObject
                 obj.worldCoordButton.text = obj.CoordText(evt.data.xyz,'world');
                 obj.worldCoordButton.ActionFcn = @(~,~) assignans(evt.data.xyz);

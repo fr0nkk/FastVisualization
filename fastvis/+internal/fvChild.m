@@ -36,9 +36,9 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             obj.fvfig.Update;
         end
 
-        function temp = UpdateOnCleanup(obj)
+        function temp = PauseUpdates(obj)
             if obj.isInit
-                temp = obj.fvfig.UpdateOnCleanup;
+                temp = obj.fvfig.PauseUpdates;
             else
                 temp = [];
             end
@@ -52,7 +52,7 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
         end
 
         function fvclear(obj)
-            t = obj.UpdateOnCleanup;
+            t = obj.PauseUpdates;
             cellfun(@delete,obj.child);
             obj.Update;
         end
@@ -95,7 +95,7 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
         function obj = struct2fv(s,parent)
             if nargin < 2
                 parent = gcfv;
-                t = parent.UpdateOnCleanup;
+                t = parent.PauseUpdates;
             end
             f = str2func(s.class);
             obj = f(parent,s.varargin{:});

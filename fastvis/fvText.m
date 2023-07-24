@@ -74,7 +74,7 @@ classdef fvText < internal.fvPrimitive
 
         function UpdateShape(obj)
             if ~obj.isInit, return, end
-            t = obj.UpdateOnCleanup;
+            t = obj.PauseUpdates;
             [xyz,ind] = obj.makeShape(obj.Text,1,obj.Font,obj.HorizontalAlignment,obj.VerticalAlignment);
             obj.Coord = xyz;
             obj.Index = ind;

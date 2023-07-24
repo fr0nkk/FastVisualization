@@ -45,6 +45,11 @@ classdef fvPointcloud < internal.fvPrimitive
             obj.Update;
         end
 
+        function set.MinPointSize(obj,v)
+            obj.MinPointSize = v;
+            obj.Update;
+        end
+
         function set.PointShape(obj,val)
             if isscalartext(val)
                 switch val
