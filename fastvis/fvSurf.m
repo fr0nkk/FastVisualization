@@ -1,11 +1,11 @@
 function M = fvSurf(varargin)
-%FVMESH
+%FVSURF
 
 [parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;
 p.addOptional('Z',[]);
 p.addOptional('col',[]);
-p.addParameter('AutoCalcNormals',false);
+p.addParameter('AutoCalcNormals',true);
 p.KeepUnmatched = true;
 p.parse(args{:});
 
@@ -13,16 +13,15 @@ Z = p.Results.Z;
 col = p.Results.col;
 
 if isempty(Z)
-    Z = peaks(100).*16;
+    Z = peaks(200).*16;
     if isempty(col)
         col = rescale(Z);
     end
 end
 
-[Y,X] = ndgrid(1:height(Z),1:width(Z));
+[X,Y] = ndgrid(1:height(Z),1:width(Z));
 
-
-xyz = [X(:) Y(:) Z(:)];
+xyz = [X(:) Y(:) double(Z(:))];
 if ~isempty(col)
     col = reshape(col,height(xyz),[]);
 end

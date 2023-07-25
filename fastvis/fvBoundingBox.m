@@ -103,8 +103,8 @@ classdef fvBoundingBox < internal.fvChild
         end
 
         function xyz = bbox2corners(bbox)
-            p = [bbox(1:3) bbox(1:3) + bbox(4:6)];
-            [X,Y,Z] = ndgrid(p([1 4]),p([2 5]),p([3 6]));
+            p = [bbox(1:3) ; bbox(1:3)+bbox(4:6)];
+            [X,Y,Z] = ndgrid(p(:,1),p(:,2),p(:,3));
             xyz = [X(:) Y(:) Z(:)];
         end
 

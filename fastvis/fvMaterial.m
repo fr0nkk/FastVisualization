@@ -1,10 +1,10 @@
 classdef fvMaterial < handle
     
-    properties
-        color
-        alpha
-        specular
-        shininess
+    properties(SetObservable)
+        Color
+        Alpha
+        Specular
+        Shininess
     end
 
     events
@@ -22,33 +22,33 @@ classdef fvMaterial < handle
             if nargin < 2, alpha = 1; end
             if nargin < 3, specular = [1 1 1]; end
             if nargin < 4, shininess = 10; end
-            obj.color = color;
-            obj.alpha = alpha;
-            obj.specular = specular;
-            obj.shininess = shininess;
+            obj.Color = color;
+            obj.Alpha = alpha;
+            obj.Specular = specular;
+            obj.Shininess = shininess;
         end
 
         function tf = get.isTex(obj)
-            tf = isscalartext(obj.color) || size(obj.color,3) > 1;
+            tf = isscalartext(obj.Color) || size(obj.Color,3) > 1;
         end
 
-        function set.color(obj,c)
-            obj.color = c;
+        function set.Color(obj,c)
+            obj.Color = c;
             notify(obj,'PropChanged');
         end
 
-        function set.alpha(obj,a)
-            obj.alpha = a;
+        function set.Alpha(obj,a)
+            obj.Alpha = a;
             notify(obj,'PropChanged');
         end
 
-        function set.specular(obj,s)
-            obj.specular = s;
+        function set.Specular(obj,s)
+            obj.Specular = s;
             notify(obj,'PropChanged');
         end
 
-        function set.shininess(obj,s)
-            obj.shininess = s;
+        function set.Shininess(obj,s)
+            obj.Shininess = s;
             notify(obj,'PropChanged');
         end
     end

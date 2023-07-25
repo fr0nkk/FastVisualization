@@ -7,7 +7,7 @@ wo = wobj('f16.obj');
 [tri,xyz,texCoord,normals,materials,vertex_material] = wo.getDrawData;
 m = fvMesh(tri,xyz,texCoord,normals,materials,vertex_material);
 m.Rotate([90 0 0],1).Translate([0 0 5.5]);
-m.Material(2).alpha = 0.5;
+m.Material(2).Alpha = 0.5;
 
 p = fvPointcloud;
 a.Model = MTrans3D(1) * MRot3D([10 10 10],1);

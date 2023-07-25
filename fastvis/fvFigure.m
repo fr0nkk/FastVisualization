@@ -81,11 +81,16 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
     %#ok<*ASGLU>
     
     methods
-        function obj = fvFigure(canvas)
+        function obj = fvFigure(varargin)
+            p = inputParser;
+            p.addOptional('canvas',[]);
+            p.KeepUnmatched = true;
+            p.parse(varargin{:});
 
+            canvas = p.Results.canvas;
             obj.Camera = fvCamera;
             obj.ctrl = internal.fvController;
-            if nargin < 1 || isempty(canvas)
+            if isempty(canvas)
                 canvas = GLCanvas('GL4',0);
                 parent = JFrame(mfilename);
                 parent.add(canvas);
@@ -109,6 +114,8 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             internal.fvInstances('add',obj);
 
             obj.popup = internal.fvPopup(obj);
+
+            set(obj,p.Unmatched);
         end
 
         function id = NextColorId(obj)

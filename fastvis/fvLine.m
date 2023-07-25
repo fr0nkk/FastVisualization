@@ -14,7 +14,7 @@ classdef fvLine < internal.fvPrimitive
             [ax,args,t] = internal.fvParse(varargin{:});
 
             p = inputParser;
-            p.addOptional('xyz',[]);
+            p.addOptional('xyz',nan);
             p.addOptional('col',[]);
             p.addOptional('ind',[]);
             p.KeepUnmatched = true;
@@ -23,7 +23,7 @@ classdef fvLine < internal.fvPrimitive
             xyz = p.Results.xyz;
             col = p.Results.col;
 
-            if isempty(xyz)
+            if isscalar(xyz) && isnan(xyz)
                 Z = linspace(0,10*pi,200)';
                 X = sin(Z);
                 Y = cos(Z);

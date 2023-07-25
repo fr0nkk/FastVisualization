@@ -37,12 +37,12 @@ classdef fvImage < internal.fvPrimitive
         end
 
         function set.ImageSource(obj,img)
-            obj.Material.color = img;
+            obj.Material.Color = img;
             obj.Coord = [0 0;1 0;0 1;1 1] .* fliplr(obj.ImageSize);
         end
 
         function sz = get.ImageSize(obj)
-            img = obj.Material.color;
+            img = obj.Material.Color;
             if isscalartext(img)
                 info = imfinfo(img);
                 sz = [info.Height info.Width];

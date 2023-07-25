@@ -255,8 +255,10 @@ classdef fvPrimitive < internal.fvDrawable
 
         function ZoomTo(obj)
             bbox = obj.BoundingBox;
-            center = mapply(bbox(1:3) + bbox(4:6)./2,obj.full_model);
-            obj.validCamera.ZoomCenterRange(center,bbox(4:6));
+            xyz = fvBoundingBox.bbox2corners(bbox);
+            xyz = mapply(xyz,obj.fvfig.Model * obj.full_model);
+            bbox = fvBoundingBox.coords2bbox(xyz);
+            obj.validCamera.ZoomBBox(bbox);
         end
 
         function xyz = get.glCoords(obj)

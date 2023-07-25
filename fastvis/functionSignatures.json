@@ -4,9 +4,8 @@
     {
         "inputs":
         [
-            {"name":"Camera",  "kind":"positional", "type":[["fvCamera"],["@(args) isempty(args)"]]},
-            {"name":"MSAA",  "kind":"positional", "type":[["integer","scalar"],["@(args) isempty(args)"]]},
-            {"name":"Canvas",  "kind":"positional", "type":["GLCanvas"]}
+            {"name":"Canvas",  "kind":"ordered", "type":"GLCanvas"},
+            {"name":"opts", "kind":"properties", "type":"fvFigure"}
         ]
     },
 
@@ -113,6 +112,17 @@
             {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
             {"name":"Position",  "kind":"positional", "type":["numeric"]},
             {"name":"opts", "kind":"properties", "type":["fvLine"]}
+        ]
+    },
+
+    "fvSurf":
+    {
+        "inputs":
+        [
+            {"name":"parent",  "kind":"ordered", "type":[["fvFigure"],["internal.fvDrawable"]]},
+            {"name":"Z",  "kind":"positional", "type":["numeric"]},
+            {"name":"Color",  "kind":"positional", "type":["numeric"]},
+            {"name":"opts", "kind":"properties", "type":["internal.fvPrimitive"]}
         ]
     },
 

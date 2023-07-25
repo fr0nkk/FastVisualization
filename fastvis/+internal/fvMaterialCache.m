@@ -32,18 +32,18 @@ classdef fvMaterialCache < handle
                 s.material_tex = obj.getTex(k);
             else
                 s.color_source = 'material_color';
-                col = mtl.color;
+                col = mtl.Color;
                 if width(col) == 1
                     col = [col col col];
                 end
                 if width(col) < 4
                     col(4) = 1;
                 end
-                col(4) = col(4) .* mtl.alpha;
+                col(4) = col(4) .* mtl.Alpha;
                 s.material_col = col;
             end
-            s.material_spec = mtl.specular;
-            s.material_shin = mtl.shininess;
+            s.material_spec = mtl.Specular;
+            s.material_shin = mtl.Shininess;
         end
 
     end
@@ -52,11 +52,11 @@ classdef fvMaterialCache < handle
             if obj.texNeedRecalc(k)
                 maxSize = 2048;
                 m = obj.mtl(k);
-                img = obj.getimg(m.color,maxSize,3);
+                img = obj.getimg(m.Color,maxSize,3);
                 if size(img,3) < 4
                     img(:,:,4) = 1;
                 end
-                img(:,:,4) = img(:,:,4) .* obj.getimg(m.alpha,maxSize,1,size(img,[1 2]));
+                img(:,:,4) = img(:,:,4) .* obj.getimg(m.Alpha,maxSize,1,size(img,[1 2]));
                 if isempty(obj.tex{k})
                     obj.tex{k} = glmu.Texture(7,'GL_TEXTURE_2D',img,'GL_RGBA',0);
                 else
