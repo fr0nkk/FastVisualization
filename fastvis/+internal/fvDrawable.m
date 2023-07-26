@@ -19,10 +19,11 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         % Camera  - Camera to use for rendering
         % If not set, it defaults to the parent's camera
+        % Setting a Camera for a drawable makes it unclickable
         Camera
 
         % ConstantSize - Render the primitive to have always the same final size
-        % If not equal to zero, the primitive is rendered so 1 unit the
+        % If not equal to zero, the primitive is rendered so 1 unit of the
         % primitive is [ConstantSize] pixels on the screen
         ConstantSize = 0;
 
@@ -34,13 +35,14 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         % ConstantSizeRot - Rotation modification to apply when ConstantSize is set
         % Same: Keep the primitive's rotation
-        % Normal: Make the primitive normal to the camera's Z axis
+        % Normal: Align the primitive's Z axis with the camera's Z axis
         % None: Remove the primitive's rotation
         ConstantSizeRot char = 'Same';
 
         % DepthRange - DepthRange to use for drawing
         % To draw a primitive always on top, use [0 0.1]
         % To draw a primitive always behind, use [0.9 1]
+        % If not set, it defaults to the parent's DepthRange
         DepthRange
 
         % CallbackFcn - function_handle to call when the primitive is clicked
@@ -48,6 +50,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
         % index, material and world coordinate
         CallbackFcn function_handle
 
+        % Name - Name to display
         Name = 'fvDrawable';
     end
 
@@ -66,14 +69,6 @@ classdef (Abstract) fvDrawable < internal.fvChild
     end
     
     methods
-
-        function c = validCamera(obj)
-            if isempty(obj.Camera)
-                c = obj.parent.validCamera;
-            else
-                c = obj.Camera;
-            end
-        end
 
         function set.Model(obj,m)
             if ~isnumeric(m) || ~ismatrix(m) || ~all(size(m) == 4) || ~isfloat(m)
@@ -127,14 +122,6 @@ classdef (Abstract) fvDrawable < internal.fvChild
             end
             obj.DepthRange = r;
             obj.Update;
-        end
-
-        function r = validDepthRange(obj)
-            if isempty(obj.DepthRange)
-                r = obj.parent.validDepthRange;
-            else
-                r = obj.DepthRange;
-            end
         end
 
         function m = full_model(obj)
@@ -192,6 +179,24 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         function obj = ResetModel(obj)
             obj.Model = eye(4);
+        end
+    end
+
+    methods(Hidden)
+        function c = validCamera(obj)
+            if isempty(obj.Camera)
+                c = obj.parent.validCamera;
+            else
+                c = obj.Camera;
+            end
+        end
+
+        function r = validDepthRange(obj)
+            if isempty(obj.DepthRange)
+                r = obj.parent.validDepthRange;
+            else
+                r = obj.DepthRange;
+            end
         end
     end
 

@@ -137,7 +137,6 @@ classdef fvPrimitive < internal.fvDrawable
             obj.glDrawable.uni.pointMask = 0;
             obj.Name = 'fvPrimitive';
             obj.RightClickMenu = @internal.fvPrimitive.Menu;
-            % parent.addChild(obj);
             obj.isInit = true;
             
             if ~isempty(varargin)

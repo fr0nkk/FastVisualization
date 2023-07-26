@@ -53,7 +53,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         MView_need_recalc = 1
         buttonPressState
         cached_fov = 45
-        isAnimatingMatrix = false
+        isAnimating = false
     end
     
     methods
@@ -280,7 +280,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             if isempty(MV0), MV0 = obj.MView; end
             if isempty(MV1), MV1 = obj.MView; end
 
-            obj.isAnimatingMatrix = true; temp = onCleanup(@() obj.EndAnimation(MP1,MV1));
+            obj.isAnimating = true; temp = onCleanup(@() obj.EndAnimation(MP1,MV1));
             if ~event.hasListener(obj,'Moved'), return; end
             oldM = [MP0(:)' MV0(:)'];
             newM = [MP1(:)' MV1(:)'];
@@ -300,7 +300,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
                 state0 = obj.getState;
             end
 
-            obj.isAnimatingMatrix = true; temp = onCleanup(@() obj.EndAnimation(state1));
+            obj.isAnimating = true; temp = onCleanup(@() obj.EndAnimation(state1));
             if ~event.hasListener(obj,'Moved'), return; end
             oldParam = [state0.Origin state0.Rotation state0.Translation state0.Size state0.NearFar state0.FOV];
             newParam = [state1.Origin state1.Rotation state1.Translation state1.Size state1.NearFar state1.FOV];
@@ -353,7 +353,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
     methods(Hidden)
 
         function AdjustNearFar(obj)
-            if obj.isAnimatingMatrix, return, end
+            if obj.isAnimating, return, end
             camDist = -obj.iTranslation(3);
             obj.iNearFar = obj.NearFarFcn(camDist);
             obj.MProj_need_recalc = 1;
@@ -372,7 +372,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
                 obj.MProj = P;
                 obj.MView = V;
             end
-            obj.isAnimatingMatrix = false;
+            obj.isAnimating = false;
             notify(obj,'Moved');
         end
     end

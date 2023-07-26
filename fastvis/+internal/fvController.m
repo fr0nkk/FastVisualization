@@ -63,7 +63,6 @@ classdef fvController < glmu.GLController
         end
         
         function UpdateFcn(obj,gl)
-            t = tic;
             obj.MSframebuffer.DrawTo(1:4);
 
             % clear everything
@@ -108,20 +107,16 @@ classdef fvController < glmu.GLController
             obj.screen.Draw;
             
             glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.canvas.size)
-            
-            toc(t);
         end
         
         function ResizeFcn(obj,gl,sz)
-            % obj.figSize = sz;
-
             gl.glViewport(0,0,sz(1),sz(2));
-            obj.fvfig.ResizeCallback(sz);
             obj.MSframebuffer.Resize(sz);
             obj.framebuffer.Resize(sz);
+            obj.fvfig.ResizeCallback(sz);
         end
 
-        function SetMSAA(obj,nSamples)
+        function nSamples = SetMSAA(obj,nSamples)
             nSamples = max(nSamples,1);
             [gl,temp] = obj.canvas.getContext;
             maxSamples = glmu.Get(gl,@glGetIntegerv,gl.GL_MAX_SAMPLES,1,'int32');

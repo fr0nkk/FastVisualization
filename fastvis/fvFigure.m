@@ -31,25 +31,36 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         % Model - Base scene model
         Model = eye(4);
 
-        
-        PopupMenuActive = 1;
-
+        % PopupMenuActive - Display the menu on right click in fvFigure
+        PopupMenuActive = true;
 
         % Title - Title of the fvFigure
         Title
 
         % Size - Size of the canvas
         Size
-
+        
+        % MSAA - Number of samples for multisample anti-aliasing
         MSAA = 4
+
+        % DepthRange - Range of depth to use for depth writes
+        % Values must be from 0 to 1
+        % Used by childrens if they have no DepthRange set
+        DepthRange = [0 1];
     end
 
     properties(Hidden)
+        % for debug
+        PauseUpdatesActive = true;
+        ShowFramerate = false;
+        FrametimeSmoothing = 0.5;
+    end
+
+    properties(Hidden,SetAccess=protected)
         ctrl internal.fvController
         lastFocus
         mtlCache internal.fvMaterialCache
         lastMousePress
-        DepthRange = [0 1];
     end
 
     events
@@ -62,14 +73,13 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
 
     properties(Access = protected)
         MouseEvents
-        mousePressOrigin = nan(0,2);
-        camStateOrigin = cell(0,1);
         pauseStack = 0
         camMouseListeners
         camListener
         cameraNeedsReset = 0
         popup
         UpdateNeeded = true
+        frametime = 1/60; % initial estimate
     end
 
     properties(Dependent,Access=protected)
@@ -122,11 +132,6 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             id = numel(obj.child)*obj.isHold + 1;
         end
 
-        function ResizeCallback(obj,sz)
-            obj.Camera.Resize(sz);
-            notify(obj,'Resized');
-        end
-
         function set.Camera(obj,cam)
             if ~isa(cam,'fvCamera')
                 error('Camera must be a fvCamera');
@@ -140,55 +145,10 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             end
         end
 
-        function MousePressedCallback(obj,~,evt)
-            info = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
-            obj.Camera.PressAction(evt.java.getButton,info.xyz_gl)
-            obj.lastMousePress = info;
-        end
-
-        function MouseDraggedCallback(obj,~,evt)
-            obj.Camera.DragAction(evt.data.buttonMask,evt.data.dxy);
-        end
-
-        function MouseClickedCallback(obj,~,evt)
-            t = obj.PauseUpdates; 
-            evt.data = obj.lastMousePress;
-            notify(obj,'MouseClicked',evt);
-            if obj.PopupMenuActive && evt.java.isPopupTrigger
-                obj.popup.show(evt)
-            end
-            o = evt.data.object;
-            if ~isempty(o) && ~isempty(o.CallbackFcn)
-                o.CallbackFcn(obj,evt);
-            end
-        end
-
-        function MouseWheelMovedCallback(obj,~,evt)
-            info = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
-            obj.Camera.ZoomAction(evt.java.getUnitsToScroll,info.xyz_gl);
-        end
-
-        function MouseMovedCallback(obj,~,evt)
-            if ~event.hasListener(obj,'MouseHover') && ~event.hasListener(obj,'MouseMoved'), return, end
-            t = obj.PauseUpdates;
-
-            evt.data = obj.ctrl.coord2closest(jevt2coords(evt,0),5);
-
-            notify(obj,'MouseMoved',evt);
-
-            if ~isempty(evt.data.object)
-                notify(obj,'MouseHover',evt);
-            end
-        end
-
-        function FocusGainedCallback(obj,~,~)
-            obj.lastFocus = datetime('now');
-        end
-
         function Update(obj)
             if ~isvalid(obj) || ~isvalid(obj.parent), return, end
             obj.UpdateNeeded = true;
-            if obj.pauseStack > 0, return, end
+            if obj.PauseUpdatesActive && obj.pauseStack > 0, return, end
             if obj.cameraNeedsReset
                 obj.cameraNeedsReset = 0;
                 t = obj.PauseUpdates;
@@ -196,7 +156,12 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
                 obj.ResetCamera;
             else
                 obj.Camera.AdjustNearFar;
+                t = tic;
                 obj.parent.Update;
+                obj.frametime = (obj.frametime * obj.FrametimeSmoothing) + (toc(t) * (1.0-obj.FrametimeSmoothing));
+                if obj.ShowFramerate
+                    fprintf('fvFigure framerate: %.2f\n',1./obj.frametime)
+                end
                 obj.UpdateNeeded = false;
             end
         end
@@ -319,6 +284,11 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             obj.Update;
         end
 
+        function set.DepthRange(obj,value)
+            obj.DepthRange = value;
+            obj.Update;
+        end
+
         function set.ColorOrder(obj,cmap)
             obj.ColorOrder = cmap;
             temp = obj.PauseUpdates;
@@ -363,16 +333,8 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function set.MSAA(obj,n)
-            obj.ctrl.SetMSAA(n);
-            obj.MSAA = n;
+            obj.MSAA = obj.ctrl.SetMSAA(n);
             obj.Update;
-        end
-
-        function C = validateChilds(obj,desiredClass)
-            C = obj.validateChilds@JChildParent;
-            if nargin >= 2
-                C = C(cellfun(@(c) isa(c,desiredClass),C));
-            end
         end
 
         function fvclose(obj)
@@ -394,17 +356,70 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
                 delete(jf);
             end
         end
-        
+
     end
 
-    methods(Hidden)
-        function [gl,temp] = getContext(obj)
-            [gl,temp] = obj.parent.getContext;
-        end
-
+    methods(Access=private)
         function EndPauseUpdate(obj)
             obj.pauseStack = max(0,obj.pauseStack - 1);
             if obj.UpdateNeeded, obj.Update; end
+        end
+    end
+
+    methods(Hidden)
+
+        function ResizeCallback(obj,sz)
+            obj.Camera.Resize(sz);
+            notify(obj,'Resized');
+        end
+
+        function MousePressedCallback(obj,~,evt)
+            info = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
+            obj.Camera.PressAction(evt.java.getButton,info.xyz_gl)
+            obj.lastMousePress = info;
+        end
+
+        function MouseDraggedCallback(obj,~,evt)
+            obj.Camera.DragAction(evt.data.buttonMask,evt.data.dxy);
+        end
+
+        function MouseClickedCallback(obj,~,evt)
+            t = obj.PauseUpdates; 
+            evt.data = obj.lastMousePress;
+            notify(obj,'MouseClicked',evt);
+            if obj.PopupMenuActive && evt.java.isPopupTrigger
+                obj.popup.show(evt)
+            end
+            o = evt.data.object;
+            if ~isempty(o) && ~isempty(o.CallbackFcn)
+                o.CallbackFcn(obj,evt);
+            end
+        end
+
+        function MouseWheelMovedCallback(obj,~,evt)
+            info = obj.ctrl.coord2closest(jevt2coords(evt.java,0),5);
+            obj.Camera.ZoomAction(evt.java.getUnitsToScroll,info.xyz_gl);
+        end
+
+        function MouseMovedCallback(obj,~,evt)
+            if ~event.hasListener(obj,'MouseHover') && ~event.hasListener(obj,'MouseMoved'), return, end
+            t = obj.PauseUpdates;
+
+            evt.data = obj.ctrl.coord2closest(jevt2coords(evt,0),5);
+
+            notify(obj,'MouseMoved',evt);
+
+            if ~isempty(evt.data.object)
+                notify(obj,'MouseHover',evt);
+            end
+        end
+
+        function FocusGainedCallback(obj,~,~)
+            obj.lastFocus = datetime('now');
+        end
+
+        function [gl,temp] = getContext(obj)
+            [gl,temp] = obj.parent.getContext;
         end
 
         function c = validCamera(obj)
@@ -413,6 +428,13 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
 
         function r = validDepthRange(obj)
             r = obj.DepthRange;
+        end
+
+        function C = validateChilds(obj,desiredClass)
+            C = obj.validateChilds@JChildParent;
+            if nargin >= 2
+                C = C(cellfun(@(c) isa(c,desiredClass),C));
+            end
         end
 
         function s = saveobj(obj)

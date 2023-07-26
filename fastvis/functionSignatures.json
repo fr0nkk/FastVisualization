@@ -126,6 +126,14 @@
         ]
     },
 
+    "fvCamera":
+    {
+        "inputs":
+        [
+            {"name":"opts", "kind":"properties", "type":["fvCamera"]}
+        ]
+    },
+
     "fvMaterial":
     {
         "inputs":
