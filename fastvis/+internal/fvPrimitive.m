@@ -58,6 +58,8 @@ classdef fvPrimitive < internal.fvDrawable
     end
 
     properties(Dependent)
+        % isColormapped - returns true if the primitive color is drawn
+        % using its Colormap (if width of Color is 1)
         isColormapped
     end
 
@@ -74,12 +76,9 @@ classdef fvPrimitive < internal.fvDrawable
         batch_mtl_idx
         batch_mtl
     end
-
-    properties(Access=protected)
-        glProg glmu.Program
-    end
     
     properties(Access=private)
+        glProg glmu.Program
         needRecalc = 1;
         auto_color_id
         mtl_el

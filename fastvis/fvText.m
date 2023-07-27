@@ -9,12 +9,18 @@ classdef fvText < internal.fvPrimitive
         % Use str2shape() to see a list of available fonts
         Font char = 'Arial'
 
-        HorizontalAlignment char = 'Left' % Valid values: Left, Right, Center
-        VerticalAlignment char = 'Bottom' % Valid values: Top, Bottom, Center
+        % HorizontalAlignment - Horizontal alignment of the anchor point
+        % Valid values: Left, Right, Center
+        HorizontalAlignment char = 'Left' 
+
+        % VerticalAlignment - Vertical alignment of the anchor point
+        % Valid values: Top, Bottom, Center
+        VerticalAlignment char = 'Bottom' 
     end
 
     properties(Dependent,SetObservable)
-        TextSize % Text size - see ConstantSize property
+        % TextSize - Size of the text - Alias of the ConstantSize property
+        TextSize
     end
 
     methods

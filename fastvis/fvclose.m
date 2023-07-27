@@ -1,5 +1,7 @@
 function fvclose(arg)
 %FVCLOSE Close the current fvFigure or all
+% fvclose - close the current fvFigure
+% fvclose all - close all fvFigures
 
 if nargin < 1
     arg = internal.fvInstances('latest');

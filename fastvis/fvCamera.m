@@ -2,12 +2,25 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 %FVCAMERA
 
     properties(Dependent,SetObservable)
+        % Origin - Point around which the rotation is applied
         Origin
+
+        % Rotation - Angles in degrees to rotate
         Rotation
+
+        % Translation - Offset to apply after rotation
         Translation
+
+        % Size - Dimensions of the canvas [width, height]
         Size
+
+        % NearFar - Near and far clip planes distances from camera
         NearFar
+
+        % FOV - Field of view of camera
         FOV
+
+        % Projection - Type of projection to use (Perspective or Orthogonal)
         Projection
     end
 

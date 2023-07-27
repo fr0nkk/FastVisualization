@@ -2,7 +2,11 @@ classdef fvBoundingBox < internal.fvChild
 %FVBOUNDINGBOX 
     
     properties(Transient,SetObservable)
+        % bbox - bounding box to display [x y z dx dy dz]
+        % if empty, the parent's bounding box is used
         bbox
+
+        % Visible - Show or hide the bounding box
         Visible
     end
     

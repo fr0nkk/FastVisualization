@@ -1,6 +1,6 @@
 
 a = fvFigure;
-a.Size = [300 250]
+a.Size = [300 250];
 
 writesnap = @(imName) imwrite(a.Snapshot,imName);
 

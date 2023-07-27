@@ -2,10 +2,13 @@ classdef fvLine < internal.fvPrimitive
 %FVLINE view lines in fast vis
 
     properties(Transient,SetObservable)
+        % LineWidth - Width of the lines to display
         LineWidth = 1
     end
 
     properties(Dependent)
+        % LineStrip - If set to true, the coordinates will make one
+        % continuous line. Otherwise, lines are reset for each pair
         LineStrip
     end
     

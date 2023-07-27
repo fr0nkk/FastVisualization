@@ -2,10 +2,21 @@ classdef fvPointcloud < internal.fvPrimitive
 %FVPOINTCLOUD view a pointcloud in fast vis
 
     properties(Transient,SetObservable)
-        PointUnit = 'pixel' % 'pixel' or 'world'
+        % PointUnit - Unit to use for PointSize
+        % Must be 'pixel' or 'world'
+        PointUnit = 'pixel'
+
+        % PointSize - Size of the points
         PointSize = 2
-        MinPointSize = 1; % in pixels, minimum size when in world unit
-        PointShape = 'square' % 'square' 'round' or alpha matrix [m x n]
+
+        % MinPointSize - Minimum size to draw points, in pixels, when
+        % PointUnit is in world mode
+        MinPointSize = 1;
+
+        % PointShape - Shape of the drawn points
+        % valid values are 'square', 'round', or an alpha matrix [m x n]
+        % for custom shapes
+        PointShape = 'square'
     end
 
     methods
