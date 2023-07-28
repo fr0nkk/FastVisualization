@@ -35,7 +35,7 @@ classdef fvPointcloud < internal.fvPrimitive
             col = p.Results.col;
             if isscalar(xyz) && isnan(xyz)
                 [X,Y,Z] = peaks(200);
-                xyz = [X(:) Y(:) Z(:)]+1e5;
+                xyz = [X(:) Y(:) Z(:)];
                 if isempty(col)
                     col = rescale(xyz(:,3));
                 end

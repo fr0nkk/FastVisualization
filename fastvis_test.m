@@ -1,8 +1,11 @@
 
 a = fvFigure;
-onCleanupObj = a.PauseUpdates; % only update when this variable is cleared
 
+a.Camera.Origin = [0 0 0];
+a.Camera.Rotation = [-45 0 -45];
+a.Camera.Translation = [0 0 -30];
 fvhold on
+
 wo = wobj('f16.obj');
 [tri,xyz,texCoord,normals,materials,vertex_material] = wo.getDrawData;
 m = fvMesh(tri,xyz,texCoord,normals,materials,vertex_material);
@@ -32,9 +35,8 @@ p2.PointSize = 0.05;
 p2.MinPointSize = 3;
 p2.PointShape = imresize([0 1 0 ; 1 1 1 ; 0 1 0],5,'nearest');
 
-a.ResetCamera;
-
 fvBoundingBox(a,p.worldBBox);
 fvBoundingBox(p,[]);
 
-clear onCleanupObj % update
+a.ResetCamera;
+
