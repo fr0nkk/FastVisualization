@@ -1,5 +1,6 @@
 function A = fvAxes(varargin)
 %FVAXES view axes in fast vis
+% fvAxes(xyz,'Property',Value,...)
 
 [parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;
@@ -7,8 +8,8 @@ p.addOptional('pos',[0 0 0]);
 p.KeepUnmatched = true;
 p.parse(args{:});
 
-xyz = [0 0 0; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1];
-col = [1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1; 0 0 1];
+xyz = [0 0 0; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1].*1e6;
+col = [1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1; 0 0 0];
 ind = [1 2 nan 3 4 nan 5 6]';
 mdl = MTrans3D(p.Results.pos);
 

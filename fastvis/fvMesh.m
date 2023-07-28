@@ -1,5 +1,6 @@
 function M = fvMesh(varargin)
 %FVMESH
+% fvMesh(tri,xyz,color,normals,materials,material_index,'Property',Value,...)
 
 [parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;

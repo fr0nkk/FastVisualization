@@ -1,5 +1,6 @@
 function M = fvMarker(varargin)
 %FVMARKER view a marker in fast vis
+% fvMarker(xyz,'Property',Value,...)
 
 [parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;

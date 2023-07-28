@@ -1,5 +1,6 @@
 function M = fvSurf(varargin)
 %FVSURF
+% fvSurf(Z,color,'Property',Value,...)
 
 [parent,args,t] = internal.fvParse(varargin{:});
 p = inputParser;

@@ -1,5 +1,6 @@
 classdef fvPointcloud < internal.fvPrimitive
 %FVPOINTCLOUD view a pointcloud in fast vis
+% fvPointcloud(xyz,color,indices,'Property',Value,...)
 
     properties(Transient,SetObservable)
         % PointUnit - Unit to use for PointSize
@@ -34,7 +35,7 @@ classdef fvPointcloud < internal.fvPrimitive
             col = p.Results.col;
             if isscalar(xyz) && isnan(xyz)
                 [X,Y,Z] = peaks(200);
-                xyz = [X(:) Y(:) Z(:)];
+                xyz = [X(:) Y(:) Z(:)]+1e5;
                 if isempty(col)
                     col = rescale(xyz(:,3));
                 end

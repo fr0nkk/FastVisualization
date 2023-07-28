@@ -1,5 +1,6 @@
 classdef fvText < internal.fvPrimitive
 %FVTEXT Insert text
+% fvText(text,'Property',Value,...)
 
     properties(Transient,SetObservable)
         % Text - Text to display

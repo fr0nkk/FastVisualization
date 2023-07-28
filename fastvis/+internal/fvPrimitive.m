@@ -142,6 +142,7 @@ classdef fvPrimitive < internal.fvDrawable
                 set(obj,varargin{:});
             end
 
+            obj.Update;
         end
 
         function n = Count(obj)

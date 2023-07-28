@@ -1,6 +1,7 @@
 classdef fvImage < internal.fvPrimitive
 %FVIMAGE 
 % 1 pixel of image is 1 unit of world
+% fvImage(imageSource,'Property',Value,...)
     
     properties(Dependent,SetObservable)
         ImageSource
