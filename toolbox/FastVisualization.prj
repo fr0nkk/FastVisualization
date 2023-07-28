@@ -1,6 +1,6 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
   <configuration file="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox\FastVisualization.prj" location="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox" name="FastVisualization" target="target.toolbox" target-name="Package Toolbox">
-    <param.appname>Fast Visualization</param.appname>
+    <param.appname>FastVisualization</param.appname>
     <param.authnamewatermark>Francis Plamondon</param.authnamewatermark>
     <param.email />
     <param.company />
@@ -8,7 +8,7 @@
     <param.description />
     <param.screenshot>${PROJECT_ROOT}\msh3.png</param.screenshot>
     <param.version>1.0.0</param.version>
-    <param.output>${PROJECT_ROOT}\Fast Visualization.mltbx</param.output>
+    <param.output>${PROJECT_ROOT}\FastVisualization.mltbx</param.output>
     <param.products.name />
     <param.products.id />
     <param.products.version />
@@ -118,7 +118,7 @@ toolbox</param.exclude.filters>
     <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="Fast Visualization.mltbx" optional="false">C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox\Fast Visualization.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="FastVisualization.mltbx" optional="false">C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox\FastVisualization.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
