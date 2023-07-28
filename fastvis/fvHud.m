@@ -20,8 +20,8 @@ classdef fvHud < fvLine
             c = fvCamera;
             c.Translation = [0 0 -1/tand(c.FOV/2)];
             
-            xy = ([0 0 ; 0 1 ; 1 1 ; 1 0 ; 0 0]-0.5)./1.01+0.5;
-            obj@fvLine(ax,xy,[1 1 0],'Camera',c,'DepthRange',[0 0.1],'Visible',1,'Name','fvHud');
+            xy = [0 0 ; 0 1 ; 1 1 ; 1 0 ; 0 0];
+            obj@fvLine(ax,xy,[1 1 0],'Camera',c,'DepthRange',[0 0.1],'Visible',0,'Name','fvHud');
             
             
             obj.hud_listeners = [

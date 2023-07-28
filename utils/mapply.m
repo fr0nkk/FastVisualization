@@ -1,5 +1,5 @@
 function xyz = mapply(xyz,m,fwdFlag)
-if nargin == 3 && fwdFlag == 1, warning('aa'); end
+
 if nargin < 3, fwdFlag = 1; end
 
 xyz(:,4) = 1;

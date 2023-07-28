@@ -98,8 +98,6 @@ frag_color.a *= alpha;
 if(frag_color.a == 0.0f) discard;
 frag_color.rgb = lighting(frag_color.rgb,material_spec,material_shin);
 
-
-//frag_camDist = vec2(-camView.z,edlDivisor);
 frag_camDist = vec2(length(camView.xyz),edlDivisor);
 frag_xyz = camView.xyz;
 
