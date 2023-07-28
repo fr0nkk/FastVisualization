@@ -1,5 +1,15 @@
 # Fast Visualization
-Fast Visualization Toolbox for MATLAB - View 2D or 3D data
+Fast Visualization Toolbox for MATLAB - View 2D or 3D data in a OpenGL viewer
+
+- Multiple primitive types (points, lines or triangles)
+- Multiple color choices (colormap, texture, material, color per vertex)
+- Multiple object types (pointcloud, lines, mesh, surface, text, image, ...)
+- On-the-fly property changes
+- Dynamic point sizes in pointclouds
+- Multiple objects hierarchy
+- Support for save and load in .mat format
+- Customizable camera
+- Multisample anti-aliasing
 
 ## Examples of capabilities
 ![pc1](https://github.com/fr0nkk/FastVisualization/assets/93832337/c006f80b-f2c6-4e17-8be8-8245eb5b309f "fvPointcloud")
@@ -15,3 +25,7 @@ Fast Visualization Toolbox for MATLAB - View 2D or 3D data
 ![srf1](https://github.com/fr0nkk/FastVisualization/assets/93832337/ad1bc66a-4366-4b06-bddb-c5e8befd23b2 "fvSurf")
 ![txt1](https://github.com/fr0nkk/FastVisualization/assets/93832337/d363aaf7-4ae0-4930-9a41-db655b573b37 "fvText")
 
+## todo
+- [ ] Add possibility to make dashed lines
+- [ ] Examples
+- [ ] HTML documentation
