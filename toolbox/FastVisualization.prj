@@ -1,12 +1,12 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration file="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox\Fast Visualization.prj" location="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox" name="Fast Visualization" target="target.toolbox" target-name="Package Toolbox">
+  <configuration file="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox\FastVisualization.prj" location="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox" name="FastVisualization" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>Fast Visualization</param.appname>
-    <param.authnamewatermark>fr0nk</param.authnamewatermark>
+    <param.authnamewatermark>Francis Plamondon</param.authnamewatermark>
     <param.email />
     <param.company />
-    <param.summary />
+    <param.summary>View 2D or 3D data in a OpenGL viewer</param.summary>
     <param.description />
-    <param.screenshot />
+    <param.screenshot>${PROJECT_ROOT}\msh3.png</param.screenshot>
     <param.version>1.0.0</param.version>
     <param.output>${PROJECT_ROOT}\Fast Visualization.mltbx</param.output>
     <param.products.name />
@@ -50,7 +50,7 @@ toolbox</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="3.1.0.0" fromRepository="true" id="fe3f503f-9f2c-425b-8ba1-c290ca01c4a3" include="true" latest="latest">matogl</requiredAddOn>
+        <requiredAddOn earliest="3.1.1.0" fromRepository="true" id="fe3f503f-9f2c-425b-8ba1-c290ca01c4a3" include="true" latest="latest">matogl</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
@@ -71,9 +71,7 @@ toolbox</param.exclude.filters>
     <unset>
       <param.email />
       <param.company />
-      <param.summary />
       <param.description />
-      <param.screenshot />
       <param.output />
       <param.products.name />
       <param.products.id />
@@ -110,7 +108,6 @@ toolbox</param.exclude.filters>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\doc</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\fastvis</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\fastvis_paths.m</file>
-      <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\fastvis_test.asv</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\fastvis_test.m</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\LICENSE</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\obj</file>
