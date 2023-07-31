@@ -20,11 +20,11 @@ if isempty(Z)
     end
 end
 
-[X,Y] = ndgrid(1:height(Z),1:width(Z));
+[X,Y] = ndgrid(1:size(Z,1),1:size(Z,2));
 
 xyz = [X(:) Y(:) double(Z(:))];
 if ~isempty(col)
-    col = reshape(col,height(xyz),[]);
+    col = reshape(col,size(xyz,1),[]);
 end
 
 tri = delaunay(xyz(:,1:2));

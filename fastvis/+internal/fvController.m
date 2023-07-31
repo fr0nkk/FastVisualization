@@ -196,12 +196,13 @@ classdef fvController < glmu.GLController
             x = [nan nan nan];
             s=struct('xyz',x,'xyz_gl',x,'xyz_view',x,'object',[],'info',struct);
             
-            if ~any(validId,'all'), return, end
+            if ~any(validId(:)), return, end
 
             xyzs = obj.glGetZone(xy,[sz 3],2,'single','GL_RGB');
             xyzs(repmat(~validId,1,1,3)) = nan;
 
-            [~,k] = max(xyzs(:,:,3),[],'all');
+            z = xyzs(:,:,3);
+            [~,k] = max(z(:));
             idx = k + prod(sz).*(0:2);
 
             s.xyz_view = double(xyzs(idx));

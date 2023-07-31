@@ -50,9 +50,9 @@ classdef wobj < handle
             vt_t = type == "vt";
             vn_t = type == "vn";
             
-            obj.vertices = single(iLines2Mat(str(v_t),7).double);
-            obj.texture_coords = single(iLines2Mat(str(vt_t),3).double);
-            obj.normals = single(iLines2Mat(str(vn_t),3).double);
+            obj.vertices = iLines2MatSingle(str(v_t),7);
+            obj.texture_coords = iLines2MatSingle(str(vt_t),3);
+            obj.normals = iLines2MatSingle(str(vn_t),3);
             
             [v_x,v_n] = iExtents(v_t);
             [vt_x,vt_n] = iExtents(vt_t);
@@ -65,7 +65,7 @@ classdef wobj < handle
             vt_s = cumsum(vt_n);
             vn_s = cumsum(vn_n);
             
-            nf = height(f_x);
+            nf = size(f_x,1);
             fc = cell(nf,8);
             for i=1:nf
                 f_i = f_x(i,1);
@@ -76,9 +76,9 @@ classdef wobj < handle
                 
                 f = iLines2Mat(str(f_x(i,1):f_x(i,2)),inf);
                 tf = ~f.contains("/");
-                f(tf) = f(tf).append("//");
+                f(tf) = strcat(f(tf),"//");
                 k = f.count("/") == 1;
-                f(k) = f(k).append("/");
+                f(k) = strcat(f(k),"/");
                 f = int32(f.split("/",3).double);
                 o = v_s(iFindId(v_x(:,2),f_i))+1;
                 fc{i,5} = iApplyOffset(f(:,:,1),o);
@@ -93,7 +93,7 @@ classdef wobj < handle
                     fc{i,7} = iApplyOffset(f(:,:,3),o);
                 end
             
-                fc{i,8} = height(f);
+                fc{i,8} = size(f,1);
             end
 
             fc = [{'object','group','material','smooth','vertices','texture_coords','normals','count'} ; num2cell(fc,1)];
@@ -103,7 +103,7 @@ classdef wobj < handle
             l_x = iExtents(type == "l");
             if isempty(l_x), return, end
             
-            nl = height(l_x);
+            nl = size(l_x,1);
             c = cell(nl,1);
             l_g = c;
             l_o = c;
@@ -131,7 +131,7 @@ classdef wobj < handle
 
         function [tri,xyz,texCoord,normals,materials,vertex_material] = getDrawData(obj)
             fv = cellfun(@trifan,{obj.faces.vertices},'uni',0);
-            h = cellfun(@height,fv);
+            h = cellfun(@(x) size(x,1),fv);
             fv = vertcat(fv{:});
             tf = ~any(fv==0,2);
             fv = fv(tf,:);
@@ -149,13 +149,14 @@ classdef wobj < handle
             fm = repmat(repelem([obj.faces.material],1,h)',1,3);
             if ~isempty(fm), fm = fm(tf,:); end
             
-            w = [width(obj.vertices) width(obj.normals) width(obj.texture_coords) width(fm)/3];
+            wf = @(x) size(x,2);
+            w = [wf(obj.vertices) wf(obj.normals) wf(obj.texture_coords) wf(fm)/3];
             
             V = [obj.vertices(fv,:) obj.normals(fn,:) obj.texture_coords(ft,:) single(fm(:))];
             [uv,~,tri] = unique(V,'rows');
             tri = reshape(tri,[],3);
             
-            uv = mat2cell(uv,height(uv),w);
+            uv = mat2cell(uv,size(uv,1),w);
             [xyz, normals, texCoord, vertex_material] = uv{:};
             
             materials = cell(numel(obj.material),1);
@@ -188,6 +189,11 @@ function [i,n] = iExtents(tf)
     n = diff(i,[],2)+1;
 end
 
+function x = iLines2MatSingle(str,maxDim2)
+    x = iLines2Mat(str,maxDim2);
+    x = single(x.double);
+end
+
 function str = iLines2Mat(str,maxDim2)
     if isempty(str), str = string.empty; return, end
     ns = str.count(" ");
@@ -195,7 +201,11 @@ function str = iLines2Mat(str,maxDim2)
     if ms+1 > maxDim2
         error('size of dim 2 exceeds %i',maxDim2)
     end
-    str = str.pad(str.strlength + ms - ns,"right"," ").split(" ",2);
+    nToAppend = ms-ns;
+    a = arrayfun(@(n) pad("",n),1:ms);
+    tf = nToAppend > 0;
+    str(tf) = arrayfun(@(x,n) strcat(x,a(n)),str(tf),nToAppend(tf));
+    str = str.split(" ",2);
 end
 
 function id = iFindId(x,i)
@@ -223,7 +233,13 @@ function s = iReadMtl(filename)
 end
 
 function [type,str] = iReadTypeTextLines(filename)
-    str = readlines(filename,"WhitespaceRule","trim","EmptyLineRule","skip");
+    [fid,errMsg] = fopen(filename,'r');
+    if fid == -1
+        error(errMsg)
+    end
+    str = textscan(fid, '%s%[^\n\r]','TextType','string','Delimiter','','MultipleDelimsAsOne',true,'ReturnOnError', false);
+    str = strtrim(str{1});
+    fclose(fid);
     icom = str.contains("#");
     str(icom) = strtrim(str(icom).extractBefore("#"));
     str = str.replace(sprintf('\t'),' ');
