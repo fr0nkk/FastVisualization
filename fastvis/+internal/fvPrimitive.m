@@ -98,7 +98,7 @@ classdef fvPrimitive < internal.fvDrawable
     methods
 
         function obj = fvPrimitive(parent,prim_type,coords,color,normals,prim_index,material,material_index,varargin)
-            if nargin < 1, parent = []; end
+            if nargin < 1, parent = gcfv; end
             obj@internal.fvDrawable(parent);
             
             if nargin < 2, prim_type = 'GL_POINTS'; end
