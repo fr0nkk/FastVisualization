@@ -98,7 +98,7 @@ classdef fvPrimitive < internal.fvDrawable
     methods
 
         function obj = fvPrimitive(parent,prim_type,coords,color,normals,prim_index,material,material_index,varargin)
-            if nargin < 1, parent = []; end
+            if nargin < 1, parent = gcfv; end
             obj@internal.fvDrawable(parent);
             
             if nargin < 2, prim_type = 'GL_POINTS'; end
@@ -109,12 +109,12 @@ classdef fvPrimitive < internal.fvDrawable
             if nargin < 7, material = []; end
             if nargin < 8, material_index = []; end
 
-            if height(coords) == 1 && width(coords) > 3
+            if size(coords,1) == 1 && size(coords,2) > 3
                 coords = coords';
             end
 
-            if width(coords) == 1
-                coords(:,2) = (1:height(coords))';
+            if size(coords,2) == 1
+                coords(:,2) = (1:size(coords,1))';
                 coords = fliplr(coords);
             end
 
@@ -146,15 +146,15 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function n = Count(obj)
-            n = height(obj.Coord);
+            n = size(obj.Coord,1);
         end
 
         function d = ndims(obj)
-            d = width(obj.Coord);
+            d = size(obj.Coord,2);
         end
 
         function set.Coord(obj,v)
-            if width(v) > 3
+            if size(v,2) > 3
                 error('Coords must be [N x 3] or [N x 2]')
             end
             temp2 = obj.PauseUpdates;
@@ -299,7 +299,7 @@ classdef fvPrimitive < internal.fvDrawable
 
         function xyz = get.validCoords(obj)
             xyz = obj.Coord;
-            if width(xyz) < 3
+            if size(xyz,2) < 3
                 xyz(:,end+1:3) = 0;
             end
             if ~isfloat(xyz)
@@ -308,7 +308,7 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function tf = get.isColormapped(obj)
-            tf = width(obj.Color) == 1;
+            tf = size(obj.Color,2) == 1;
         end
 
         function c = get.validColor(obj)
@@ -322,7 +322,7 @@ classdef fvPrimitive < internal.fvDrawable
                 if isa(cmap,'function_handle')
                     cmap = cmap(256);
                 end
-                h = height(cmap);
+                h = size(cmap,1);
                 if isfloat(c)
                     c = floor(c.*h)+1;
                 end
@@ -331,7 +331,7 @@ classdef fvPrimitive < internal.fvDrawable
             end
             if isempty(c)
                 cmap = obj.fvfig.ColorOrder;
-                k = mod1(obj.auto_color_id,height(cmap));
+                k = mod1(obj.auto_color_id,size(cmap,1));
                 c = cmap(k,:);
             end
         end
@@ -416,9 +416,9 @@ classdef fvPrimitive < internal.fvDrawable
                 end
                 m = mode(obj.validMtlIdx(p),2);
                 [obj.batch_mtl,~,g] = unique(m);
-                obj.batch_mtl_idx = splitapply(@(c) {c},int32(1:height(p))',g);
+                obj.batch_mtl_idx = splitapply(@(c) {c},int32(1:size(p,1))',g);
                 
-                co = cellfun(@numel,obj.batch_mtl_idx).*width(p);
+                co = cellfun(@numel,obj.batch_mtl_idx).*size(p,2);
                 co = [co cumsum([0 ; co(1:end-1)])];
 
                 p = p(vertcat(obj.batch_mtl_idx{:}),:);

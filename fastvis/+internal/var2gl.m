@@ -12,16 +12,16 @@ function x = var2gl(x,n,m)
         x = single(x);
     end
 
-    if width(x) == 1
+    if size(x,2) == 1
         x = repmat(x,1,n);
     end
 
-    if width(x) < n
+    if size(x,2) < n
         x(:,end+1:n) = 0;
     end
 
-    if nargin >= 3 && height(x) < m
-        x(end:m,:) = repmat(x(end,:),m-height(x)+1,1);
+    if nargin >= 3 && size(x,1) < m
+        x(end:m,:) = repmat(x(end,:),m-size(x,1)+1,1);
     end
     
 end

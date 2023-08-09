@@ -98,7 +98,7 @@ classdef fvBoundingBox < internal.fvChild
         end
 
         function bbox = coords2bbox(x)
-            if width(x) < 3
+            if size(x,2) < 3
                 x(:,3) = 0;
             end
             minx = min(x,[],1);

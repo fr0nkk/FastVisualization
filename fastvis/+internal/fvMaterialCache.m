@@ -33,10 +33,10 @@ classdef fvMaterialCache < handle
             else
                 s.color_source = 'material_color';
                 col = mtl.Color;
-                if width(col) == 1
+                if size(col,2) == 1
                     col = [col col col];
                 end
-                if width(col) < 4
+                if size(col,2) < 4
                     col(4) = 1;
                 end
                 col(4) = col(4) .* mtl.Alpha;
@@ -56,7 +56,8 @@ classdef fvMaterialCache < handle
                 if size(img,3) < 4
                     img(:,:,4) = 1;
                 end
-                img(:,:,4) = img(:,:,4) .* obj.getimg(m.Alpha,maxSize,1,size(img,[1 2]));
+                sz = size(img);
+                img(:,:,4) = img(:,:,4) .* obj.getimg(m.Alpha,maxSize,1,sz(1:2));
                 if isempty(obj.tex{k})
                     obj.tex{k} = glmu.Texture(7,'GL_TEXTURE_2D',img,'GL_RGBA',0);
                 else
@@ -70,7 +71,7 @@ classdef fvMaterialCache < handle
     methods(Static)
         function img = getimg(color,maxsz,expectedChannels,expectedSize)
             if isscalartext(color)
-                [img,cmap] = imread(color);
+                [img,cmap] = imread(char(color));
                 if ~isempty(cmap)
                     img = ind2rgb(img,cmap);
                 end
@@ -78,7 +79,8 @@ classdef fvMaterialCache < handle
                 img = color;
             end
 
-            sz = size(img,[1 2]);
+            sz = size(img);
+            sz = sz(1:2);
             if max(sz) > maxsz
                 sz(sz > maxsz) = maxsz;
                 img = imresize(img,sz);

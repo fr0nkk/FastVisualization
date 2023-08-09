@@ -29,11 +29,11 @@ if isempty(tri)
     end
 end
 
-if width(tri) < 3
+if size(tri,2) < 3
     error('faces must be made of at least 3 points')
 end
 
-if width(tri) > 3
+if size(tri,2) > 3
     tri = trifan(tri);
     warning('faces were assumed to be convex and were converted to triangles');
 end

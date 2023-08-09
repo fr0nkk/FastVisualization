@@ -88,7 +88,7 @@ tb = double(bitand(t,uint8(7)));
 
 shp2 = makeline(xy,tb,pts_per_bezier);
 
-shp = polyshape(shp2,'Simplify',1,'KeepCollinearPoints',0);
+shp = polyshape(shp2,'Simplify',0);
 
 end
 
