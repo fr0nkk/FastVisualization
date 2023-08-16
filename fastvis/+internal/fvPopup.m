@@ -24,16 +24,15 @@ classdef fvPopup < handle
         function show(obj,evt)
             cellfun(@delete,obj.objectButton.child);
             isOnObject = ~isempty(evt.data.object);
+            obj.worldCoordButton.text = obj.CoordText(evt.data.xyz,'world');
+            obj.worldCoordButton.ActionFcn = @(~,~) assignans(evt.data.xyz);
             if isOnObject
-                obj.worldCoordButton.text = obj.CoordText(evt.data.xyz,'world');
-                obj.worldCoordButton.ActionFcn = @(~,~) assignans(evt.data.xyz);
                 o = evt.data.object;
                 obj.objectButton.text = o.Name;
                 m = o.RightClickMenu(o,evt);
                 cellfun(@(c) obj.objectButton.add(c),m);
             end
             obj.objectButton.java.setVisible(isOnObject);
-            obj.worldCoordButton.java.setVisible(isOnObject);
 
             obj.mainMenu.show(evt);
         end
