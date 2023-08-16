@@ -50,7 +50,7 @@ toolbox</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="3.1.1.0" fromRepository="true" id="fe3f503f-9f2c-425b-8ba1-c290ca01c4a3" include="true" latest="latest">matogl</requiredAddOn>
+        <requiredAddOn earliest="3.1.2.0" fromRepository="true" id="fe3f503f-9f2c-425b-8ba1-c290ca01c4a3" include="true" latest="latest">matogl</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id />
@@ -112,6 +112,7 @@ toolbox</param.exclude.filters>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\LICENSE</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\obj</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\README.md</file>
+      <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\untitled.m</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\utils</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
