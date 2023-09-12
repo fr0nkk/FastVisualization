@@ -117,6 +117,7 @@ classdef fvController < glmu.GLController
             gl.glViewport(0,0,sz(1),sz(2));
             obj.MSframebuffer.Resize(sz);
             obj.framebuffer.Resize(sz);
+            structfun(@(s) progResize(s,obj.fvfig.Camera),obj.progs);
             obj.fvfig.ResizeCallback(sz);
         end
 
@@ -184,6 +185,7 @@ classdef fvController < glmu.GLController
                 obj.progs.(name) = glmu.Program(fullname);
             end
             prog = obj.progs.(name);
+            progResize(prog,obj.fvfig.Camera)
         end
 
         function s = coord2closest(obj,coord,radius)
@@ -251,4 +253,9 @@ classdef fvController < glmu.GLController
             
         end
     end
+end
+
+function progResize(prog,cam)
+    prog.uniforms.scrSz.Set(max(cam.Size));
+    prog.uniforms.fov.Set(cam.FOV);
 end

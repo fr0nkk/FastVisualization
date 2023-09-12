@@ -14,7 +14,10 @@ uniform mat4 modelview = mat4(1.0);
 uniform mat4 projection = mat4(1.0);
 uniform float pointSize = -1.0;
 uniform float scrSz = 500.0;
+uniform float fov = 45;
 uniform float minPointSize = 1.0;
+
+float pi = 4.0*atan(1.0);
 
 void main()
 {
@@ -24,5 +27,8 @@ myFragPos = vec3(model * vec4(vertex_position,1.0));
 v_normal = mat3(transpose(inverse(model))) * vertex_normal;
 v_texcoord = vertex_texcoords;
 
-gl_PointSize = pointSize < 0 ? -pointSize : max(minPointSize,atan(pointSize/-camView.z)*scrSz);
+
+float pixScale =  scrSz / (2.0 * tan(fov/180.0*pi/2.0));
+
+gl_PointSize = pointSize < 0 ? -pointSize : max(minPointSize,2*atan(pointSize/2/length(camView.xyz))*pixScale);
 }
