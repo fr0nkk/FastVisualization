@@ -324,7 +324,10 @@ classdef fvPrimitive < internal.fvDrawable
                 end
                 h = size(cmap,1);
                 if isfloat(c)
+                    c(isnan(c)) = 0;
                     c = floor(c.*h)+1;
+                else
+                    c = double(c)+1;
                 end
                 
                 c = cmap(clamp(c,1,h),:);
