@@ -211,9 +211,11 @@ classdef fvController < glmu.GLController
                 id = ids(idx(1:2));
                 drawId = mod1(id(1),65535);
                 o = obj.drawnPrimitives{drawId};
-                elemId = floor((id(1)-1)/65535)+1;
-                s.object = o;
-                s.info = o.id2info(elemId,id(2));
+                if isvalid(o)
+                    s.object = o;
+                    elemId = floor((id(1)-1)/65535)+1;
+                    s.info = o.id2info(elemId,id(2));
+                end
 
                 s.xyz_view = double(xyzs(idx));
                 s.xyz_gl = mapply(s.xyz_view,obj.drawnParams.MView,0);
@@ -225,7 +227,7 @@ classdef fvController < glmu.GLController
                 % camera's origin
 
                 params = obj.drawnParams;
-                state = obj.drawnParams.state;
+                state = params.state;
 
                 % camera position (line point 1)
                 l0 = mapply([0 0 0],params.MView,0);
