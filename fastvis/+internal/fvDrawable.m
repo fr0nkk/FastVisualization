@@ -45,6 +45,16 @@ classdef (Abstract) fvDrawable < internal.fvChild
         % If not set, it defaults to the parent's DepthRange
         DepthRange
 
+        % DepthOffset - Offset to depth
+        % The value is scaled to the smallest change to avoid Z fighting
+        % Useful for drawing a primitive on top of another when they have
+        % the same depth.
+        DepthOffset = 0;
+
+        % FillPolygons - Flag to fill primitives
+        % When disabled, triangle primitves will display as wireframe
+        FillPolygons logical = true;
+
         % CallbackFcn - function_handle to call when the primitive is clicked
         % Event contains the data property which contains the clicked
         % index, material and world coordinate
@@ -121,6 +131,19 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 error('DepthRange must be composed of two elements from 0 to 1')
             end
             obj.DepthRange = r;
+            obj.Update;
+        end
+
+        function set.DepthOffset(obj,o)
+            if ~isscalar(o) || ~isfinite(o)
+                error('DepthOffset must be a finite scalar.')
+            end
+            obj.DepthOffset = o;
+            obj.Update;
+        end
+
+        function set.FillPolygons(obj,tf)
+            obj.FillPolygons = tf;
             obj.Update;
         end
 
@@ -214,6 +237,13 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 gl.glColorMaski(3,tf,tf,tf,tf);
                 r = obj.validDepthRange;
                 gl.glDepthRange(r(1),r(2));
+                if obj.FillPolygons
+                    polyMode = gl.GL_FILL;
+                else
+                    polyMode = gl.GL_LINE;
+                end
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK,polyMode);
+                gl.glPolygonOffset(0,single(obj.DepthOffset));
                 obj.DrawFcn(M,j);
                 drawnPrims = [drawnPrims {obj}];
             end

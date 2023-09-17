@@ -58,6 +58,9 @@ classdef fvController < glmu.GLController
 
             % gl.glEnable(gl.GL_FRAMEBUFFER_SRGB);
 
+            gl.glEnable(gl.GL_POLYGON_OFFSET_FILL);
+            gl.glEnable(gl.GL_POLYGON_OFFSET_LINE);
+
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
 
         end
@@ -106,6 +109,8 @@ classdef fvController < glmu.GLController
 
             gl.glEnable(gl.GL_CULL_FACE);
             gl.glFrontFace(gl.GL_CCW);
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK,gl.GL_FILL);
+            gl.glPolygonOffset(0,0);
 
             obj.screen.program.uniforms.edlStrength.Set(obj.fvfig.EDL);
             obj.screen.Draw;
