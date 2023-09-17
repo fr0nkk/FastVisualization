@@ -67,6 +67,15 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             catch
             end
         end
+
+        function newObj = fvCopy(obj,parent)
+            if nargin < 2
+                parent = obj.fvfig;
+            end
+            t = parent.PauseUpdates;
+            s = obj.fv2struct;
+            newObj = obj.struct2fv(s,parent);
+        end
     end
 
     methods(Hidden)
