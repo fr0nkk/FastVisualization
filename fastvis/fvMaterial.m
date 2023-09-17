@@ -13,7 +13,6 @@ classdef fvMaterial < handle
 
     properties(Dependent)
         isTex
-        texture
     end
     
     methods
