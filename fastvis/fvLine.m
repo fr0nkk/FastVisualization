@@ -1,11 +1,6 @@
 classdef fvLine < internal.fvPrimitive
 %FVLINE view lines in fast vis
 
-    properties(Transient,SetObservable)
-        % LineWidth - Width of the lines to display
-        LineWidth = 1
-    end
-
     properties(Dependent)
         % LineStrip - If set to true, the coordinates will make one
         % continuous line. Otherwise, lines are reset for each pair
@@ -39,11 +34,6 @@ classdef fvLine < internal.fvPrimitive
             obj@internal.fvPrimitive(ax,'GL_LINE_STRIP',xyz,col,[],p.Results.ind,[],[],'Name','fvLine',p.Unmatched);
         end
 
-        function set.LineWidth(obj,w)
-            obj.LineWidth = w;
-            obj.Update;
-        end
-
         function set.LineStrip(obj,tf)
             tf = logical(tf);
             if tf(1)
@@ -57,14 +47,6 @@ classdef fvLine < internal.fvPrimitive
         function tf = get.LineStrip(obj)
             tf = strcmp(obj.PrimitiveType,'GL_LINE_STRIP');
         end
-    end
-    methods(Access=protected)
-        
-        function DrawFcn(obj,varargin)
-            obj.glDrawable.gl.glLineWidth(obj.LineWidth);
-            obj.DrawFcn@internal.fvPrimitive(varargin{:});
-        end
-        
     end
 end
 

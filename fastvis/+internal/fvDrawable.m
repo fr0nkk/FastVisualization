@@ -17,6 +17,10 @@ classdef (Abstract) fvDrawable < internal.fvChild
         % Clickable - Enable or disable the ability to click the primitive
         Clickable logical = true;
 
+        % LineWidth - Width of the lines to display
+        % Applies when the rendered object is a line
+        LineWidth = 1
+
         % Camera  - Camera to use for rendering
         % If not set, it defaults to the parent's camera
         % Setting a Camera for a drawable makes it unclickable
@@ -105,6 +109,11 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         function set.Alpha(obj,v)
             obj.Alpha = v;
+            obj.Update;
+        end
+
+        function set.LineWidth(obj,w)
+            obj.LineWidth = w;
             obj.Update;
         end
 
@@ -244,6 +253,7 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 end
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK,polyMode);
                 gl.glPolygonOffset(0,single(obj.DepthOffset));
+                gl.glLineWidth(obj.LineWidth);
                 obj.DrawFcn(M,j);
                 drawnPrims = [drawnPrims {obj}];
             end
