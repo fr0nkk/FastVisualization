@@ -44,12 +44,6 @@ classdef fvPrimitive < internal.fvDrawable
         % The struct must contain Offset, Ambient, Diffuse and Specular
         Light = struct('Offset',[0 0 0],'Ambient',[0.3 0.3 0.3],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
 
-        % Cull - Cull the front faces
-        % 0: no cull
-        % 1: cull font faces
-        % -1 cull back faces
-        Cull = 0;
-
         % Specular - Primitive's specular when rendering with color per vertex
         Specular = [0.5 0.5 0.5];
 
@@ -221,11 +215,6 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Update;
         end
 
-        function set.Cull(obj,c)
-            obj.Cull = c;
-            obj.Update;
-        end
-
         function set.Shininess(obj,s)
             obj.Shininess = s;
             obj.Update;
@@ -386,18 +375,6 @@ classdef fvPrimitive < internal.fvDrawable
                     u.material_spec.Set(obj.Specular);
                     u.material_shin.Set(obj.Shininess);
                 end
-            end
-
-            gl = obj.glDrawable.gl;
-            if obj.Cull
-                gl.glEnable(gl.GL_CULL_FACE);
-                if obj.Cull > 0
-                    gl.glFrontFace(gl.GL_CCW);
-                else
-                    gl.glFrontFace(gl.GL_CW);
-                end
-            else
-                gl.glDisable(gl.GL_CULL_FACE);
             end
 
             obj.glDrawable.Draw;

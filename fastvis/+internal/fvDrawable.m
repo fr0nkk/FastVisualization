@@ -59,6 +59,12 @@ classdef (Abstract) fvDrawable < internal.fvChild
         % When disabled, triangle primitves will display as wireframe
         FillPolygons logical = true;
 
+        % Cull - Cull the front faces
+        % 0: no cull
+        % 1: cull font faces
+        % -1 cull back faces
+        Cull = 0;
+
         % CallbackFcn - function_handle to call when the primitive is clicked
         % Event contains the data property which contains the clicked
         % index, material and world coordinate
@@ -153,6 +159,11 @@ classdef (Abstract) fvDrawable < internal.fvChild
 
         function set.FillPolygons(obj,tf)
             obj.FillPolygons = tf;
+            obj.Update;
+        end
+
+        function set.Cull(obj,c)
+            obj.Cull = c;
             obj.Update;
         end
 
@@ -254,6 +265,16 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK,polyMode);
                 gl.glPolygonOffset(0,single(obj.DepthOffset));
                 gl.glLineWidth(obj.LineWidth);
+                if obj.Cull
+                    gl.glEnable(gl.GL_CULL_FACE);
+                    if obj.Cull > 0
+                        gl.glFrontFace(gl.GL_CCW);
+                    else
+                        gl.glFrontFace(gl.GL_CW);
+                    end
+                else
+                    gl.glDisable(gl.GL_CULL_FACE);
+                end
                 obj.DrawFcn(M,j);
                 drawnPrims = [drawnPrims {obj}];
             end
