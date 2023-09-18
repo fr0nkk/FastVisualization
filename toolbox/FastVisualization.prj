@@ -1,13 +1,13 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration file="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox\FastVisualization.prj" location="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox" name="FastVisualization" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="3028266717" file="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox\FastVisualization.prj" location="C:\Users\Francis\Documents\MATLAB\fastvisualization\toolbox" name="FastVisualization" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>FastVisualization</param.appname>
     <param.authnamewatermark>Francis Plamondon</param.authnamewatermark>
     <param.email />
     <param.company />
     <param.summary>View 2D or 3D data in a OpenGL viewer</param.summary>
-    <param.description />
+    <param.description>Fast and flexible viewer for all kinds of data</param.description>
     <param.screenshot>${PROJECT_ROOT}\msh3.png</param.screenshot>
-    <param.version>1.0.0</param.version>
+    <param.version>1.1.0</param.version>
     <param.output>${PROJECT_ROOT}\FastVisualization.mltbx</param.output>
     <param.products.name />
     <param.products.id />
@@ -39,7 +39,46 @@
 resources
 toolbox</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
-    <param.examples />
+    <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;examples&gt;
+   &lt;exampleCategory name="doc"&gt;
+      &lt;example name="GettingStarted" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/GettingStarted.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/GettingStarted.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="Images" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/Images.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/Images.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="Lines" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/Lines.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/Lines.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="Meshes" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/Meshes.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/Meshes.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="Pointclouds" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/Pointclouds.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/Pointclouds.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="Surfaces" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/Surfaces.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/Surfaces.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="Text" type="html"&gt;
+         &lt;file type="source"&gt;/doc/html/Text.html&lt;/file&gt;
+         &lt;file type="main"&gt;/doc/Text.mlx&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+&lt;/examples&gt;</param.examples>
     <param.demosxml />
     <param.apps />
     <param.registered.apps />
@@ -47,7 +86,7 @@ toolbox</param.exclude.filters>
     <param.getting.started.guide>C:\Users\Francis\Documents\MATLAB\fastvisualization\doc\GettingStarted.mlx</param.getting.started.guide>
     <param.matlabpath.excludes />
     <param.javaclasspath.excludes />
-    <param.exported.on.package>false</param.exported.on.package>
+    <param.exported.on.package>true</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
         <requiredAddOn earliest="3.1.2.0" fromRepository="true" id="fe3f503f-9f2c-425b-8ba1-c290ca01c4a3" include="true" latest="latest">matogl</requiredAddOn>
@@ -71,21 +110,18 @@ toolbox</param.exclude.filters>
     <unset>
       <param.email />
       <param.company />
-      <param.description />
       <param.output />
       <param.products.name />
       <param.products.id />
       <param.products.version />
       <param.platforms />
       <param.exclude.pcodedmfiles />
-      <param.examples />
       <param.demosxml />
       <param.apps />
       <param.registered.apps />
       <param.docs />
       <param.matlabpath.excludes />
       <param.javaclasspath.excludes />
-      <param.exported.on.package />
       <param.matlab.project.id />
       <param.matlab.project.name />
       <param.release.start />
@@ -105,6 +141,7 @@ toolbox</param.exclude.filters>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization</file>
     </fileset.rootdir>
     <fileset.rootfiles>
+      <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\demos.xml</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\doc</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\fastvis</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\fastvis_paths.m</file>
@@ -112,7 +149,6 @@ toolbox</param.exclude.filters>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\LICENSE</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\obj</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\README.md</file>
-      <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\untitled.m</file>
       <file>C:\Users\Francis\Documents\MATLAB\fastvisualization\utils</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
