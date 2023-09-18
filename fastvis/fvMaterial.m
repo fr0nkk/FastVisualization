@@ -13,7 +13,6 @@ classdef fvMaterial < handle
 
     properties(Dependent)
         isTex
-        texture
     end
     
     methods
@@ -29,7 +28,7 @@ classdef fvMaterial < handle
         end
 
         function tf = get.isTex(obj)
-            tf = isscalartext(obj.Color) || size(obj.Color,3) > 1;
+            tf = isscalartext(obj.Color) || size(obj.Color,3) > 1 || size(obj.Color,1) > 1 ||  size(obj.Color,2) > 4;
         end
 
         function set.Color(obj,c)

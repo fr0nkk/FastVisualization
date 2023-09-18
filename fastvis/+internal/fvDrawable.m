@@ -17,6 +17,10 @@ classdef (Abstract) fvDrawable < internal.fvChild
         % Clickable - Enable or disable the ability to click the primitive
         Clickable logical = true;
 
+        % LineWidth - Width of the lines to display
+        % Applies when the rendered object is a line
+        LineWidth = 1
+
         % Camera  - Camera to use for rendering
         % If not set, it defaults to the parent's camera
         % Setting a Camera for a drawable makes it unclickable
@@ -44,6 +48,22 @@ classdef (Abstract) fvDrawable < internal.fvChild
         % To draw a primitive always behind, use [0.9 1]
         % If not set, it defaults to the parent's DepthRange
         DepthRange
+
+        % DepthOffset - Offset to depth
+        % The value is scaled to the smallest change to avoid Z fighting
+        % Useful for drawing a primitive on top of another when they have
+        % the same depth.
+        DepthOffset = 0;
+
+        % FillPolygons - Flag to fill primitives
+        % When disabled, triangle primitves will display as wireframe
+        FillPolygons logical = true;
+
+        % Cull - Cull the front faces
+        % 0: no cull
+        % 1: cull font faces
+        % -1 cull back faces
+        Cull = 0;
 
         % CallbackFcn - function_handle to call when the primitive is clicked
         % Event contains the data property which contains the clicked
@@ -98,6 +118,11 @@ classdef (Abstract) fvDrawable < internal.fvChild
             obj.Update;
         end
 
+        function set.LineWidth(obj,w)
+            obj.LineWidth = w;
+            obj.Update;
+        end
+
         function set.ConstantSize(obj,sz)
             obj.ConstantSize = sz;
             obj.Update;
@@ -121,6 +146,24 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 error('DepthRange must be composed of two elements from 0 to 1')
             end
             obj.DepthRange = r;
+            obj.Update;
+        end
+
+        function set.DepthOffset(obj,o)
+            if ~isscalar(o) || ~isfinite(o)
+                error('DepthOffset must be a finite scalar.')
+            end
+            obj.DepthOffset = o;
+            obj.Update;
+        end
+
+        function set.FillPolygons(obj,tf)
+            obj.FillPolygons = tf;
+            obj.Update;
+        end
+
+        function set.Cull(obj,c)
+            obj.Cull = c;
             obj.Update;
         end
 
@@ -214,6 +257,24 @@ classdef (Abstract) fvDrawable < internal.fvChild
                 gl.glColorMaski(3,tf,tf,tf,tf);
                 r = obj.validDepthRange;
                 gl.glDepthRange(r(1),r(2));
+                if obj.FillPolygons
+                    polyMode = gl.GL_FILL;
+                else
+                    polyMode = gl.GL_LINE;
+                end
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK,polyMode);
+                gl.glPolygonOffset(0,single(obj.DepthOffset));
+                gl.glLineWidth(obj.LineWidth);
+                if obj.Cull
+                    gl.glEnable(gl.GL_CULL_FACE);
+                    if obj.Cull > 0
+                        gl.glFrontFace(gl.GL_CCW);
+                    else
+                        gl.glFrontFace(gl.GL_CW);
+                    end
+                else
+                    gl.glDisable(gl.GL_CULL_FACE);
+                end
                 obj.DrawFcn(M,j);
                 drawnPrims = [drawnPrims {obj}];
             end

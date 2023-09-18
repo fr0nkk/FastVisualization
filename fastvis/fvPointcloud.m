@@ -76,6 +76,8 @@ classdef fvPointcloud < internal.fvPrimitive
                 [gl,temp] = obj.getContext;
                 if isinteger(val)
                     val = single(val)./single(intmax(class(val)));
+                elseif islogical(val)
+                    val = single(val);
                 end
                 if size(val,3) > 1
                     val = mean(val,3);

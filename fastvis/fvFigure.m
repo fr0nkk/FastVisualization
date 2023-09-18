@@ -192,6 +192,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             obj.child = {};
             obj.fvhold(0);
             obj.BackgroundColor = [0 0 0];
+            obj.CameraConstraints = 'auto';
         end
 
         function clear(obj)

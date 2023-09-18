@@ -1,6 +1,6 @@
 function tf = isscalartext(x)
 
-tf = ischar(x) || (isstring(x) && isscalar(x));
+tf = ischar(x) || isStringScalar(x);
 
 end
 

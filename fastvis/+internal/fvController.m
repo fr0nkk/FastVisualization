@@ -14,7 +14,7 @@ classdef fvController < glmu.GLController
         clearColor = {0 0 0};
 
         drawnPrimitives = {}
-        lastViewMatrix
+        drawnParams
     end
     
     methods
@@ -58,6 +58,9 @@ classdef fvController < glmu.GLController
 
             % gl.glEnable(gl.GL_FRAMEBUFFER_SRGB);
 
+            gl.glEnable(gl.GL_POLYGON_OFFSET_FILL);
+            gl.glEnable(gl.GL_POLYGON_OFFSET_LINE);
+
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
 
         end
@@ -89,7 +92,11 @@ classdef fvController < glmu.GLController
                 [drawnPrims,j] = C{i}.Draw(gl,M,j,drawnPrims);
             end
             obj.drawnPrimitives = drawnPrims;
-            obj.lastViewMatrix = {obj.fvfig.Camera.MView M};
+            cam = obj.fvfig.Camera;
+            obj.drawnParams.MView = cam.MView;
+            obj.drawnParams.MProj = cam.MProj;
+            obj.drawnParams.MFig = M;
+            obj.drawnParams.state = cam.getState;
 
             obj.framebuffer.DrawTo(1:3);
 
@@ -102,6 +109,8 @@ classdef fvController < glmu.GLController
 
             gl.glEnable(gl.GL_CULL_FACE);
             gl.glFrontFace(gl.GL_CCW);
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK,gl.GL_FILL);
+            gl.glPolygonOffset(0,0);
 
             obj.screen.program.uniforms.edlStrength.Set(obj.fvfig.EDL);
             obj.screen.Draw;
@@ -113,6 +122,7 @@ classdef fvController < glmu.GLController
             gl.glViewport(0,0,sz(1),sz(2));
             obj.MSframebuffer.Resize(sz);
             obj.framebuffer.Resize(sz);
+            structfun(@(s) progResize(s,obj.fvfig.Camera),obj.progs);
             obj.fvfig.ResizeCallback(sz);
         end
 
@@ -180,6 +190,7 @@ classdef fvController < glmu.GLController
                 obj.progs.(name) = glmu.Program(fullname);
             end
             prog = obj.progs.(name);
+            progResize(prog,obj.fvfig.Camera)
         end
 
         function s = coord2closest(obj,coord,radius)
@@ -195,30 +206,61 @@ classdef fvController < glmu.GLController
 
             x = [nan nan nan];
             s=struct('xyz',x,'xyz_gl',x,'xyz_view',x,'object',[],'info',struct);
+            if any(validId(:))
+                % coord is on an object
+                xyzs = obj.glGetZone(xy,[sz 3],2,'single','GL_RGB');
+                xyzs(repmat(~validId,1,1,3)) = nan;
+    
+                z = xyzs(:,:,3);
+                [~,k] = max(z(:));
+                idx = k + prod(sz).*(0:2);
+    
+                id = ids(idx(1:2));
+                drawId = mod1(id(1),65535);
+                o = obj.drawnPrimitives{drawId};
+                if isvalid(o)
+                    s.object = o;
+                    elemId = floor((id(1)-1)/65535)+1;
+                    s.info = o.id2info(elemId,id(2));
+                end
+
+                s.xyz_view = double(xyzs(idx));
+                s.xyz_gl = mapply(s.xyz_view,obj.drawnParams.MView,0);
+                s.xyz = mapply(s.xyz_gl,obj.drawnParams.MFig,0);
+            else
+                % coord is in empty space (or on unclickable object)
+                % Return the intersection between the clicked "ray" and the
+                % plane normal to the camera direction passing through the
+                % camera's origin
+
+                params = obj.drawnParams;
+                state = params.state;
+
+                % camera position (line point 1)
+                l0 = mapply([0 0 0],params.MView,0);
+
+                % point corresponding to coord at the end of the clip box (line point 2)
+                l1 = mapply([coord.*2./state.Size-1 1],params.MProj * params.MView,0);
+
+                % camera orientation (plane normal)
+                n = [0 0 1] * params.MView(1:3,1:3);
+                
+                % camera origin (plane point)
+                p0 = state.Origin;
+                
+                % plane-line intersection
+                d = dot((p0-l0),n)/dot(l1-l0,n);
+                s.xyz_gl = l0 + (l1-l0).*d;
+
+                s.xyz = mapply(s.xyz_gl,params.MFig,0);
+                s.xyz_view = mapply(s.xyz_gl,params.MView,1);
+            end
             
-            if ~any(validId(:)), return, end
-
-            xyzs = obj.glGetZone(xy,[sz 3],2,'single','GL_RGB');
-            xyzs(repmat(~validId,1,1,3)) = nan;
-
-            z = xyzs(:,:,3);
-            [~,k] = max(z(:));
-            idx = k + prod(sz).*(0:2);
-
-            s.xyz_view = double(xyzs(idx));
-            s.xyz_gl = mapply(s.xyz_view,obj.lastViewMatrix{1},0);
-            id = ids(idx(1:2));
-            drawId = mod1(id(1),65535);
-            o = obj.drawnPrimitives{drawId};
-            elemId = floor((id(1)-1)/65535)+1;
-            s.xyz = mapply(s.xyz_gl,obj.lastViewMatrix{2},0);
-            s.object = o;
-            s.info = o.id2info(elemId,id(2));
         end
     end
 end
 
-function x = unpack3(x)
-    x = permute(x,[2 3 1]);
-    x = rot90(x);
+function progResize(prog,cam)
+    prog.uniforms.scrSz.Set(max(cam.Size));
+    prog.uniforms.fov.Set(cam.FOV);
 end
