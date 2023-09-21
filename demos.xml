@@ -4,7 +4,7 @@
    <type>toolbox</type>
    <icon>HelpIcon.DEMOS</icon>
    <website/>
-   <description/>
+   <description>Fast and flexible viewer for all kinds of data</description>
    <demosection>
       <label>doc</label>
       <demoitem>
