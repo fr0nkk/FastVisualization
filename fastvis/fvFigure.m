@@ -113,10 +113,10 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             obj.MouseEvents = JMouseEvents(obj.parent);
             obj.camMouseListeners = [
                 addlistener(obj.MouseEvents,'Pressed',@obj.MousePressedCallback)
-                skippablelistener(obj.MouseEvents,'Dragged',@obj.MouseDraggedCallback)
-                skippablelistener(obj.MouseEvents,'Clicked',@obj.MouseClickedCallback)
-                skippablelistener(obj.MouseEvents,'WheelMoved',@obj.MouseWheelMovedCallback)
-                skippablelistener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
+                addlistener(obj.MouseEvents,'Dragged',@obj.MouseDraggedCallback)
+                addlistener(obj.MouseEvents,'Clicked',@obj.MouseClickedCallback)
+                addlistener(obj.MouseEvents,'WheelMoved',@obj.MouseWheelMovedCallback)
+                addlistener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
                 ];
             obj.parent.setCallback('KeyPressed',@(src,evt) notify(obj,'KeyTyped',javaevent(evt)));
             obj.parent.setCallback('FocusGained',@obj.FocusGainedCallback);
@@ -156,9 +156,8 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
                 obj.ResetCamera;
             else
                 obj.Camera.AdjustNearFar;
-                t = tic;
                 obj.parent.Update;
-                obj.frametime = (obj.frametime * obj.FrametimeSmoothing) + (toc(t) * (1.0-obj.FrametimeSmoothing));
+                obj.frametime = (obj.frametime * obj.FrametimeSmoothing) + (obj.ctrl.lastFrameTime * (1.0-obj.FrametimeSmoothing));
                 if obj.ShowFramerate
                     fprintf('fvFigure framerate: %.2f\n',1./obj.frametime)
                 end

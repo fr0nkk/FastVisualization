@@ -15,6 +15,8 @@ classdef fvController < glmu.GLController
 
         drawnPrimitives = {}
         drawnParams
+
+        lastFrameTime = 1;
     end
     
     methods
@@ -66,6 +68,7 @@ classdef fvController < glmu.GLController
         end
         
         function UpdateFcn(obj,gl)
+            t = tic;
             obj.MSframebuffer.DrawTo(1:4);
 
             % clear everything
@@ -116,6 +119,7 @@ classdef fvController < glmu.GLController
             obj.screen.Draw;
             
             glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.canvas.size)
+            obj.lastFrameTime = toc(t);
         end
         
         function ResizeFcn(obj,gl,sz)
