@@ -49,6 +49,10 @@ classdef fvPrimitive < internal.fvDrawable
 
         % Shininess - Primitive's shininess when rendering with color per vertex
         Shininess = 10;
+
+        % ShaderCull - Discard points with Normal using the shader. See fvDrawable.Cull
+        % Useful for displaying pointclouds with point orientation
+        ShaderCull = 0;
     end
 
     properties(Dependent)
@@ -215,6 +219,11 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Update;
         end
 
+        function set.ShaderCull(obj,v)
+            obj.ShaderCull = v;
+            obj.Update;
+        end
+
         function set.Shininess(obj,s)
             obj.Shininess = s;
             obj.Update;
@@ -358,14 +367,15 @@ classdef fvPrimitive < internal.fvDrawable
             u.modelview.Set(cam.MView * MO);
             
             u.alpha.Set(obj.Alpha);
+            u.shaderCull.Set(obj.ShaderCull);
+            u.model.Set(MO);
             
-            if isempty(obj.Normal)
+            if isempty(obj.Normal) || isempty(obj.Light)
                 u.lighting.Set('none');
                 u.edlDivisor.Set(1);
             else
                 u.lighting.Set('phong');
                 u.edlDivisor.Set(0.001);
-                u.model.Set(MO);
                 axLight = obj.fvfig.Light;
                 u.light.position.Set(axLight.Position + obj.Light.Offset);
                 u.light.ambient.Set(axLight.Ambient .* obj.Light.Ambient);

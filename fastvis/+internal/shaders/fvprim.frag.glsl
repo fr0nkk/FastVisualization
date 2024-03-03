@@ -22,6 +22,7 @@ uniform float material_shin = 10.0f;
 uniform float edlDivisor = 1.0f;
 uniform uint pointMask = 1;
 uniform sampler2D pointMask_tex;
+uniform int shaderCull = 0;
 
 uniform vec3 viewPos = vec3(0.0f);
 
@@ -83,6 +84,8 @@ subroutine(color_src) vec4 material_texture(void)
 }
 
 void main(){
+
+if (shaderCull != 0 && dot(v_normal,viewPos - myFragPos)*sign(shaderCull) < 0) discard;
 
 switch (pointMask) {
     case 1:
