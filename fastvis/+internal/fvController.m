@@ -212,8 +212,33 @@ classdef fvController < glmu.GLController
                 xyzs(repmat(~validId,1,1,3)) = nan;
     
                 z = xyzs(:,:,3);
-                [~,k] = max(z(:));
-                idx = k + prod(sz).*(0:2);
+                z(z < max(z(:))*1.02) = nan;
+
+                b = radius+1;
+                o = prod(sz).*(0:2);
+                if ~isnan(z(b,b))
+                    idx = sub2ind(sz,b,b) + o;
+                    X = reshape(xyzs(b,b,:),1,[]);
+                else
+                    tf = ~isnan(z);
+                    [g1,g2] = ndgrid(1:w,1:w);
+                    a = find(tf);
+                    g1 = g1(tf);
+                    g2 = g2(tf);
+
+                    if sum(tf(:)) < 3 || all(diff(g1) == 0) || all(diff(g2) == 0)
+                        [~,k] = max(z(:));
+                        idx = k + o;
+                        X = xyzs(idx);
+                    else
+                        Fx = scatteredInterpolant(g1,g2,double(xyzs(a+o(1))),'linear','linear');
+                        Fy = scatteredInterpolant(g1,g2,double(xyzs(a+o(2))),'linear','linear');
+                        Fz = scatteredInterpolant(g1,g2,double(xyzs(a+o(3))),'linear','linear');
+                        Fi = scatteredInterpolant(g1,g2,find(tf),'nearest','nearest');
+                        X = [Fx(b,b) Fy(b,b) Fz(b,b)];
+                        idx = Fi(b,b) + o;
+                    end
+                end
     
                 id = ids(idx(1:2));
                 drawId = mod1(id(1),65535);
@@ -224,7 +249,7 @@ classdef fvController < glmu.GLController
                     s.info = o.id2info(elemId,id(2));
                 end
 
-                s.xyz_view = double(xyzs(idx));
+                s.xyz_view = double(X);
                 s.xyz_gl = mapply(s.xyz_view,obj.drawnParams.MView,0);
                 s.xyz = mapply(s.xyz_gl,obj.drawnParams.MFig,0);
             else
