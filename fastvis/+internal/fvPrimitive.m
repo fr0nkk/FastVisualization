@@ -57,6 +57,9 @@ classdef fvPrimitive < internal.fvDrawable
         % ShaderCullColor - RGBA to give when culled with ShaderCull
         ShaderCullColor = [0 0 0 0];
 
+        % ShaderCullOffset - Z offset to apply when culled with shader
+        ShaderCullOffset = 0;
+
     end
 
     properties(Dependent)
@@ -233,6 +236,11 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Update;
         end
 
+        function set.ShaderCullOffset(obj,v)
+            obj.ShaderCullOffset = v;
+            obj.Update;
+        end
+
         function set.Shininess(obj,s)
             obj.Shininess = s;
             obj.Update;
@@ -269,7 +277,7 @@ classdef fvPrimitive < internal.fvDrawable
 
         function xyz = get.glCoords(obj)
             xyz = double(obj.validCoords);
-            xyz0 = mean(xyz,'omitnan');
+            xyz0 = mean(xyz,1,'omitnan');
             xyz = single(xyz - xyz0)';
             obj.model_offset = MTrans3D(xyz0);
         end
@@ -377,7 +385,10 @@ classdef fvPrimitive < internal.fvDrawable
             
             u.alpha.Set(obj.Alpha);
             u.shaderCull.Set(obj.ShaderCull);
-            u.cullColor.Set(obj.ShaderCullColor);
+            if obj.ShaderCull
+                u.cullColor.Set(obj.ShaderCullColor);
+                u.shaderCullOffset.Set(obj.ShaderCullOffset);
+            end
             u.model.Set(MO);
             
             if isempty(obj.Normal) || isempty(obj.Light)
