@@ -50,6 +50,8 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
     end
 
     properties(Hidden)
+        popup
+        
         % for debug
         PauseUpdatesActive = true;
         ShowFramerate = false;
@@ -77,7 +79,6 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         camMouseListeners
         camListener
         cameraNeedsReset = 0
-        popup
         UpdateNeeded = true
         frametime = 1/60; % initial estimate
     end
@@ -112,11 +113,11 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             obj.mtlCache = internal.fvMaterialCache(obj);
             obj.MouseEvents = JMouseEvents(obj.parent);
             obj.camMouseListeners = [
-                addlistener(obj.MouseEvents,'Pressed',@obj.MousePressedCallback)
-                addlistener(obj.MouseEvents,'Dragged',@obj.MouseDraggedCallback)
-                addlistener(obj.MouseEvents,'Clicked',@obj.MouseClickedCallback)
-                addlistener(obj.MouseEvents,'WheelMoved',@obj.MouseWheelMovedCallback)
-                addlistener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
+                skippablelistener(obj.MouseEvents,'Pressed',@obj.MousePressedCallback)
+                skippablelistener(obj.MouseEvents,'Dragged',@obj.MouseDraggedCallback)
+                skippablelistener(obj.MouseEvents,'Clicked',@obj.MouseClickedCallback)
+                skippablelistener(obj.MouseEvents,'WheelMoved',@obj.MouseWheelMovedCallback)
+                skippablelistener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
                 ];
             obj.parent.setCallback('KeyPressed',@(src,evt) notify(obj,'KeyTyped',javaevent(evt)));
             obj.parent.setCallback('FocusGained',@obj.FocusGainedCallback);
