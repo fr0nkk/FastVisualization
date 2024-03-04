@@ -23,6 +23,7 @@ uniform float edlDivisor = 1.0f;
 uniform uint pointMask = 1;
 uniform sampler2D pointMask_tex;
 uniform int shaderCull = 0;
+uniform vec4 cullColor = vec4(0.0f);
 
 uniform vec3 viewPos = vec3(0.0f);
 
@@ -85,8 +86,6 @@ subroutine(color_src) vec4 material_texture(void)
 
 void main(){
 
-if (shaderCull != 0 && dot(v_normal,viewPos - myFragPos)*sign(shaderCull) < 0) discard;
-
 switch (pointMask) {
     case 1:
         if(length(gl_PointCoord.xy-0.5) > 0.5) discard;
@@ -96,7 +95,12 @@ switch (pointMask) {
         break;
 }
 
+
+if (shaderCull != 0 && dot(v_normal,viewPos - myFragPos)*sign(shaderCull) < 0)
+frag_color = cullColor;
+else
 frag_color = color_source();
+
 frag_color.a *= alpha;
 if(frag_color.a == 0.0f) discard;
 frag_color.rgb = lighting(frag_color.rgb,material_spec,material_shin);
