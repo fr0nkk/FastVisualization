@@ -11,7 +11,6 @@ pathList = {
     'fastvis'
     'utils'
     'obj'
-    fullfile('utils','java')
     };
 
 if addFlag
