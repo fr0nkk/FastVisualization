@@ -13,8 +13,7 @@ uniform mat4 model = mat4(1.0);
 uniform mat4 modelview = mat4(1.0);
 uniform mat4 projection = mat4(1.0);
 uniform float pointSize = -1.0;
-uniform float scrSz = 500.0;
-uniform float fov = 45;
+uniform float pixScale = 1.0;
 uniform float minPointSize = 1.0;
 uniform int shaderCull = 0;
 uniform float shaderCullOffset = 0.0f;
@@ -34,7 +33,5 @@ v_texcoord = vertex_texcoords;
 if (shaderCull != 0)
 gl_Position.z = gl_Position.z + shaderCullOffset*float(dot(v_normal,viewPos - myFragPos)*sign(shaderCull) < 0);
 
-float pixScale =  scrSz / (2.0 * tan(fov/180.0*pi/2.0));
-
-gl_PointSize = pointSize < 0 ? -pointSize : max(minPointSize,2*atan(pointSize/2/length(camView.xyz))*pixScale);
+gl_PointSize = max(minPointSize,2*atan(pointSize/2/length(camView.xyz))/pixScale);
 }

@@ -3,25 +3,28 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
     properties(Dependent,SetObservable)
         % Origin - Point around which the rotation is applied
-        Origin
+        Origin (3,1) double {mustBeReal,mustBeFinite}
 
         % Rotation - Angles in degrees to rotate
-        Rotation
+        Rotation (3,1) double {mustBeReal,mustBeFinite}
 
         % Translation - Offset to apply after rotation
-        Translation
+        Translation (3,1) double {mustBeReal,mustBeFinite}
 
         % Size - Dimensions of the canvas [width, height]
-        Size
+        Size (2,1) double {mustBePositive}
 
         % NearFar - Near and far clip planes distances from camera
-        NearFar
+        NearFar (2,1) double {mustBeNonnegative}
 
-        % FOV - Field of view of camera
-        FOV
+        % FOV - Field of view of camera in perspective mode
+        FOV (1,1) double {mustBePositive}
 
-        % Projection - Type of projection to use (Perspective or Orthogonal)
-        Projection
+        % FOV - Zoom of camera in orthographic mode
+        Zoom (1,1) double {mustBePositive}
+
+        % Perspective - Use perspective or Orthographic projection
+        Perspective (1,1) logical
     end
 
     properties(SetObservable)
@@ -33,12 +36,9 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         RotationActive = [true true] % xy
         PanActive = [true true] % xy
 
-        AnimateProjectionChange = false
+        AnimateProjectionChange = true
         NearFarFcn = @(d) [d/10 d*50];
-    end
 
-    properties(Dependent)
-        isPerspective
     end
 
     events
@@ -46,7 +46,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         Resized
     end
 
-    properties(Transient,SetAccess=private)
+    properties(Transient,SetAccess=private,SetObservable)
         MView % 4x4 matrix
         MProj % 4x4 matrix
     end
@@ -58,14 +58,14 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         iSize = [1 1];
         iNearFar = [0 1];
         iFOV = 45;
-        iProjection = 'Perspective';
+        iZoom = 1;
+        iPerspective = true;
     end
 
     properties(Transient,Access=private)
         MProj_need_recalc = 1
         MView_need_recalc = 1
         buttonPressState
-        cached_fov = 45
         isAnimating = false
     end
     
@@ -77,17 +77,17 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             end
         end
 
-        function tf = get.isPerspective(obj)
-            tf = lower(obj.iProjection(1)) == 'p';
+        function tf = get.Perspective(obj)
+            tf = obj.iPerspective;
         end
 
         function M = get.MProj(obj)
             if obj.MProj_need_recalc
                 sz = obj.iSize;
-                if obj.isPerspective
+                if obj.Perspective
                     obj.MProj = MProj3D('F2',[sz(1)/sz(2) obj.iFOV obj.iNearFar],1);
                 else
-                    obj.MProj = MProj3D('O',[sz.*obj.iFOV obj.iNearFar]);
+                    obj.MProj = MProj3D('O',[sz./obj.iZoom obj.iNearFar]);
                 end
                 obj.MProj_need_recalc = 0;
             end
@@ -111,8 +111,8 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             obj.iOrigin(:) = center;
             obj.iTranslation(:) = [0 0 -max(range(:)).*2];
             obj.MView_need_recalc = 1;
-            if ~obj.isPerspective
-                obj.iFOV = -obj.iTranslation(3) ./ mean(obj.iSize);
+            if ~obj.Perspective
+                obj.iZoom = -mean(obj.iSize) ./ obj.iTranslation(3);
                 obj.MProj_need_recalc = 1;
             end
             notify(obj,'Moved');
@@ -137,10 +137,10 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
         function k = getScaleFactor(obj,d)
             if nargin < 2, d = -obj.iTranslation(3); end
-            if obj.isPerspective
+            if obj.Perspective
                 k = d ./ max(obj.iSize) * (2*tand(obj.iFOV/2));
             else
-                k = obj.iFOV;
+                k = 1./obj.iZoom;
             end
         end
 
@@ -157,7 +157,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             if any(obj.RotationActive) && buttonMask(3) && ~any(isnan(dcoords(3,:)))
                 s = obj.buttonPressState{3};
                 a = obj.RotationSensitivity .* obj.RotationActive;
-                obj.iRotation([3 1]) = s.Rotation([3 1]) + dcoords(3,:) .* a;
+                obj.iRotation([3 1]) = mod(s.Rotation([3 1]) + dcoords(3,:) .* a,360);
                 moved = true;
             end
 
@@ -170,9 +170,9 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         function ZoomAction(obj,qty,coords)
             if obj.ZoomActive
                 obj.SetOrigin(coords);
-                k = (1 + (qty.*obj.ZoomSensitivity));
-                if ~obj.isPerspective
-                    obj.iFOV = obj.iFOV .* k;
+                k = 1 + qty.*obj.ZoomSensitivity;
+                if ~obj.Perspective
+                    obj.iZoom = obj.iZoom ./ k;
                     obj.MProj_need_recalc = 1;
                     obj.iTranslation(1:2) = obj.iTranslation(1:2) .* k;
                 else
@@ -190,6 +190,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             s.Size = obj.iSize;
             s.NearFar = obj.iNearFar;
             s.FOV = obj.iFOV;
+            s.Zoom = obj.iZoom;
         end
 
         function setState(obj,s,silent)
@@ -200,6 +201,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             obj.iSize = s.Size;
             obj.iNearFar = s.NearFar;
             obj.iFOV = s.FOV;
+            obj.iZoom = s.Zoom;
             obj.MView_need_recalc = 1;
             obj.MProj_need_recalc = 1;
             if ~silent
@@ -240,8 +242,8 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             p = obj.iFOV;
         end
 
-        function p = get.Projection(obj)
-            p = obj.iProjection;
+        function p = get.Zoom(obj)
+            p = obj.iZoom;
         end
 
         function set.Origin(obj,p)
@@ -251,7 +253,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         end
 
         function set.Rotation(obj,p)
-            obj.iRotation(1:3) = p;
+            obj.iRotation(1:3) = mod(p,360);
             obj.MView_need_recalc = 1;
             notify(obj,'Moved');
         end
@@ -280,7 +282,14 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             notify(obj,'Moved');
         end
 
-        function AnimateMatrix(obj,MP0,MV0,MP1,MV1,dt)
+        function set.Zoom(obj,z)
+            obj.iZoom(1) = z;
+            obj.MProj_need_recalc = 1;
+            notify(obj,'Moved');
+        end
+
+        function AnimateMatrix(obj,MP0,MV0,MP1,MV1,dt,p)
+            if nargin < 7, p = 1; end
             if nargin <= 4
                 dt = MP1;
                 MP1 = MP0;
@@ -299,7 +308,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             newM = [MP1(:)' MV1(:)'];
             t = tic;
             while toc(t) < dt
-                interpM = interp1([0 ; 1],[oldM ; newM],toc(t)/dt);
+                interpM = interp1([0 ; 1],[oldM ; newM],(toc(t)/dt).^p);
                 obj.MProj = reshape(interpM(1:16),4,4);
                 obj.MView = reshape(interpM(17:32),4,4);
                 notify(obj,'Moved');
@@ -315,8 +324,8 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
             obj.isAnimating = true; temp = onCleanup(@() obj.EndAnimation(state1));
             if ~event.hasListener(obj,'Moved'), return; end
-            oldParam = [state0.Origin state0.Rotation state0.Translation state0.Size state0.NearFar state0.FOV];
-            newParam = [state1.Origin state1.Rotation state1.Translation state1.Size state1.NearFar state1.FOV];
+            oldParam = [state0.Origin state0.Rotation state0.Translation state0.Size state0.NearFar state0.FOV state0.Zoom];
+            newParam = [state1.Origin state1.Rotation state1.Translation state1.Size state1.NearFar state1.FOV state1.Zoom];
 
             t = tic;
             while toc(t) < dt
@@ -327,34 +336,35 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
                 obj.iSize = interpState(10:11);
                 obj.iNearFar = interpState(12:13);
                 obj.iFOV = interpState(14);
+                obj.iZoom = interpState(15);
                 obj.MView_need_recalc = 1;
                 obj.MProj_need_recalc = 1;
                 notify(obj,'Moved');
             end
         end
 
-        function set.Projection(obj,p)
-            if ~ismember(lower(p),{'perspective','orthographic'})
-                error('Projection must be ''Perspective'' or ''Orthographic''')
-            end
-            if lower(p(1)) == lower(obj.iProjection(1)), return, end
+        function set.Perspective(obj,tf)
+            tf = logical(tf(1));
+            if ~xor(obj.Perspective,tf), return, end
 
+            r = -max(obj.iSize) ./ (2*tand(obj.iFOV/2));
+
+            if tf
+                obj.iTranslation(3) = r ./ obj.iZoom;
+                obj.MView_need_recalc = 1;
+            end
             oldM = {obj.MProj obj.MView};
-
-            obj.iProjection = char(p);
-            if obj.isPerspective
-                obj.iTranslation(3) = -obj.iFOV .* max(obj.iSize) / 2/tand(obj.cached_fov/2);
-                obj.iFOV = obj.cached_fov;
-            else
-                obj.cached_fov = obj.iFOV;
-                obj.iFOV = -obj.iTranslation(3) ./ max(obj.iSize) * 2*tand(obj.iFOV/2);
+            obj.iPerspective = tf;
+            if ~tf
+                obj.iZoom = r ./ obj.iTranslation(3);
             end
-            obj.MView_need_recalc = 1;
             obj.MProj_need_recalc = 1;
             newM = {obj.MProj obj.MView};
             
             if obj.AnimateProjectionChange
-                obj.AnimateMatrix(oldM{:},newM{:},0.5);
+                p = 2;
+                if ~tf, p=1/p; end
+                obj.AnimateMatrix(oldM{:},newM{:},0.25,p);
             else
                 notify(obj,'Moved');
             end
@@ -387,6 +397,21 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             end
             obj.isAnimating = false;
             notify(obj,'Moved');
+        end
+
+        function ui(obj,parent)
+
+            fvJLinkedValue(parent,mfilename);
+
+            fcn = @(o) abs(o.Translation(3))./500;
+            fvJLinkedValue(parent,'Origin',obj,{'Origin','MView'},'DragStep',fcn);
+            fvJLinkedValue(parent,'Rotation',obj,{'Rotation','MView'},'DragStep',0.25);
+            fvJLinkedValue(parent,'Translation',obj,{'Translation','MView'},'DragStep',fcn);
+
+            fvJLinkedValue(parent,'Perspective',obj,'Perspective');
+            fvJLinkedValue(parent,'FOV',obj,{'FOV','MProj'},'DragStep',0.1);
+            fvJLinkedValue(parent,'Zoom',obj,{'Zoom','MProj'},'DragStep',0.5);
+
         end
     end
 end

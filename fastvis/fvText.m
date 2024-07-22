@@ -12,11 +12,11 @@ classdef fvText < internal.fvPrimitive
 
         % HorizontalAlignment - Horizontal alignment of the anchor point
         % Valid values: Left, Right, Center
-        HorizontalAlignment char = 'Left' 
+        HorizontalAnchor char {mustBeMember(HorizontalAnchor,{'Center','Left','Right'})} = 'Left' 
 
         % VerticalAlignment - Vertical alignment of the anchor point
         % Valid values: Top, Bottom, Center
-        VerticalAlignment char = 'Bottom' 
+        VerticalAnchor char {mustBeMember(VerticalAnchor,{'Center','Bottom','Top'})} = 'Bottom' 
     end
 
     properties(Dependent,SetObservable)
@@ -69,22 +69,38 @@ classdef fvText < internal.fvPrimitive
             sz = obj.ConstantSize;
         end
 
-        function set.HorizontalAlignment(obj,v)
-            obj.HorizontalAlignment = v;
+        function set.HorizontalAnchor(obj,v)
+            obj.HorizontalAnchor = v;
             obj.UpdateShape;
         end
 
-        function set.VerticalAlignment(obj,v)
-            obj.VerticalAlignment = v;
+        function set.VerticalAnchor(obj,v)
+            obj.VerticalAnchor = v;
             obj.UpdateShape;
         end
 
         function UpdateShape(obj)
             if ~obj.isInit, return, end
             t = obj.PauseUpdates;
-            [xyz,ind] = obj.makeShape(obj.Text,1,obj.Font,obj.HorizontalAlignment,obj.VerticalAlignment);
+            [xyz,ind] = obj.makeShape(obj.Text,1,obj.Font,obj.HorizontalAnchor,obj.VerticalAnchor);
             obj.Coord = xyz;
             obj.Index = ind;
+        end
+    end
+
+    methods(Hidden)
+        function ui(obj,parent)
+            fvJLinkedValue(parent,mfilename);
+
+            fvJLinkedValue(parent,'Text',obj,'Text');
+
+            items = str2shape;
+            fvJLinkedValue(parent,'Font',obj,'Font','Comp',@fvJLinkedComboBox,'Items',items);
+
+            fvJLinkedValue(parent,'HAnchor',obj,'HorizontalAnchor');
+            fvJLinkedValue(parent,'VAnchor',obj,'VerticalAnchor');
+
+            obj.ui@internal.fvPrimitive(parent);
         end
     end
 

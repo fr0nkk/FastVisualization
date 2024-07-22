@@ -65,6 +65,8 @@ classdef fvController < glmu.GLController
 
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
 
+            gl.glDepthFunc(gl.GL_LEQUAL); 
+
         end
         
         function UpdateFcn(obj,gl)
@@ -118,7 +120,7 @@ classdef fvController < glmu.GLController
             obj.screen.program.uniforms.edlStrength.Set(obj.fvfig.EDL);
             obj.screen.Draw;
             
-            glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.canvas.size)
+            glmu.Blit(obj.framebuffer,0,gl.GL_COLOR_BUFFER_BIT,gl.GL_NEAREST,1,[0 0],obj.canvas.Size)
             obj.lastFrameTime = toc(t);
         end
         
@@ -174,13 +176,13 @@ classdef fvController < glmu.GLController
         end
 
         function [img,depth] = Snapshot(obj)
-            sz = [obj.canvas.size 3];
+            sz = [obj.canvas.Size 3];
             xy = [0 0];
 
             img = obj.glGetZone(xy,sz,1,'uint8','GL_RGB');
             depth = obj.glGetZone(xy,sz,2,'single','GL_RGB');
 
-            if obj.fvfig.Camera.isPerspective
+            if obj.fvfig.Camera.Perspective
                 depth = vecnorm(depth,2,3);
             else
                 depth = depth(:,:,3);
@@ -198,10 +200,11 @@ classdef fvController < glmu.GLController
         end
 
         function s = coord2closest(obj,coord,radius)
+            [gl,temp] = obj.canvas.getContext;
 
             w = 2.*radius+1; % square side length px
             
-            coord(2) = obj.canvas.size(2) - coord(2);
+            coord(2) = obj.canvas.Size(2) - coord(2);
 
             xy = coord-radius;
             sz = [w w];
@@ -268,8 +271,14 @@ classdef fvController < glmu.GLController
                 % camera position (line point 1)
                 l0 = mapply([0 0 0],params.MView,0);
 
-                % point corresponding to coord at the end of the clip box (line point 2)
-                l1 = mapply([coord.*2./state.Size-1 1],params.MProj * params.MView,0);
+                
+                M = params.MProj * params.MView;
+                if det(M) == 0
+                    l1 = [0 0 0];
+                else
+                    % point corresponding to coord at the end of the clip box (line point 2)
+                    l1 = mapply([coord.*2./state.Size-1 1],M,0);
+                end
 
                 % camera orientation (plane normal)
                 n = [0 0 1] * params.MView(1:3,1:3);
@@ -290,6 +299,5 @@ classdef fvController < glmu.GLController
 end
 
 function progResize(prog,cam)
-    prog.uniforms.scrSz.Set(max(cam.Size));
-    prog.uniforms.fov.Set(cam.FOV);
+    prog.uniforms.pixScale.Set(cam.getScaleFactor(1));
 end

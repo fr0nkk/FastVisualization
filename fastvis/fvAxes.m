@@ -9,7 +9,7 @@ p.KeepUnmatched = true;
 p.parse(args{:});
 
 xyz = [0 0 0; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1];
-col = [1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1; 0 0 1];
+col = [1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0.25 1; 0 0.25 1];
 ind = [1 2 nan 3 4 nan 5 6]';
 mdl = MTrans3D(p.Results.pos);
 

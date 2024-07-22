@@ -4,7 +4,7 @@ function out = fastvis_paths(addFlag)
 if nargin < 1, addFlag = true; end
 
 if addFlag
-    matoglCheck('3.1.2');
+    assert(exist('matogl','class'),'matogl experimental/v4 must be current');
 end
 
 pathList = {

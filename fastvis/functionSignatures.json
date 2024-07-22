@@ -43,7 +43,7 @@
             {"name":"Coords",  "kind":"positional", "type":["numeric"]},
             {"name":"Colors",  "kind":"positional", "type":["numeric"]},
             {"name":"Indices",  "kind":"positional", "type":["numeric"]},
-            {"name":"opts", "kind":"properties", "type":["fvPointcloud"]}
+            {"name":"opts", "kind":"properties", "type":["internal.fvPrimitive"]}
         ] 
     }, 
 

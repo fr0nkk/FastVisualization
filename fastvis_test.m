@@ -1,5 +1,6 @@
+f = fvControlFigure;
 
-a = fvFigure;
+a = f.fvfig;
 
 a.Camera.Origin = [0 0 0];
 a.Camera.Rotation = [-45 0 -45];
@@ -30,13 +31,16 @@ bb = fvBoundingBox(line,[]);
 
 ind = bb.Extract(p);
 p2 = fvPointcloud(p.Coord(ind,:)).Translate([-3 0 0]);
-p2.PointUnit = 'world';
 p2.PointSize = 0.05;
 p2.MinPointSize = 3;
-p2.PointShape = imresize([0 1 0 ; 1 1 1 ; 0 1 0],5,'nearest');
+p2.PointShape = 'Custom';
 
 fvBoundingBox(a,p.worldBBox);
 fvBoundingBox(p,[]);
 
 a.ResetCamera;
+
+f.UpdateTree;
+
+
 

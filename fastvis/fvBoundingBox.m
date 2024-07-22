@@ -51,7 +51,7 @@ classdef fvBoundingBox < internal.fvChild
                         ];
                     obj.UpdateModel;
                 else
-                    obj.BBoxLines.Model = obj.BBoxModel([0 0 0 1 1 1]);
+                    obj.BBoxLines.Model = obj.BBoxModel([-0.5 -0.5 -0.5 1 1 1]);
                 end
             else
                 obj.BBoxLines.Model = obj.BBoxModel(b);

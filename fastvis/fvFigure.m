@@ -2,60 +2,60 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
     
     properties(Transient,SetObservable)
         % BackgroundColor - Color of the fvFigure's background
-        BackgroundColor = [0 0 0];
+        BackgroundColor (1,3) double {mustBeInRange(BackgroundColor,0,1)} = [0 0 0];
 
         % Light - Struct containing information about lighting
         % The struct must contain Position, Ambient, Diffuse, Specular
         Light = struct('Position',[0 0 1e5],'Ambient',[1 1 1],'Diffuse',[1 1 1],'Specular',[1 1 1]);
 
         % isHold - State of hold of the fvFigure
-        isHold matlab.lang.OnOffSwitchState = false;
+        isHold (1,1) matlab.lang.OnOffSwitchState = false;
 
         % edl - Eye Dome Lighting normalized strength
         % set to 0 to deactivate
-        EDL = 0.1;
+        EDL (1,1) double {mustBeNonnegative} = 0.05;
 
         % edlWithBackground - Use EDL to shade objects with background
-        EDLWithBackground logical = false
+        EDLWithBackground (1,1) logical = false
 
         % ColorOrder - Colormap for object's color when they have no color specified
         ColorOrder = lines(7);
 
         % Camera - fvCamera used for viewing the scene - see fvCamera
-        Camera
+        Camera fvCamera
 
         % Type - Type of axes, determining camera constraints
         % Can be auto, 2D, or 3D
-        CameraConstraints = 'auto'; % auto, 2D or 3D
+        CameraConstraints {mustBeMember(CameraConstraints,{'auto','3D','2D'})} = 'auto'; % auto, 2D or 3D
 
         % Model - Base scene model
-        Model = eye(4);
+        Model (4,4) double {mustBeFinite,mustBeReal} = eye(4);
 
         % PopupMenuActive - Display the menu on right click in fvFigure
-        PopupMenuActive = true;
+        PopupMenuActive (1,1) logical = true;
 
         % Title - Title of the fvFigure
-        Title
+        Title char
 
         % Size - Size of the canvas
-        Size
+        Size (1,2) double {mustBeFinite,mustBeReal}
         
         % MSAA - Number of samples for multisample anti-aliasing
-        MSAA = 4
+        MSAA (1,1) double {mustBeInteger,mustBeInRange(MSAA,1,8)} = 4
 
         % DepthRange - Range of depth to use for depth writes
         % Values must be from 0 to 1
         % Used by childrens if they have no DepthRange set
-        DepthRange = [0 1];
+        DepthRange (1,2) double {mustBeInRange(DepthRange,0,1)} = [0 1];
     end
 
     properties(Hidden)
         popup
         
         % for debug
-        PauseUpdatesActive = true;
-        ShowFramerate = false;
-        FrametimeSmoothing = 0.5;
+        PauseUpdatesActive (1,1) logical = true;
+        ShowFramerate (1,1) logical = true;
+        FrametimeSmoothing (1,1) double {mustBeGreaterThanOrEqual(FrametimeSmoothing,0)} = 0.5;
     end
 
     properties(Hidden,SetAccess=protected)
@@ -93,40 +93,54 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
     
     methods
         function obj = fvFigure(varargin)
-            p = inputParser;
-            p.addOptional('canvas',[]);
-            p.KeepUnmatched = true;
-            p.parse(varargin{:});
+            [parent,varargin] = jparse(varargin{:});
+            if ~isa(parent,'GLCanvas')
+                if isa(parent,'JFrame')
+                    parent.Title = mfilename;
+                end
+                parent = GLCanvas(parent,'GL4');
+            end
+            % p = inputParser;
+            % p.addOptional('canvas',[]);
+            % p.KeepUnmatched = true;
+            % p.parse(varargin{:});
 
-            canvas = p.Results.canvas;
+            % canvas = p.Results.canvas;
             obj.Camera = fvCamera;
             obj.ctrl = internal.fvController;
-            if isempty(canvas)
-                canvas = GLCanvas('GL4',0);
-                parent = JFrame(mfilename);
-                parent.add(canvas);
-            end
-            
-            canvas.addChild(obj);
+            % if isempty(canvas)
+                % canvas = GLCanvas('GL4',0);
+                % parent = JFrame(mfilename);
+                % parent.add(canvas);
+            % end
+            parent.addChild(obj);
+            % canvas.addChild(obj);
             obj.ctrl.setGLCanvas(obj.parent);
             obj.parent.Init(obj,obj.MSAA);
             obj.mtlCache = internal.fvMaterialCache(obj);
             obj.MouseEvents = JMouseEvents(obj.parent);
             obj.camMouseListeners = [
-                skippablelistener(obj.MouseEvents,'Pressed',@obj.MousePressedCallback)
-                skippablelistener(obj.MouseEvents,'Dragged',@obj.MouseDraggedCallback)
-                skippablelistener(obj.MouseEvents,'Clicked',@obj.MouseClickedCallback)
-                skippablelistener(obj.MouseEvents,'WheelMoved',@obj.MouseWheelMovedCallback)
-                skippablelistener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
+                % skippablelistener(obj.MouseEvents,'Pressed',@obj.MousePressedCallback)
+                % skippablelistener(obj.MouseEvents,'Dragged',@obj.MouseDraggedCallback)
+                % skippablelistener(obj.MouseEvents,'Clicked',@obj.MouseClickedCallback)
+                % skippablelistener(obj.MouseEvents,'WheelMoved',@obj.MouseWheelMovedCallback)
+                % skippablelistener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
+                event.listener(obj.MouseEvents,'Pressed',@obj.MousePressedCallback)
+                event.listener(obj.MouseEvents,'Dragged',@obj.MouseDraggedCallback)
+                event.listener(obj.MouseEvents,'Clicked',@obj.MouseClickedCallback)
+                event.listener(obj.MouseEvents,'WheelMoved',@obj.MouseWheelMovedCallback)
+                event.listener(obj.MouseEvents,'Moved',@obj.MouseMovedCallback)
                 ];
-            obj.parent.setCallback('KeyPressed',@(src,evt) notify(obj,'KeyTyped',javaevent(evt)));
-            obj.parent.setCallback('FocusGained',@obj.FocusGainedCallback);
+            obj.parent.addJEvents('FocusGained')
+            addlistener(parent,'FocusGained',@obj.FocusGainedCallback);
             obj.FocusGainedCallback;
             internal.fvInstances('add',obj);
 
             obj.popup = internal.fvPopup(obj);
 
-            set(obj,p.Unmatched);
+            if numel(varargin)
+                set(obj,varargin{:})
+            end
         end
 
         function id = NextColorId(obj)
@@ -134,11 +148,9 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function set.Camera(obj,cam)
-            if ~isa(cam,'fvCamera')
-                error('Camera must be a fvCamera');
-            end
             delete(obj.camListener)
-            obj.camListener = skippablelistener(cam,'Moved',@(src,evt) obj.Update);
+            % obj.camListener = skippablelistener(cam,'Moved',@(src,evt) obj.Update);
+            obj.camListener = event.listener(cam,'Moved',@(src,evt) obj.Update);
             obj.Camera = cam;
             if ~isempty(obj.ctrl)
                 obj.ResizeCallback(obj.Size);
@@ -203,8 +215,9 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             if numel(col) > 3 || ~isnumeric(col)
                 error('Background color must be numerical with a maximum of 3 values')
             end
-            col = internal.var2gl(col(:)',3,1);
-            obj.ctrl.clearColor = num2cell(col);
+            glcol = internal.var2gl(col(:)',3,1);
+            obj.ctrl.clearColor = num2cell(glcol);
+            obj.BackgroundColor = col;
             obj.Update;
         end
 
@@ -212,6 +225,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             tf = logical(tf(1));
             [gl,temp] = obj.getContext;
             obj.ctrl.screen.program.uniforms.edlWithBackground.Set(tf);
+            obj.EDLWithBackground = tf;
             obj.Update;
         end
 
@@ -358,6 +372,11 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             end
         end
 
+        function Reset(obj)
+            obj.fvclear;
+            obj.ResetCamera;
+        end
+
     end
 
     methods(Access=private)
@@ -451,6 +470,22 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             s = struct('props',struct(args{:}));
             tf = cellfun(@(c) c.fvSave,obj.child);
             s.child = cellfun(@saveobj,obj.child(tf),'uni',0);
+        end
+
+        function ui(obj,parent)
+
+            fvJLinkedValue(parent,mfilename);
+
+            fvJLinkedValue(parent,'Color',obj,'BackgroundColor','DragStep',0.01);
+
+            fvJLinkedValue(parent,'EDL',obj,'EDL','DragStep',0.0005);
+
+            fvJLinkedValue(parent,'BG EDL',obj,'EDLWithBackground');
+
+            fvJLinkedValue(parent,'MSAA',obj,'MSAA','DragStep',0.05);
+
+            obj.Camera.ui(parent);
+
         end
 
     end

@@ -34,38 +34,45 @@ classdef fvPrimitive < internal.fvDrawable
 
         % PrimitiveType - Type of primitive
         % Can be: GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN
-        PrimitiveType
+        PrimitiveType char {mustBeMember(PrimitiveType,{'GL_POINTS', 'GL_LINES', 'GL_LINE_STRIP', 'GL_TRIANGLES', 'GL_TRIANGLE_STRIP', 'GL_TRIANGLE_FAN'})} = 'GL_POINTS';
 
         % Colormap - Colormap to use when colors are in colormap mode
         % Can be [M x 3] where M is the number of colors, or the name of a colormap
-        Colormap = 'parula'
+        Colormap
         
         % Light - Struct containing information about this primitive's light
         % The struct must contain Offset, Ambient, Diffuse and Specular
         Light = struct('Offset',[0 0 0],'Ambient',[0.3 0.3 0.3],'Diffuse',[0.8 0.8 0.8],'Specular',[1 1 1]);
 
         % Specular - Primitive's specular when rendering with color per vertex
-        Specular = [0.5 0.5 0.5];
+        Specular (1,3) double {mustBeNonnegative} = [0.5 0.5 0.5];
 
         % Shininess - Primitive's shininess when rendering with color per vertex
-        Shininess = 10;
+        Shininess (1,1) double {mustBeNonnegative} = 10;
 
-        % ShaderCull - Modify backward or forward elements with Normal. See fvDrawable.Cull
-        % Useful for displaying pointclouds with point orientation
-        ShaderCull = 0;
+        % ShaderCull - Cull pixels with normals at the shader level
+        ShaderCull (1,1) double {mustBeInRange(ShaderCull,-1,1),mustBeInteger} = 0;
 
         % ShaderCullColor - RGBA to give when culled with ShaderCull
-        ShaderCullColor = [0 0 0 0];
+        ShaderCullColor (1,4) double {mustBeInRange(ShaderCullColor,0,1)} = [0 0 0 0];
 
         % ShaderCullOffset - Z offset to apply when culled with shader
-        ShaderCullOffset = 0;
+        ShaderCullOffset (1,1) double {mustBeReal,mustBeFinite} = 0;
 
-    end
+        % PointSize - Size of the points, in world units
+        % A size of 0 default to MinPointSize (in pixels)
+        PointSize (1,1) double {mustBeFinite,mustBeNonnegative} = 0
 
-    properties(Dependent)
-        % isColormapped - returns true if the primitive color is drawn
-        % using its Colormap (if width of Color is 1)
-        isColormapped
+        % MinPointSize - Minimum size of points, in pixels
+        MinPointSize (1,1) double {mustBeFinite,mustBeNonnegative} = 2;
+
+        % PointShape - Shape of the drawn points
+        % valid values are 'square', 'round', or an alpha matrix [m x n]
+        % for custom shapes
+        PointShape char {mustBeMember(PointShape,{'Square','Round','Custom'})} = 'Square'
+
+        PointShapeCustom = imresize([0 1 0 ; 1 1 1 ; 0 1 0],5,'nearest')
+
     end
 
     events
@@ -87,6 +94,8 @@ classdef fvPrimitive < internal.fvDrawable
         needRecalc = 1;
         auto_color_id
         mtl_el
+        colListener
+        cmapListener
     end
 
     properties(Hidden,Dependent)
@@ -131,18 +140,21 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Material = material;
             obj.MaterialIndex = material_index;
             obj.auto_color_id = obj.fvfig.NextColorId;
+            obj.Colormap = fvColormap('parula');
             
             [gl,gltemp] = obj.getContext;
 
             shdPath = execdir(fileparts(mfilename('fullpath')),'shaders','fvprim');
             obj.glProg = obj.fvfig.ctrl.InitProg(shdPath);
-            obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.PrimitiveType,uint32([0 0 0]),{obj.glCoords obj.glNormals obj.glColor});
+
+            attrib = glmu.VertexAttrib.FromData({obj.glCoords obj.glNormals obj.glColor},gl.GL_ARRAY_BUFFER,gl.GL_STATIC_DRAW,{'float','float','normalized'});
+
+            obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.PrimitiveType,uint32([0 0 0]),attrib);
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
-            obj.glDrawable.uni.pointMask = 0;
             obj.Name = 'fvPrimitive';
             obj.RightClickMenu = @internal.fvPrimitive.Menu;
             obj.isInit = true;
-            
+
             if ~isempty(varargin)
                 set(obj,varargin{:});
             end
@@ -166,11 +178,12 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Coord = v;
             obj.needRecalc = 1;
             obj.InvalidateBBox;
-            obj.UpdateColor;
+            obj.UpdateColor(false);
             notify(obj,'CoordsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
-            obj.glDrawable.array.EditBuffer({obj.glCoords});
+            obj.glDrawable.array.attrib{1}.buffer.Set(obj.glCoords);
+            % obj.glDrawable.array.EditBuffer({obj.glCoords});
         end
 
         function set.Normal(obj,v)
@@ -179,25 +192,32 @@ classdef fvPrimitive < internal.fvDrawable
             notify(obj,'NormalsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
-            obj.glDrawable.array.EditBuffer({[] obj.glNormals });
+            obj.glDrawable.array.attrib{2}.buffer.Set(obj.glNormals);
+            % obj.glDrawable.array.EditBuffer({[] obj.glNormals });
             obj.Update;
         end
 
         function set.Colormap(obj,cmap)
-            sz = size(cmap);
-            if ~isscalartext(cmap) && (sz(1) < 1 || sz(2) ~= 3 || numel(sz) > 2) && ~isa(cmap,'function_handle')
-                error('Colormap must be [m x 3] where m is at least 1')
+            if isa(cmap,'fvColormap')
+                obj.Colormap = cmap;
+                obj.cmapListener = event.listener(cmap,'Modified',@(~,~) obj.UpdateColor);
+            else
+                obj.Colormap.Source = cmap;
             end
-            obj.Colormap = cmap;
-            obj.UpdateColor();
-            notify(obj,'ColorChanged');
+            obj.UpdateColor;
         end
 
         function set.Color(obj,v)
             temp = obj.PauseUpdates;
+            if isstruct(v)
+                v = fvColor(v);
+            end
             obj.Color = v;
-            obj.UpdateColor();
-            notify(obj,'ColorChanged');
+            delete(obj.colListener);
+            if isa(v,'fvColor')
+                obj.colListener = event.listener(v,'ColorChanged',@(~,~) obj.UpdateColor);
+            end
+            obj.UpdateColor;
         end
 
         function set.Index(obj,idx)
@@ -254,6 +274,67 @@ classdef fvPrimitive < internal.fvDrawable
             obj.Update;
         end
 
+        function set.PointSize(obj,v)
+            obj.PointSize = v;
+            obj.Update;
+        end
+
+        function set.MinPointSize(obj,v)
+            obj.MinPointSize = v;
+            obj.Update;
+        end
+
+        function set.PointShape(obj,val)
+            obj.PointShape = val;
+            if strcmp(val,'Custom')
+                obj.PointShapeCustom = obj.PointShapeCustom;
+            end
+            obj.Update;
+            % if isscalartext(val)
+            %     switch val
+            %         case 'square'
+            %             pointMask = 0;
+            %         case 'round'
+            %             pointMask = 1;
+            %         otherwise
+            %             error('invalid value: %s',val)
+            %     end
+            % else
+            %     [gl,temp] = obj.getContext;
+            %     if isinteger(val)
+            %         val = single(val)./single(intmax(class(val)));
+            %     elseif islogical(val)
+            %         val = single(val);
+            %     end
+            %     if size(val,3) > 1
+            %         val = mean(val,3);
+            %     end
+            %     tex = glmu.Texture(7,'GL_TEXTURE_2D',flipud(val),'GL_RED',1);
+            %     obj.glDrawable.uni.pointMask_tex = tex;
+            %     pointMask = 2;
+            % end
+            % obj.glDrawable.uni.pointMask = pointMask;
+            % obj.PointShape = val;
+            % obj.Update;
+        end
+
+        function set.PointShapeCustom(obj,M0)
+            M = M0;
+            [gl,temp] = obj.getContext;
+            if isinteger(M)
+                M = single(M)./single(intmax(class(M)));
+            elseif islogical(M)
+                M = single(M);
+            end
+            if size(M,3) > 1
+                M = mean(M,3);
+            end
+            tex = glmu.Texture(7,'GL_TEXTURE_2D',flipud(M),'GL_RED',1);
+            obj.glDrawable.uni.pointMask_tex = tex;
+            obj.PointShapeCustom = M0;
+            obj.Update;
+        end
+
         function xyz = worldCoords(obj)
             xyz = mapply(obj.validCoords,obj.full_model);
         end
@@ -293,6 +374,7 @@ classdef fvPrimitive < internal.fvDrawable
         function c = get.glColor(obj)
             c = obj.validColor;
             c = internal.var2gl(c,3,obj.Count)';
+            c = uint8(c.*255);
         end
 
         function ind = get.validPrimIdx(obj)
@@ -322,21 +404,15 @@ classdef fvPrimitive < internal.fvDrawable
             end
         end
 
-        function tf = get.isColormapped(obj)
-            tf = size(obj.Color,2) == 1;
-        end
-
         function c = get.validColor(obj)
             c = obj.Color;
-            if obj.isColormapped
+            if isa(c,'fvColor')
+                c = c.Result;
+            end
+            if size(c,2) == 1 && ~isempty(obj.Colormap)
                 % colormap mode
-                cmap = obj.Colormap;
-                if isscalartext(cmap)
-                    cmap = str2func(cmap);
-                end
-                if isa(cmap,'function_handle')
-                    cmap = cmap(256);
-                end
+                cmap = double(obj.Colormap);
+                % cmap = obj.iColormap.build(obj.ColormapDivisions);
                 h = size(cmap,1);
                 if isfloat(c)
                     c(isnan(c)) = 0;
@@ -408,6 +484,22 @@ classdef fvPrimitive < internal.fvDrawable
                 end
             end
 
+            if strcmp(obj.PrimitiveType,'GL_POINTS')
+                u.pointSize.Set(obj.PointSize);
+                u.minPointSize.Set(obj.MinPointSize);
+                switch obj.PointShape
+                    case 'Square'
+                        m = 0;
+                    case 'Round'
+                        m = 1;
+                    case 'Custom'
+                        m = 2;
+                end
+                u.pointMask.Set(m);
+            else
+                u.pointMask.Set(0);
+            end
+
             obj.glDrawable.Draw;
         end
 
@@ -417,7 +509,8 @@ classdef fvPrimitive < internal.fvDrawable
             if isempty(obj.Material)
                 obj.glDrawable.multi_uni = [];
                 glp = ind2glind(p);
-                obj.glDrawable.EditElement(glp);
+                obj.glDrawable.element.buffer.Set(glp);
+                % obj.glDrawable.EditElement(glp);
 
                 obj.glDrawable.uni.color_source = 'vertex_color';
                 obj.glDrawable.countoffsets = [numel(glp) 0];
@@ -458,11 +551,16 @@ classdef fvPrimitive < internal.fvDrawable
 
     methods(Hidden)
 
-        function UpdateColor(obj)
+        function UpdateColor(obj,notifyFlag)
             if ~obj.isInit, return, end
+            if nargin < 2, notifyFlag = true; end
             [gl,temp] = obj.getContext;
-            obj.glDrawable.array.EditBuffer({[] [] obj.glColor});
+            obj.glDrawable.array.attrib{3}.buffer.Set(obj.glColor);
+            % obj.glDrawable.array.EditBuffer({[] [] obj.glColor});
             obj.Update;
+            if notifyFlag
+                notify(obj,'ColorChanged');
+            end
         end
         
         function s = id2info(obj,elemId,primId)
@@ -473,15 +571,38 @@ classdef fvPrimitive < internal.fvDrawable
             end
             s.primId = primId;
         end
+
+        function ui(obj,parent)
+            
+
+            if isa(obj.Color,'fvColor')
+                obj.Color.ui(parent);
+            end
+            
+            obj.Colormap.ui(parent);
+            
+            fvJLinkedValue(parent,mfilename);
+
+            fvJLinkedValue(parent,'Primitive',obj,'PrimitiveType');
+
+            fvJLinkedValue(parent,'PointSize',obj,'PointSize','DragStep',0.001);
+            fvJLinkedValue(parent,'MinPtSize',obj,'MinPointSize','DragStep',0.01);
+            fvJLinkedValue(parent,'PointShape',obj,'PointShape');
+
+            fvJLinkedValue(parent,'ShdCull',obj,'ShaderCull','DragStep',0.05);
+            fvJLinkedValue(parent,'ShdCullCol',obj,'ShaderCullColor','DragStep',0.01);
+            fvJLinkedValue(parent,'ShdCullOff',obj,'ShaderCullOffset','DragStep',0.01);
+
+            obj.ui@internal.fvDrawable(parent);
+
+        end
     end
 
     methods(Hidden,Static)
-        function m = Menu(o,evt)
+        function Menu(o,menu,evt)
             x = mapply(evt.data.xyz,o.full_model,0);
-            m = {
-                    JMenuItem(internal.fvPopup.CoordText(x,'local'), @(~,~) assignans(x));
-                };
-            m = [m ; Menu@internal.fvChild(o,evt)];
+            JMenuItem(menu,'Text',internal.fvPopup.CoordText(x,'local'), 'ActionFcn',@(~,~) assignans(x));
+            Menu@internal.fvChild(o,menu,evt);
         end
     end
 

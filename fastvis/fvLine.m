@@ -4,7 +4,7 @@ classdef fvLine < internal.fvPrimitive
     properties(Dependent)
         % LineStrip - If set to true, the coordinates will make one
         % continuous line. Otherwise, lines are reset for each pair
-        LineStrip
+        LineStrip (1,1) logical
     end
     
     methods

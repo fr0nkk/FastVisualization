@@ -15,7 +15,7 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
     end
 
     properties(Hidden)
-        fvSave logical = true;
+        fvSave (1,1) logical = true;
     end
     
     methods
@@ -112,11 +112,9 @@ classdef (Abstract) fvChild < JChildParent & matlab.mixin.SetGet
             cellfun(@(c) internal.fvChild.struct2fv(c,obj),s.child,'uni',0);
         end
 
-        function m = Menu(obj,~)
-            m = {
-                JMenuItem('Get',@(~,~) assignans(obj));
-                JMenuItem('Delete',@(~,~) delete(obj));
-                };
+        function Menu(obj,menu,~)
+                JMenuItem(menu,'Text','Get','ActionFcn',@(~,~) assignans(obj));
+                JMenuItem(menu,'Text','Delete','ActionFcn',@(~,~) delete(obj));
         end
 
     end
