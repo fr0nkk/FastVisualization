@@ -147,7 +147,7 @@ classdef fvPrimitive < internal.fvDrawable
             shdPath = execdir(fileparts(mfilename('fullpath')),'shaders','fvprim');
             obj.glProg = obj.fvfig.ctrl.InitProg(shdPath);
 
-            attrib = glmu.VertexAttrib.FromData({obj.glCoords obj.glNormals obj.glColor},gl.GL_ARRAY_BUFFER,gl.GL_STATIC_DRAW,{'float','float','normalized'});
+            attrib = glmu.VertexAttrib.FromData({obj.glCoords obj.glNormals obj.glColor},gl.GL_ARRAY_BUFFER,gl.GL_STATIC_DRAW);
 
             obj.glDrawable = glmu.drawable.MultiElement(obj.glProg,obj.PrimitiveType,uint32([0 0 0]),attrib);
             obj.glDrawable.idUni = obj.glDrawable.program.uniforms.elemid;
@@ -374,7 +374,6 @@ classdef fvPrimitive < internal.fvDrawable
         function c = get.glColor(obj)
             c = obj.validColor;
             c = internal.var2gl(c,3,obj.Count)';
-            c = uint8(c.*255);
         end
 
         function ind = get.validPrimIdx(obj)
@@ -526,7 +525,7 @@ classdef fvPrimitive < internal.fvDrawable
                 co = [co cumsum([0 ; co(1:end-1)])];
 
                 p = p(vertcat(obj.batch_mtl_idx{:}),:);
-                obj.glDrawable.EditElement(ind2glind(p));
+                obj.glDrawable.element.buffer.Set(ind2glind(p));
                 M = obj.validMaterial(obj.batch_mtl);
                 obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a,0),M,'uni',0);
                 mtl_idx = (1:numel(M))';
