@@ -5,6 +5,9 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         % Origin - Point around which the rotation is applied
         Origin (3,1) double {mustBeReal,mustBeFinite}
 
+        % LocalPlane - Local level plane, with angles in degrees
+        LocalPlane (3,1) double {mustBeReal,mustBeFinite}
+
         % Rotation - Angles in degrees to rotate
         Rotation (3,1) double {mustBeReal,mustBeFinite}
 
@@ -53,6 +56,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
     properties(Access=private)
         iOrigin = [0 0 0];
+        iLocalPlane = [0 0 0];
         iRotation = [0 0 0];
         iTranslation = [0 0 -1];
         iSize = [1 1];
@@ -96,7 +100,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
         function M = get.MView(obj)
             if obj.MView_need_recalc
-                obj.MView = MTrans3D(obj.iTranslation) * MRot3D(obj.iRotation,1,[1 2 3]) * MTrans3D(-obj.iOrigin);
+                obj.MView = MTrans3D(obj.iTranslation) * MRot3D(obj.iRotation,1,[1 2 3]) * MRot3D(obj.iLocalPlane,1,[1 2 3]) * MTrans3D(-obj.iOrigin);
                 obj.MView_need_recalc = 0;
             end
             M = obj.MView;
@@ -120,12 +124,10 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
         function SetOrigin(obj,coord)
             % set camera origin while keeping the same view
-            if isempty(coord), return, end
-            if any(isnan(coord))
-                coord = mapply([0 0 0],MTrans3D([obj.iTranslation(1:2) 0]) * MRot3D(obj.iRotation,1,[1 3]),0) + obj.iOrigin;
-            end
-            M =  MTrans3D(obj.iTranslation) * MRot3D(obj.iRotation,1,[1 2 3]);
-            obj.iTranslation(1:3) = mapply(coord-obj.iOrigin,M);
+            if isempty(coord) || any(isnan(coord)), return, end
+
+            [~,MT] = mdecompose(obj.MView * MTrans3D(coord));
+            obj.iTranslation(1:3) = MT(1:3,4)';
             obj.iOrigin(1:3) = coord;
             obj.MView_need_recalc = 1;
         end
@@ -185,6 +187,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
         function s = getState(obj)
             s.Origin = obj.iOrigin;
+            s.LocalPlane = obj.iLocalPlane;
             s.Rotation = obj.iRotation;
             s.Translation = obj.iTranslation;
             s.Size = obj.iSize;
@@ -196,6 +199,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         function setState(obj,s,silent)
             if nargin < 3, silent = false; end
             obj.iOrigin = s.Origin;
+            obj.iLocalPlane = s.LocalPlane;
             obj.iRotation = s.Rotation;
             obj.iTranslation = s.Translation;
             obj.iSize = s.Size;
@@ -226,6 +230,10 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             p = obj.iRotation;
         end
 
+        function p = get.LocalPlane(obj)
+            p = obj.iLocalPlane;
+        end
+
         function p = get.Translation(obj)
             p = obj.iTranslation;
         end
@@ -254,6 +262,12 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
         function set.Rotation(obj,p)
             obj.iRotation(1:3) = mod(p,360);
+            obj.MView_need_recalc = 1;
+            notify(obj,'Moved');
+        end
+
+        function set.LocalPlane(obj,p)
+            obj.iLocalPlane(1:3) = mod(p,360);
             obj.MView_need_recalc = 1;
             notify(obj,'Moved');
         end
@@ -324,19 +338,20 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
             obj.isAnimating = true; temp = onCleanup(@() obj.EndAnimation(state1));
             if ~event.hasListener(obj,'Moved'), return; end
-            oldParam = [state0.Origin state0.Rotation state0.Translation state0.Size state0.NearFar state0.FOV state0.Zoom];
-            newParam = [state1.Origin state1.Rotation state1.Translation state1.Size state1.NearFar state1.FOV state1.Zoom];
+            oldParam = [state0.Origin state0.LocalPlane state0.Rotation state0.Translation state0.Size state0.NearFar state0.FOV state0.Zoom];
+            newParam = [state1.Origin state1.LocalPlane state1.Rotation state1.Translation state1.Size state1.NearFar state1.FOV state1.Zoom];
 
             t = tic;
             while toc(t) < dt
                 interpState = interp1([0 ; 1],[oldParam ; newParam],toc(t)/dt);
                 obj.iOrigin = interpState(1:3);
-                obj.iRotation = interpState(4:6);
-                obj.iTranslation = interpState(7:9);
-                obj.iSize = interpState(10:11);
-                obj.iNearFar = interpState(12:13);
-                obj.iFOV = interpState(14);
-                obj.iZoom = interpState(15);
+                obj.iLocalPlane = interpState(4:6);
+                obj.iRotation = interpState(7:9);
+                obj.iTranslation = interpState(10:12);
+                obj.iSize = interpState(13:14);
+                obj.iNearFar = interpState(15:16);
+                obj.iFOV = interpState(17);
+                obj.iZoom = interpState(18);
                 obj.MView_need_recalc = 1;
                 obj.MProj_need_recalc = 1;
                 notify(obj,'Moved');
@@ -405,6 +420,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
 
             fcn = @(o) abs(o.Translation(3))./500;
             fvJLinkedValue(parent,'Origin',obj,{'Origin','MView'},'DragStep',fcn);
+            fvJLinkedValue(parent,'LocalPlane',obj,{'LocalPlane','MView'},'DragStep',0.25);
             fvJLinkedValue(parent,'Rotation',obj,{'Rotation','MView'},'DragStep',0.25);
             fvJLinkedValue(parent,'Translation',obj,{'Translation','MView'},'DragStep',fcn);
 
