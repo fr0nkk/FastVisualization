@@ -182,6 +182,7 @@ classdef fvPrimitive < internal.fvDrawable
             notify(obj,'CoordsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
+            obj.glDrawable.array.Bind;
             obj.glDrawable.array.attrib{1}.buffer.Set(obj.glCoords);
             % obj.glDrawable.array.EditBuffer({obj.glCoords});
         end
@@ -192,6 +193,7 @@ classdef fvPrimitive < internal.fvDrawable
             notify(obj,'NormalsChanged');
             if ~obj.isInit, return, end
             [gl,temp] = obj.getContext;
+            obj.glDrawable.array.Bind;
             obj.glDrawable.array.attrib{2}.buffer.Set(obj.glNormals);
             % obj.glDrawable.array.EditBuffer({[] obj.glNormals });
             obj.Update;
@@ -505,11 +507,12 @@ classdef fvPrimitive < internal.fvDrawable
         function RecalcBatch(obj)
             p = obj.validPrimIdx;
             delete(obj.mtl_el);
-            if isempty(obj.Material)
+            % [gl,temp] = obj.getContext;
+            if isempty(obj.Material) || obj.Count < 1
                 obj.glDrawable.multi_uni = [];
                 glp = ind2glind(p);
+                obj.glDrawable.array.Bind;
                 obj.glDrawable.element.buffer.Set(glp);
-                % obj.glDrawable.EditElement(glp);
 
                 obj.glDrawable.uni.color_source = 'vertex_color';
                 obj.glDrawable.countoffsets = [numel(glp) 0];
@@ -525,7 +528,10 @@ classdef fvPrimitive < internal.fvDrawable
                 co = [co cumsum([0 ; co(1:end-1)])];
 
                 p = p(vertcat(obj.batch_mtl_idx{:}),:);
+                
+                obj.glDrawable.array.Bind;
                 obj.glDrawable.element.buffer.Set(ind2glind(p));
+                
                 M = obj.validMaterial(obj.batch_mtl);
                 obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a,0),M,'uni',0);
                 mtl_idx = (1:numel(M))';
@@ -554,6 +560,7 @@ classdef fvPrimitive < internal.fvDrawable
             if ~obj.isInit, return, end
             if nargin < 2, notifyFlag = true; end
             [gl,temp] = obj.getContext;
+            obj.glDrawable.array.Bind;
             obj.glDrawable.array.attrib{3}.buffer.Set(obj.glColor);
             % obj.glDrawable.array.EditBuffer({[] [] obj.glColor});
             obj.Update;
