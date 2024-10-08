@@ -54,7 +54,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         MProj % 4x4 matrix
     end
 
-    properties(Access=private)
+    properties(Access=protected)
         iOrigin = [0 0 0];
         iLocalPlane = [0 0 0];
         iRotation = [0 0 0];
@@ -66,7 +66,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         iPerspective = true;
     end
 
-    properties(Transient,Access=private)
+    properties(Transient,Access=protected)
         MProj_need_recalc = 1
         MView_need_recalc = 1
         buttonPressState
@@ -140,7 +140,7 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
         function k = getScaleFactor(obj,d)
             if nargin < 2, d = -obj.iTranslation(3); end
             if obj.Perspective
-                k = d ./ max(obj.iSize) * (2*tand(obj.iFOV/2));
+                k = d ./ max(obj.iSize) .* (2.*tand(obj.iFOV./2));
             else
                 k = 1./obj.iZoom;
             end
@@ -217,10 +217,22 @@ classdef fvCamera < handle & matlab.mixin.Copyable & matlab.mixin.SetGet
             p = mapply([0 0 0],obj.MView,0);
         end
 
-        function x = getCamRay(obj)
-            x = [0 0 1] * obj.MView(1:3,1:3);
-        end
+        function x = getCamRay(obj,xyNDC)
+            if nargin < 2, xyNDC = [0 0]; end
 
+            xyNDC(:,3) = 0;
+
+            p = obj.getCamPos;
+
+            r = mapply(xyNDC,obj.MProj * obj.MView,false);
+
+            x = r - p;
+
+            x = x ./ vecnorm(x,2,2);
+
+
+            % x = [0 0 1] * obj.MView(1:3,1:3);
+        end
 
         function p = get.Origin(obj)
             p = obj.iOrigin;
