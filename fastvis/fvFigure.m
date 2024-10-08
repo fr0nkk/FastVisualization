@@ -71,6 +71,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         MouseHover
         MouseMoved
         KeyTyped
+        PreUpdate
     end
 
     properties(Access = protected)
@@ -150,12 +151,18 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         function set.Camera(obj,cam)
             delete(obj.camListener)
             % obj.camListener = skippablelistener(cam,'Moved',@(src,evt) obj.Update);
-            obj.camListener = event.listener(cam,'Moved',@(src,evt) obj.Update);
+            obj.camListener = event.listener(cam,'Moved',@(src,evt) obj.CamUpdate);
             obj.Camera = cam;
             if ~isempty(obj.ctrl)
                 obj.ResizeCallback(obj.Size);
                 obj.Update;
             end
+        end
+
+        function CamUpdate(obj)
+            temp = obj.PauseUpdates;
+            notify(obj,'PreUpdate');
+            obj.Update;
         end
 
         function Update(obj)
@@ -319,7 +326,7 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
             if ~isnumeric(m) || ~ismatrix(m) || ~all(size(m) == 4) || ~isfloat(m)
                 error('model must be 4x4 single or double matrix')
             end
-            obj.Model = double(m);
+            obj.Model = m;
             obj.Update;
         end
 
@@ -329,20 +336,20 @@ classdef fvFigure < JChildParent & matlab.mixin.SetGet
         end
 
         function t = get.Title(obj)
-            t = obj.parent.parent.title;
+            t = obj.parent.parent.Title;
         end
 
         function set.Title(obj,t)
-            obj.parent.parent.title = t;
+            obj.parent.parent.Title = t;
         end
 
         function sz = get.Size(obj)
-            sz = obj.parent.size;
+            sz = obj.parent.Size;
         end
 
         function set.Size(obj,sz)
             t = obj.PauseUpdates;
-            obj.parent.size = sz;
+            obj.parent.Size = sz;
             obj.parent.parent.java.pack;
             obj.Update;
         end
