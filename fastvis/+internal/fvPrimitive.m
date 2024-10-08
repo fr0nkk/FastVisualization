@@ -533,9 +533,9 @@ classdef fvPrimitive < internal.fvDrawable
                 obj.glDrawable.element.buffer.Set(ind2glind(p));
                 
                 M = obj.validMaterial(obj.batch_mtl);
-                obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a,0),M,'uni',0);
+                obj.glDrawable.multi_uni = arrayfun(@(a) obj.fvfig.mtlCache.UniStruct(a,1),M,'uni',0);
                 mtl_idx = (1:numel(M))';
-                obj.mtl_el = arrayfun(@(k) addlistener(M(k),'PropChanged',@(src,evt) obj.EditMaterial(src,k)),mtl_idx);
+                obj.mtl_el = arrayfun(@(k) listener(M(k),'PropChanged',@(src,evt) obj.EditMaterial(src,k)),mtl_idx);
                 obj.glDrawable.countoffsets = co;
             end
         end
@@ -548,8 +548,9 @@ classdef fvPrimitive < internal.fvDrawable
         end
 
         function EditMaterial(obj,src,k)
-            [gl,temp] = obj.getContext;
-            obj.glDrawable.multi_uni{k} = obj.fvfig.mtlCache.UniStruct(src,1);
+            % [gl,temp] = obj.getContext;
+            obj.needRecalc = true;
+            % obj.glDrawable.multi_uni{k} = obj.fvfig.mtlCache.UniStruct(src,0);
             obj.Update;
         end
     end
